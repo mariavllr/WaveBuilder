@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using DG.Tweening;
 using TMPro;
+using Unity.VisualScripting.Antlr3.Runtime;
 
 public class WaveFunctionGame : MonoBehaviour
 {
@@ -52,7 +53,7 @@ public class WaveFunctionGame : MonoBehaviour
     private float elapsedTime;
     public bool isRunning = true;
 
-    public bool tutorial = false;
+    public bool tutorial = false; //Si hay tutorial, no se generara el mapa hasta que el tutorial acabe
 
 
     //Events
@@ -74,7 +75,6 @@ public class WaveFunctionGame : MonoBehaviour
         DragObject.OnTileReleased -= OnTileRemoved;
         CardGenerator.OnTileRotated -= OnTileRotation;
     }
-
 
     void Awake()
     {
@@ -116,21 +116,23 @@ public class WaveFunctionGame : MonoBehaviour
     private void Update()
     {
         //TIMER
-        if (!isRunning) return;
+        if (isRunning)
+        {
+            elapsedTime += Time.deltaTime;
 
-        elapsedTime += Time.deltaTime;
+            int hours = Mathf.FloorToInt(elapsedTime / 3600);
+            int minutes = Mathf.FloorToInt((elapsedTime % 3600) / 60);
+            int seconds = Mathf.FloorToInt(elapsedTime % 60);
 
-        int hours = Mathf.FloorToInt(elapsedTime / 3600);
-        int minutes = Mathf.FloorToInt((elapsedTime % 3600) / 60);
-        int seconds = Mathf.FloorToInt(elapsedTime % 60);
-
-        timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
+            timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
+        }  
     }
 
     public void PauseTimer() => isRunning = false;
     public void ResumeTimer() => isRunning = true;
 
-    public void StartGame() => UpdateGenerationCube();
+    public void StartGame() { UpdateGenerationCube(); tutorial = false; }
+    public void ExitGame() => Application.Quit();
 
     /// <summary>
     /// Clears all the tiles' neighbours
@@ -1058,6 +1060,13 @@ public class WaveFunctionGame : MonoBehaviour
 
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
+
+        //Desactivar ser arrastrado
+        DragObject drag = instantiatedTile.GetComponent<DragObject>();
+        if(drag != null)
+        {
+            Destroy(drag); 
+        }
 
         // Efecto de rebote con DOTween
         instantiatedTile.transform.DOJump(instantiatedTile.transform.position, jumpPower: 0.5f, numJumps: 1, duration: 0.3f).SetEase(Ease.InOutFlash);

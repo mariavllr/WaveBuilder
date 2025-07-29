@@ -67,7 +67,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: -1255982633427224767, guid: 94a5d60501cda5f4d8fd4e5a2ece23ea, type: 3}
-  - {fileID: 2408938254544824348, guid: 94a5d60501cda5f4d8fd4e5a2ece23ea, type: 3}
+  - {fileID: -6889774600060860878, guid: ac3cac2587695da4ca42558ebdd76419, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -102,7 +102,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: wall
-  probability: 6
+  probability: 8
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1

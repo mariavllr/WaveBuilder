@@ -12,6 +12,7 @@ public class CardGenerator : MonoBehaviour
     public int queueSize;
     public float distance;
     private float offset = 0;
+    private bool isDragging = false;
 
     public static event Action<Vector3, Tile> OnTileRotated;
 
@@ -23,18 +24,22 @@ public class CardGenerator : MonoBehaviour
 
     private void OnEnable()
     {
-        DragObject.OnTileReleased += OnTileRemoved; //  Suscribimos el evento
+        DragObject.OnTileDragged += OnTileDragged;
+        DragObject.OnTileReleased += OnTileRemoved;
         DeleteTile.OnDeleteTile += OnDeleteTile;
     }
 
     private void OnDestroy()
     {
-        DragObject.OnTileReleased -= OnTileRemoved; //  Desuscribimos para evitar errores
+        DragObject.OnTileReleased -= OnTileRemoved; 
+        DragObject.OnTileDragged -= OnTileDragged;
+        DeleteTile.OnDeleteTile -= OnDeleteTile; 
     }
+
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && isDragging)
         {
             RotateTile();
         }
@@ -132,9 +137,14 @@ public class CardGenerator : MonoBehaviour
         }
     }
 
+    private void OnTileDragged(Tile tile)
+    {
+        isDragging = true;
+    }
+
    private void OnTileRemoved(GameObject removedTile)
     {
-       // Destroy(removedTile.GetComponent<DragObject>());
+        isDragging = false;
         tileQueue.Dequeue();
 
         MoveUpQueue();
@@ -196,6 +206,7 @@ public class CardGenerator : MonoBehaviour
 
     private void OnDeleteTile()
     {
+        isDragging = false;
         tileQueue.Dequeue();
 
         MoveUpQueue();

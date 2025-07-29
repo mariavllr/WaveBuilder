@@ -20,6 +20,7 @@ public class DragObject : MonoBehaviour
     private Cell currentPreviewCell = null;
     private GameObject currentPreviewInstance = null;
     private WaveFunctionGame wfc;
+    private bool paused = false;
 
     Material previewMaterial;
     private void Awake()
@@ -45,8 +46,14 @@ public class DragObject : MonoBehaviour
         previewMaterial = wfc.previewMaterial;
     }
 
+
+
     void Update()
     {
+        if (!enabled) return;
+
+        if (!wfc.isRunning && !wfc.tutorial) return; // Si el juego está pausado, no hacer nada
+
         if (Input.GetMouseButtonDown(0)) // Click izquierdo
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
