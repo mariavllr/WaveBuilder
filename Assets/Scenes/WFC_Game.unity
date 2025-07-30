@@ -176,11 +176,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Las fichas se pueden rotar con el ESPACIO. Se mostrar\xE1n las celdas
-    donde se pueden colocar. \xA1Pru\xE9balo!"
+  m_text: "Las fichas se pueden rotar con el ESPACIO mientras las arrastras. Se mostrar\xE1n
+    las celdas donde se pueden colocar. \xA1Pru\xE9balo!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 8749207899587793446, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -314,9 +314,10 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "Y eso es todo. Cuando est\xE9s listo/a, pulsa COMENZAR.\n\n-El reloj contar\xE1
-    el tiempo que est\xE9s jugando, que luego se te preguntar\xE1.\n\n-Cuando acabes,
-    pulsa PAUSA en el reloj y responde el test.\n\n-Si le das sin querer, el reloj
-    se activar\xE1 de nuevo con REANUDAR."
+    el tiempo que est\xE9s jugando, que luego se te preguntar\xE1 junto con el n\xBA
+    de fichas colocadas (est\xE1 abajo a la izquierda).\n\n-Cuando acabes, pulsa
+    PAUSA en el reloj y responde el test.\n\n-Si le das sin querer, el reloj se activar\xE1
+    de nuevo con REANUDAR."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
   m_sharedMaterial: {fileID: 8749207899587793446, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
@@ -3711,8 +3712,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Primero se generar\xE1 un mapa peque\xF1o. A tu derecha, aparecer\xE1n
-    fichas que puedes colocar arrastrando al mapa. Puedes probarlo ahora."
+  m_text: "Cuando comiences se generar\xE1 un mapa peque\xF1o. A tu derecha ir\xE1n
+    saliendo fichas que puedes colocar arrastrando al mapa. Prueba a arrastrar una
+    ficha."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
   m_sharedMaterial: {fileID: 8749207899587793446, guid: 82fe3f5b124a67a4f96b273fe239800d, type: 2}
@@ -4885,6 +4887,8 @@ MonoBehaviour:
   - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
   queueSize: 3
   distance: 2.5
+  dragCooldown: 0.5
+  timerCooldown: 0
 --- !u!4 &1993922142
 Transform:
   m_ObjectHideFlags: 0

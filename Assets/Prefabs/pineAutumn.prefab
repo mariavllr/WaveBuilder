@@ -66,10 +66,10 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -1909796842805597316, guid: d5de016f028264a4d9c55fe20a7c4106, type: 3}
-  - {fileID: 7016487812639021227, guid: d5de016f028264a4d9c55fe20a7c4106, type: 3}
-  - {fileID: -1929036172255054197, guid: d5de016f028264a4d9c55fe20a7c4106, type: 3}
-  - {fileID: -526821532274794220, guid: d5de016f028264a4d9c55fe20a7c4106, type: 3}
+  - {fileID: 2100000, guid: 1369237e843a2d64ead002a3f769cb22, type: 2}
+  - {fileID: 2100000, guid: f54d5e7c5ffe37847a722b4fa7694827, type: 2}
+  - {fileID: 2100000, guid: 1369237e843a2d64ead002a3f769cb22, type: 2}
+  - {fileID: 2100000, guid: d051b7c14567ac1419ddb353dbfa4325, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: pineAutumn
-  probability: 10
+  probability: 12
   rotateRight: 0
   rotate180: 0
   rotateLeft: 0

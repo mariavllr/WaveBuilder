@@ -11,7 +11,7 @@ public class DragObject : MonoBehaviour
     private Tile tile;
 
     public static event Action<Tile> OnTileDragged;
-    public static event Action<GameObject> OnTileReleased;
+    public static event Action<GameObject, Cell> OnTileReleased;
 
 
     //Para mostrar las celdas validas y mostrar una preview del objeto colocado
@@ -20,7 +20,8 @@ public class DragObject : MonoBehaviour
     private Cell currentPreviewCell = null;
     private GameObject currentPreviewInstance = null;
     private WaveFunctionGame wfc;
-    private bool paused = false;
+    private CardGenerator cardGenerator;
+    private Cell closest;
 
     Material previewMaterial;
     private void Awake()
@@ -28,6 +29,7 @@ public class DragObject : MonoBehaviour
         DeleteTile.OnDeleteTile += OnTileDeleted;
         CardGenerator.OnTileRotated += OnTileRotated;
         wfc = FindAnyObjectByType<WaveFunctionGame>();
+        cardGenerator = FindAnyObjectByType<CardGenerator>();
     }
     private void OnDestroy()
     {
@@ -54,7 +56,7 @@ public class DragObject : MonoBehaviour
 
         if (!wfc.isRunning && !wfc.tutorial) return; // Si el juego está pausado, no hacer nada
 
-        if (Input.GetMouseButtonDown(0)) // Click izquierdo
+        if (Input.GetMouseButtonDown(0) && cardGenerator.timerCooldown <= 0) // Click izquierdo
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
@@ -68,16 +70,17 @@ public class DragObject : MonoBehaviour
             }
         }
 
-        if (isDragging)
-        {
-            transform.position = GetWorldMousePosition() + offset;
 
-            //RotateTile();
+
+        if (isDragging)
+        { 
+            transform.position = GetWorldMousePosition() + offset;
 
             //Muestra las celdas donde se puede colocar
             if (validCells != null && validCells.Count > 0)
             {
-                Cell closest = FindClosestCell(transform.position, validCells);
+                //Cell closest = FindClosestCell(transform.position, validCells);
+                closest = FindClosestCellToMouse();
 
                 if (closest != currentPreviewCell)
                 {
@@ -102,7 +105,7 @@ public class DragObject : MonoBehaviour
             if (Input.GetMouseButtonUp(0)) // Suelta el click
             {
                 isDragging = false;
-                OnTileReleased?.Invoke(this.gameObject); // Disparamos el evento
+                OnTileReleased?.Invoke(this.gameObject, closest); // Disparamos el evento
 
                 if (currentPreviewInstance != null)
                 {
@@ -143,6 +146,8 @@ public class DragObject : MonoBehaviour
         }
     }
 
+    //Opcion 1: Calcula celda más cercana a una tile
+
     private Cell FindClosestCell(Vector3 origin, List<Cell> cells)
     {
         Cell closest = null;
@@ -160,7 +165,56 @@ public class DragObject : MonoBehaviour
         return closest;
     }
 
- 
+    //Opcion 2: Calcula celda más cercana al mouse
+
+    private Cell FindClosestCellToMouse()
+    {
+        Cell closest = null;
+        float minDistSq = Mathf.Infinity;
+
+        Vector3 mousePos = Input.mousePosition;
+
+        foreach (Cell cell in validCells)
+        {
+            Vector3 cellScreenPos = Camera.main.WorldToScreenPoint(cell.transform.position);
+
+            // Opcional: ignorar si está detrás de la cámara
+            if (cellScreenPos.z < 0)
+                continue;
+
+            float distSq = (cellScreenPos - mousePos).sqrMagnitude;
+
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                closest = cell;
+            }
+        }
+
+        return closest;
+    }
+
+    //Opcion 3: Calcula la más cercana al mouse con un RAYCAST
+
+  /*  private Cell FindClosestCellToMouseRaycast()
+    {
+        Cell closest = null;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            Cell cell = hit.collider.GetComponent<Cell>();
+
+            if (cell != null && validCells.Contains(cell))
+            {
+                return cell;
+            }
+        }
+
+        return closest;
+    }
+  */
+
 
     private GameObject CreatePreviewAtCell(Cell cell)
     {

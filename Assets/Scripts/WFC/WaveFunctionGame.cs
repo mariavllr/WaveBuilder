@@ -7,7 +7,6 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using DG.Tweening;
 using TMPro;
-using Unity.VisualScripting.Antlr3.Runtime;
 
 public class WaveFunctionGame : MonoBehaviour
 {
@@ -1012,10 +1011,10 @@ public class WaveFunctionGame : MonoBehaviour
 
 
     //---------------COLOCAR TILE EN CELDA---------------
-    private void OnTileRemoved(GameObject tileRemoved)
+    private void OnTileRemoved(GameObject tileRemoved, Cell closest)
     {
         actualTileDragged = null;
-        Cell cellToCollapse = FindClosestCell(tileRemoved, validCells);
+        Cell cellToCollapse = closest;
         if (cellToCollapse == null)
         {
             Debug.Log("No hay celdas!");

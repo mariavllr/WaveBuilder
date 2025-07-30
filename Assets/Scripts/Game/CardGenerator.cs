@@ -2,9 +2,9 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
-using UnityEngine.UIElements;
 using System;
-using UnityEngine.Tilemaps;
+using UnityEngine.Rendering;
+
 public class CardGenerator : MonoBehaviour
 {
     [SerializeField] public List<Tile> tilesList;
@@ -13,6 +13,10 @@ public class CardGenerator : MonoBehaviour
     public float distance;
     private float offset = 0;
     private bool isDragging = false;
+    public float dragCooldown = 0.3f;
+    public float timerCooldown = 0;
+
+    private LocalKeyword SelectableKeyword;
 
     public static event Action<Vector3, Tile> OnTileRotated;
 
@@ -39,6 +43,8 @@ public class CardGenerator : MonoBehaviour
 
     private void Update()
     {
+        if (timerCooldown > 0) timerCooldown -= Time.deltaTime;
+
         if (Input.GetKeyDown(KeyCode.Space) && isDragging)
         {
             RotateTile();
@@ -49,10 +55,24 @@ public class CardGenerator : MonoBehaviour
     {  
         for (int i = 0; i < queueSize; i++)
         {
-            EnqueueTile();
+            Tile tile = EnqueueTile();          
         }
 
-        tileQueue.First().gameObject.AddComponent<DragObject>();
+        Tile first = tileQueue.First();
+        first.gameObject.AddComponent<DragObject>();
+        MakeTileSelectable(true, first);
+    }
+
+    private void MakeTileSelectable(bool selectable, Tile tile)
+    {
+        Material[] materials = tile.GetComponent<MeshRenderer>().materials;
+
+        foreach (Material mat in materials)
+        {
+            SelectableKeyword = new LocalKeyword(mat.shader, "_SELECTABLE");
+            if(!selectable) mat.SetKeyword(SelectableKeyword, false);
+            else mat.SetKeyword(SelectableKeyword, true);
+        }
     }
 
     private Tile GetRandomTile()
@@ -86,7 +106,7 @@ public class CardGenerator : MonoBehaviour
         return null; // This should not happen if the list is not empty
     }
 
-    private void EnqueueTile()
+    private Tile EnqueueTile()
     {
         Tile tileToEnqueue = GetRandomTile();
         tileToEnqueue.gameObject.SetActive(true);
@@ -109,6 +129,7 @@ public class CardGenerator : MonoBehaviour
         {
             instantiatedTile.gameObject.transform.Rotate(instantiatedTile.rotation, Space.Self);
         }
+
         tileQueue.Enqueue(instantiatedTile);
 
         //EFECTO REBOTE
@@ -126,6 +147,9 @@ public class CardGenerator : MonoBehaviour
 
             index++;
         }
+
+        MakeTileSelectable(false, instantiatedTile);
+        return instantiatedTile;
     }
 
     private void MoveUpQueue()
@@ -135,14 +159,17 @@ public class CardGenerator : MonoBehaviour
         {
             tile.transform.position += new Vector3(0, distance, 0);
         }
+
+        MakeTileSelectable(true, tileQueue.First());
     }
 
     private void OnTileDragged(Tile tile)
     {
         isDragging = true;
+        timerCooldown = dragCooldown;
     }
 
-   private void OnTileRemoved(GameObject removedTile)
+   private void OnTileRemoved(GameObject removedTile, Cell cell)
     {
         isDragging = false;
         tileQueue.Dequeue();
