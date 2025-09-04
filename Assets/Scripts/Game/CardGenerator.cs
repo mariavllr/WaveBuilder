@@ -180,7 +180,7 @@ public class CardGenerator : MonoBehaviour
     }
 
     //Cuando rote, queremos que busque su tile rotada en la tile list. Siempre rotará +90 grados.
-    private void RotateTile()
+    public void RotateTile()
     {
         Tile actualTile = tileQueue.First();
         string tileName = actualTile.name;
