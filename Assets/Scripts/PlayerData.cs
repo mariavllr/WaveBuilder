@@ -5,14 +5,16 @@ using System.Collections.Generic;
 [System.Serializable]
 public class LevelProgress
 {
-    public string levelID; // Coincide con el levelID del LevelData
-    public int maxScore;
+    public int levelID; // Coincide con el levelID del LevelData
+    public int score;
+    public bool isCompleted;
+    public List<MissionProgress> missionProgressList = new List<MissionProgress>();
 }
 
 [System.Serializable]
 public class MissionProgress
 {
-    public string missionID;
+    public int missionID;
     public bool isCompleted;
 }
 

@@ -109,7 +109,12 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         stopwatch.Start();
-        if (!tutorial) UpdateGenerationCube();
+
+        if (!tutorial)
+        {
+            ResumeTimer();
+            UpdateGenerationCube();
+        }
     }
 
     private void Update()

@@ -25,7 +25,6 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _PERSPECTIVE
   - _REFLECTIONS
   - _WORLD_SPACE_UV
   m_InvalidKeywords: []
@@ -120,7 +119,7 @@ Material:
     - _NormalSpeed: 0
     - _NormalStrength: 1.01
     - _OrthographicCamSize: 0
-    - _PERSPECTIVE: 1
+    - _PERSPECTIVE: 0
     - _PosterizeSteps: 0
     - _QueueControl: 1
     - _QueueOffset: -49

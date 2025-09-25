@@ -146,11 +146,11 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.size
-    value: 3
+    value: 7
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[0].first
-    value: _QueueControl
+    value: _AlphaShilouette
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[0].second
@@ -158,19 +158,51 @@ Preset:
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[1].first
-    value: _QueueOffset
+    value: _Hue
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[1].second
-    value: 0
+    value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[2].first
-    value: _SELECTABLE
+    value: _QueueControl
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Floats.Array.data[2].second
     value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[3].first
+    value: _QueueOffset
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[3].second
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[4].first
+    value: _SELECTABLE
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[4].second
+    value: 0
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[5].first
+    value: _Saturation
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[5].second
+    value: 1
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[6].first
+    value: _Value
+    objectReference: {fileID: 0}
+  - target: {fileID: 0}
+    propertyPath: m_SavedProperties.m_Floats.Array.data[6].second
+    value: 1
     objectReference: {fileID: 0}
   - target: {fileID: 0}
     propertyPath: m_SavedProperties.m_Colors.Array.size
