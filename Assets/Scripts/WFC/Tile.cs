@@ -24,7 +24,10 @@ public class Tile : MonoBehaviour
         SAND_WALL_CORNER_EXT,
         SAND_WALL_CORNER_INT,
         SAND_BORDER,
-        SAND_WALL_TOP
+        SAND_WALL_TOP,
+        LIMIT,
+        GRASS_END,
+        BEACH
 
     }
     [Serializable]

@@ -32,6 +32,7 @@ public class WaveFunctionGame : MonoBehaviour
     [SerializeField] private int dimensionsX, dimensionsZ, dimensionsY;
     [SerializeField] Tile floorTile;                     //Tile for the floor
     [SerializeField] Tile emptyTile;                     //Tile for the ceiling
+    [SerializeField] Tile limitTile;                    //Tile for the borders of the map
     [SerializeField] private Tile[] tileObjects;         //All the tiles that can be used to generate the map
     [SerializeField] int cellSize;
     [SerializeField] GameObject newTilesContainer;          //When rotation tiles are generated, the new gameobjects need to be stored somewhere
@@ -89,19 +90,20 @@ public class WaveFunctionGame : MonoBehaviour
 
         stopwatch.Start();
         InitializeGrid();
+        DefineMapLimits();
         CreateSolidFloor();
         CreateSolidCeiling();
-        
+
 
         GetCenterCube();
-
+        
         //AÑADIR TODAS LAS FICHAS AL CARD GENERATOR
         cardGenerator.tilesList = tileObjects.ToList();
 
         for (int i = cardGenerator.tilesList.Count - 1; i >= 0; i--)
         {
             Tile element = cardGenerator.tilesList[i];
-            if (element.tileType == "solid" || element.tileType == "empty" || element.tileType == "cornerExtBorder" || element.tileType == "border"
+            if (element.tileType == "limit" || element.tileType == "empty_limit" || element.tileType == "solid" || element.tileType == "empty" || element.tileType == "cornerExtBorder" || element.tileType == "border"
                 || element.tileType == "cornerIntBorder" || element.tileType == "cornerExt_border_sand" || element.tileType == "borderSand" || element.tileType == "cornerInt_border_sand")
             {
                 cardGenerator.tilesList.Remove(element);
@@ -109,7 +111,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         stopwatch.Start();
-
+        
         if (!tutorial)
         {
             ResumeTimer();
@@ -509,6 +511,56 @@ public class WaveFunctionGame : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Define the borders of the map as "limit" to avoid strange borders
+    /// </summary>
+    void DefineMapLimits()
+    {
+        int y = 1; // justo encima del suelo (suelo es y=0)
+
+        for (int z = 0; z < dimensionsZ; z++)
+        {
+            for (int x = 0; x < dimensionsX; x++)
+            {
+                // ¿es borde en X o Z?
+                bool isBorder = (x == 0 || x == dimensionsX - 1 || z == 0 || z == dimensionsZ - 1);
+
+                if (isBorder)
+                {
+                    int index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                    Cell cellToCollapse = gridComponents[index];
+
+                    // Marcar como borde
+                    cellToCollapse.tileOptions = new Tile[] { limitTile };
+                    cellToCollapse.collapsed = true;
+
+                    // limpiar hijos previos
+                    if (cellToCollapse.transform.childCount != 0)
+                    {
+                        foreach (Transform child in cellToCollapse.transform)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                    }
+
+                    // Instanciar la tile "border"
+                    Tile instantiatedTile = Instantiate(limitTile,
+                                                        cellToCollapse.transform.position,
+                                                        Quaternion.identity,
+                                                        cellToCollapse.transform);
+
+                    if (instantiatedTile.rotation != Vector3.zero)
+                    {
+                        instantiatedTile.gameObject.transform.Rotate(limitTile.rotation, Space.Self);
+                    }
+
+                    instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
+                    instantiatedTile.gameObject.SetActive(true);
+                    iterations++;
+                }
+            }
+        }
+    }
 
     /// <summary>
     /// Reorders the grid based on the entropy of the cells, collapsing the one with less entropy
@@ -766,6 +818,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (iterations <= centerCubeCells)
         {
+            print("FIN CUBO");
             StartCoroutine(CheckEntropy());
         }
 
@@ -775,7 +828,7 @@ public class WaveFunctionGame : MonoBehaviour
             cubeStep = false;
 
             stopwatch.Stop();
-            print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
+            //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
             
         }
     }
@@ -969,7 +1022,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         foreach (var option in optionCopy)
         {
-            if (validSet.Contains(option))
+            if (validSet.Contains(option) && option.tileType != "limit")
             {
                 optionList.Add(option); // Solo añadimos los válidos
             }
@@ -1158,6 +1211,7 @@ public class WaveFunctionGame : MonoBehaviour
         stopwatch.Start();
 
         InitializeGrid();
+        DefineMapLimits();
         CreateSolidFloor();
         CreateSolidCeiling();
         GetCenterCube();
