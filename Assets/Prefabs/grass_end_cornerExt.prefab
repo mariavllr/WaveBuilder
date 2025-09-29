@@ -66,8 +66,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 5845373116496583729, guid: c47ec70355fbfad45b4d1b213bc0e093, type: 3}
-  - {fileID: 9124478189034003926, guid: c47ec70355fbfad45b4d1b213bc0e093, type: 3}
+  - {fileID: 2100000, guid: 1369237e843a2d64ead002a3f769cb22, type: 2}
+  - {fileID: 2100000, guid: f54d5e7c5ffe37847a722b4fa7694827, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -138,11 +138,19 @@ MonoBehaviour:
   excludedNeighboursUp:
   - grass_end_ExtCorner
   - grass_end
+  - beach
+  - beach_cornerExt
+  - beach_grassEnd_L
+  - beach_grassEnd_R
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft:
   - grass_end_ExtCorner
   - grass_end
+  - beach
+  - beach_cornerExt
+  - beach_grassEnd_L
+  - beach_grassEnd_R
   excludeInTopLayer: 0
   upSocket:
     socket_name: 18

@@ -66,9 +66,9 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 3412699288550938261, guid: 628a3813b2dd26c42946307fb775ea84, type: 3}
-  - {fileID: -1895543508161051963, guid: 628a3813b2dd26c42946307fb775ea84, type: 3}
-  - {fileID: 5467006231318260319, guid: 628a3813b2dd26c42946307fb775ea84, type: 3}
+  - {fileID: 2100000, guid: 1369237e843a2d64ead002a3f769cb22, type: 2}
+  - {fileID: 2100000, guid: e01b5713750eb724c8a235649f9ecb65, type: 2}
+  - {fileID: 2100000, guid: f54d5e7c5ffe37847a722b4fa7694827, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -163,10 +163,22 @@ MonoBehaviour:
   - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   belowNeighbours:
   - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - grass_end_ExtCorner
+  - grass_end
+  - beach
+  - beach_cornerExt
+  - beach_grassEnd_L
+  - beach_grassEnd_R
   excludedNeighboursRight: []
   excludedNeighboursDown: []
-  excludedNeighboursLeft: []
+  excludedNeighboursLeft:
+  - grass_end_ExtCorner
+  - grass_end
+  - beach
+  - beach_cornerExt
+  - beach_grassEnd_L
+  - beach_grassEnd_R
   excludeInTopLayer: 0
   upSocket:
     socket_name: 18

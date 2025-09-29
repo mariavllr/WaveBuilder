@@ -104,7 +104,7 @@ Material:
     - _FoamBlend: 0.09
     - _FresnelPower: 1
     - _GradientRefractionScale: 10
-    - _HorizonDistance: 78
+    - _HorizonDistance: 26
     - _IntersectionFoamBlend: 1.09
     - _IntersectionFoamCutoff: 4.11
     - _IntersectionFoamDepth: 0.45
@@ -116,7 +116,7 @@ Material:
     - _LightingSmoothness: 12.34
     - _NormalScale: 1.61
     - _NormalSpeed: 0.16
-    - _NormalStrength: 1.71
+    - _NormalStrength: -1.74
     - _OrthographicCamSize: 0
     - _PERSPECTIVE: 0
     - _PosterizeSteps: 0

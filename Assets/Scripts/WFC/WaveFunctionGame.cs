@@ -11,6 +11,7 @@ using TMPro;
 public class WaveFunctionGame : MonoBehaviour
 {
     [SerializeField] private int iterations = 0;
+    [SerializeField] private bool GENERATE_ALL = false;
 
     [Header("Game")]
     [SerializeField] CardGenerator cardGenerator;
@@ -78,25 +79,33 @@ public class WaveFunctionGame : MonoBehaviour
 
     void Awake()
     {
+        //PREPROCESSING
         ClearNeighbours(ref tileObjects);
         CreateRemainingCells(ref tileObjects);
         DefineNeighbourTiles(ref tileObjects, ref tileObjects);
 
         newTilesContainer.SetActive(false); // Hide the new tiles container in the editor
         gridComponents = new List<Cell>();
-        stopwatch = new Stopwatch();
-        centerCubeCells = 0;
         audioSource = GetComponent<AudioSource>();
 
-        stopwatch.Start();
+        Init();
+    }
+
+
+    private void Init()
+    {
+        centerCubeCells = 0;
+        iterations = 0;
+        //stopwatch = new Stopwatch();
+        //stopwatch.Start();
+
+        //INITIALIZE
         InitializeGrid();
         DefineMapLimits();
         CreateSolidFloor();
         CreateSolidCeiling();
+        if (!GENERATE_ALL) GetCenterCube();
 
-
-        GetCenterCube();
-        
         //AÑADIR TODAS LAS FICHAS AL CARD GENERATOR
         cardGenerator.tilesList = tileObjects.ToList();
 
@@ -110,12 +119,25 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
-        stopwatch.Start();
-        
+        //stopwatch.Start();
+
         if (!tutorial)
         {
             ResumeTimer();
-            UpdateGenerationCube();
+
+            //START WFC
+            if (GENERATE_ALL)
+            {
+                cubeStep = false;
+                UpdateGeneration();
+            }
+
+            else
+            {
+                cubeStep = true;
+                UpdateGenerationCube();
+            }
+
         }
     }
 
@@ -534,6 +556,9 @@ public class WaveFunctionGame : MonoBehaviour
                     cellToCollapse.tileOptions = new Tile[] { limitTile };
                     cellToCollapse.collapsed = true;
 
+                    //Necesario para que los alrededores del limite sean visitables
+                    GetNeighboursCloseToCollapsedCell(cellToCollapse);
+
                     // limpiar hijos previos
                     if (cellToCollapse.transform.childCount != 0)
                     {
@@ -556,6 +581,7 @@ public class WaveFunctionGame : MonoBehaviour
 
                     instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
                     instantiatedTile.gameObject.SetActive(true);
+
                     iterations++;
                 }
             }
@@ -660,8 +686,9 @@ public class WaveFunctionGame : MonoBehaviour
 
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
-           
-        if(cubeStep) UpdateGenerationCube();
+
+        if (cubeStep) UpdateGenerationCube();
+        else if (GENERATE_ALL) UpdateGeneration();
     }
 
     /// <summary>
@@ -808,6 +835,7 @@ public class WaveFunctionGame : MonoBehaviour
                 for (int x = 0; x < dimensionsX; x++)
                 {
                     CheckNeighbours(x, y, z, ref newGenerationCell);
+
                 }
             }
         }
@@ -818,7 +846,6 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (iterations <= centerCubeCells)
         {
-            print("FIN CUBO");
             StartCoroutine(CheckEntropy());
         }
 
@@ -827,7 +854,7 @@ public class WaveFunctionGame : MonoBehaviour
             print("END");
             cubeStep = false;
 
-            stopwatch.Stop();
+           // stopwatch.Stop();
             //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
             
         }
@@ -850,7 +877,7 @@ public class WaveFunctionGame : MonoBehaviour
                 {
                     CheckNeighbours(x, y, z, ref newGenerationCell);
 
-                    //Si la celda tiene solo una opcion, que se colapse
+                    //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
                     var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
 
                     if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
@@ -880,13 +907,28 @@ public class WaveFunctionGame : MonoBehaviour
                         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
                         instantiatedTile.gameObject.SetActive(true);
 
-                        UpdateGeneration();
+                        //UpdateGeneration();
+                        iterations++;
                     }
                 }
             }
         }
 
         gridComponents = newGenerationCell;
+
+        if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
+        {
+            StartCoroutine(CheckEntropy());
+        }
+
+        else
+        {
+            print("END generation");
+
+            // stopwatch.Stop();
+            //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
+
+        }
     }
 
     /// <summary>
@@ -1201,20 +1243,8 @@ public class WaveFunctionGame : MonoBehaviour
         {
             Destroy(gameObject.transform.GetChild(i).gameObject);
         }
-
-        iterations = 0;
-        centerCubeCells = 0;
         gridComponents.Clear();
-        cubeStep = true;
 
-        stopwatch.Reset();
-        stopwatch.Start();
-
-        InitializeGrid();
-        DefineMapLimits();
-        CreateSolidFloor();
-        CreateSolidCeiling();
-        GetCenterCube();
-        UpdateGenerationCube();
+        Init();
     }
 }
