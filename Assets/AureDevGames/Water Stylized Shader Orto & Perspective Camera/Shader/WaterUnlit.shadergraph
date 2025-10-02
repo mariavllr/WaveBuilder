@@ -2101,7 +2101,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -2738,8 +2738,8 @@
     "m_ObjectId": "1b55603d66da4fc49e65dc9ad98b0ac8",
     "m_Title": "BLEND OBJECT COLOR",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": -44.00004577636719,
+        "y": -293.60003662109377
     }
 }
 
@@ -3220,8 +3220,8 @@
     "m_ObjectId": "28d03412e682475ab7ca76b6b496742c",
     "m_Title": "CAVES SET UP",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": -428.0,
+        "y": 1132.000244140625
     }
 }
 
@@ -3805,8 +3805,8 @@
     "m_ObjectId": "396d13a284fe4101928818ac42318f01",
     "m_Title": "REFLECTIONS",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": 288.800048828125,
+        "y": 1117.5999755859375
     }
 }
 
@@ -3954,7 +3954,7 @@
     "m_StageCapability": 2,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0
@@ -3977,6 +3977,9 @@
     "m_AlphaClip": false,
     "m_CastShadows": true,
     "m_ReceiveShadows": true,
+    "m_DisableTint": false,
+    "m_AdditionalMotionVectorMode": 0,
+    "m_AlembicMotionVectors": false,
     "m_SupportsLODCrossFade": false,
     "m_CustomEditorGUI": "",
     "m_SupportVFX": false
@@ -4281,7 +4284,7 @@
     "m_StageCapability": 2,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0
@@ -4572,7 +4575,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -4790,7 +4793,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -5307,8 +5310,8 @@
     "m_ObjectId": "658af11bd853495a95a31486625b0779",
     "m_Title": "PRIMARY FOAM",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": 2184.800537109375,
+        "y": 1635.1998291015625
     }
 }
 
@@ -6176,7 +6179,7 @@
     "hlslDeclarationOverride": 0,
     "m_Hidden": false,
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -6456,7 +6459,7 @@
     "m_StageCapability": 2,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0
@@ -7293,8 +7296,8 @@
     "m_ObjectId": "a688971f8bd04af2a219705e0d9a1f33",
     "m_Title": "FOG",
     "m_Position": {
-        "x": 5121.6005859375,
-        "y": 1278.4000244140625
+        "x": 5603.20166015625,
+        "y": 1632.000244140625
     }
 }
 
@@ -7411,8 +7414,8 @@
     "m_ObjectId": "abb3c36d69fe4bd8a6258eff4839ca9a",
     "m_Title": "DEPTH",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": -1224.80029296875,
+        "y": -327.20001220703127
     }
 }
 
@@ -7577,8 +7580,8 @@
     "m_ObjectId": "b1557fbda61d4a8fb1abe459ac967bc7",
     "m_Title": "INTERSECTION FOAM",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": 2790.400390625,
+        "y": 1604.8001708984375
     }
 }
 
@@ -8104,7 +8107,7 @@
     "m_StageCapability": 2,
     "m_BareResource": false,
     "m_Texture": {
-        "m_SerializedTexture": "{\"texture\":{\"instanceID\":0}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "m_DefaultType": 0
@@ -8344,8 +8347,8 @@
     "m_ObjectId": "c63484b628e54536939ae2838e52d66b",
     "m_Title": "WAVES MOVEMENT",
     "m_Position": {
-        "x": 4778.39990234375,
-        "y": -130.40005493164063
+        "x": 4778.400390625,
+        "y": -130.39999389648438
     }
 }
 
@@ -9036,8 +9039,8 @@
     "m_ObjectId": "d8da0964d9b546d09534c80d84befee7",
     "m_Title": "SPECULAR",
     "m_Position": {
-        "x": 3747.33837890625,
-        "y": 1724.000244140625
+        "x": 3747.20068359375,
+        "y": 1724.0
     }
 }
 
@@ -9172,8 +9175,8 @@
     "m_ObjectId": "dd90a22460ad4b1cade700471366fbc8",
     "m_Title": "SECONDARY FOAM(ADDING LAYERS FROM DOWN TO UP)",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": 1354.400390625,
+        "y": 1654.4000244140625
     }
 }
 
@@ -9962,8 +9965,8 @@
     "m_ObjectId": "f27f0a3128164d98beb30cd773b63098",
     "m_Title": "CALCULATE WORLD OR LOCAL UVS",
     "m_Position": {
-        "x": 10.0,
-        "y": 10.0
+        "x": -1844.0,
+        "y": 1764.7999267578125
     }
 }
 
@@ -10193,8 +10196,8 @@
     "m_ObjectId": "f77ae05689b84c08b5dc11eb4ef5f940",
     "m_Title": "THE MAIN PIPELINE",
     "m_Position": {
-        "x": -1068.800048828125,
-        "y": 477.5999755859375
+        "x": -1068.8001708984375,
+        "y": 477.60009765625
     }
 }
 
