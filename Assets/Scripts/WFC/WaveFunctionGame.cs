@@ -493,6 +493,14 @@ public class WaveFunctionGame : MonoBehaviour
 
                 instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
                 instantiatedTile.gameObject.SetActive(true);
+
+
+                //Ocultar la mesh de solid de los bordes, para que see vea bien el contorno de la isla
+                if (z == 0 || x == 0 || z == dimensionsZ-1 || x == dimensionsX-1)
+                {
+                    gridComponents[index].MakeVisible(false);
+                }
+
                 iterations++;
             }
         }

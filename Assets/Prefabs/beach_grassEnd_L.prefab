@@ -66,9 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 45be1909352617f43a8aac53ef0f6ec3, type: 2}
-  - {fileID: 2100000, guid: 19c8ca7f9fe9093458a65fe6ecaf83ae, type: 2}
-  - {fileID: 2100000, guid: e2c4c13535e5a0148967350b0b1a13e0, type: 2}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -131,12 +129,44 @@ MonoBehaviour:
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
-  upNeighbours: []
-  rightNeighbours: []
-  downNeighbours: []
-  leftNeighbours: []
-  aboveNeighbours: []
-  belowNeighbours: []
+  upNeighbours:
+  - {fileID: 2530941585740922925, guid: e4c626b4e24c9ff4fb746b7eb686f563, type: 3}
+  - {fileID: 1844171690833133885, guid: a071b336862f83c4c96d996124b9539d, type: 3}
+  rightNeighbours:
+  - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
+  - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
+  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
+  - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
+  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
+  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
+  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
+  - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 1998954779518839673, guid: df6e603df0bfe3245ac5d898a00913ab, type: 3}
+  - {fileID: 2710682045578985575, guid: f261e5f2d7cf8f44f81776fb946a234a, type: 3}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
+  aboveNeighbours:
+  - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
+  belowNeighbours:
+  - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   excludedNeighboursUp:
   - beach_grassEnd_R
   excludedNeighboursRight: []

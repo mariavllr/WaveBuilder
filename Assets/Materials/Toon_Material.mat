@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-107774648296620612
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 9
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Toon_Material
+  m_Shader: {fileID: -6465566751694194690, guid: db6c0fa612b94ea459e53cf5cc2626a3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2000
+  stringTagMap: {}
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - MainTex:
+        m_Texture: {fileID: 2800000, guid: bbcf9b601475e854998ee9fe258636b1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Mask:
+        m_Texture: {fileID: 2800000, guid: ffacac78670008b469c514fd88171f21, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Mask_R_Emission:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_1:
+        m_Texture: {fileID: 2800000, guid: ffacac78670008b469c514fd88171f21, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture2D:
+        m_Texture: {fileID: 2800000, guid: f7afe797516c73a4e8d1c934390f09b6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture2DAsset_907b60d04c4941989d5497f47fb6c6fa_Out_0:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - Brightness_Rim: 1.25
+    - Brightness_outline: 11.27
+    - Float_1: 1.38
+    - Power: 1.39
+    - Rim_Power: 0.37
+    - ShadowStengthOverRim: 0.451
+    - ToonRamp: 0
+    - ToonRampOffset: 0.61
+    - ToonRampSmoothness: 0
+    - Toon_Ramp_Offset: 0.362
+    - Toon_Ramp_Smoothness: 0.041
+    - _Brightness: 2
+    - _Edge: 0.099
+    - _Float: 0
+    - _Hue: 1.21
+    - _Opacity: 10
+    - _Outline: 0.002
+    - _OutlineZ: 0
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _RimPower: 4.93
+    - _Saturation: 1
+    - _Scale: 0.01
+    - _SpeedX: 0
+    - _SpeedY: 3
+    - _Value: 1
+    m_Colors:
+    - Toon_Ramp_Tint: {r: 0.57126534, g: 0.7132075, b: 0.5530722, a: 1}
+    - ToonrampTinting: {r: 0.28773588, g: 0.8021357, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 0, g: 0, b: 1, a: 1}
+    - _ColorR: {r: 0, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
