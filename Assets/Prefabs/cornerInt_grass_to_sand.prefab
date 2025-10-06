@@ -66,9 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -4470834876696951345, guid: b7ac38b9055d7d84283d094d0e4e0c94, type: 3}
-  - {fileID: -4012127247763579572, guid: b7ac38b9055d7d84283d094d0e4e0c94, type: 3}
-  - {fileID: -6889774600060860878, guid: ac3cac2587695da4ca42558ebdd76419, type: 3}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -103,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: cornerInt_sand
-  probability: 5
+  probability: 100
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1
@@ -111,8 +109,7 @@ MonoBehaviour:
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
   upNeighbours:
-  - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
-  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
@@ -120,11 +117,24 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   downNeighbours:
+  - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
   - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
+  - {fileID: 9088737001066412842, guid: 1d0809ff38743cd46a0c5f2cc70193fd, type: 3}
+  - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
+  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
+  - {fileID: 5732100880684727847, guid: f191b8a530ab39342a6d1fbe66e934ca, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

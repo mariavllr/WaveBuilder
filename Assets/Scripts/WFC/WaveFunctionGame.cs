@@ -671,7 +671,7 @@ public class WaveFunctionGame : MonoBehaviour
         if (selectedTile is null)
         {
             Debug.LogError("INCOMPATIBILITY!");
-            Regenerate();
+           // Regenerate();
             return;
         }
 
@@ -886,7 +886,7 @@ public class WaveFunctionGame : MonoBehaviour
                     CheckNeighbours(x, y, z, ref newGenerationCell);
 
                     //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
-                    var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                    /*var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
 
                     if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
                     {
@@ -917,7 +917,7 @@ public class WaveFunctionGame : MonoBehaviour
 
                         //UpdateGeneration();
                         iterations++;
-                    }
+                    }*/
                 }
             }
         }

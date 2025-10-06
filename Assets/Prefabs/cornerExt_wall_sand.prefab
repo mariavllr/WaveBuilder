@@ -66,8 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 3134908336970627228, guid: 232aa969d64eeb040bcaf846e3d2dc44, type: 3}
-  - {fileID: 5086727986680746777, guid: 232aa969d64eeb040bcaf846e3d2dc44, type: 3}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -102,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: cornerExt_wall_sand
-  probability: 5
+  probability: 100
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1

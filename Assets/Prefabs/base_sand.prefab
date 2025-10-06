@@ -66,8 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 8094766623012117012, guid: d4b4c882b2444af42827d18c7ebab6d4, type: 3}
-  - {fileID: 737136048053244691, guid: d4b4c882b2444af42827d18c7ebab6d4, type: 3}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -102,19 +101,61 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: sand
-  probability: 10
+  probability: 100
   rotateRight: 0
   rotate180: 0
   rotateLeft: 0
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
-  upNeighbours: []
-  rightNeighbours: []
-  downNeighbours: []
-  leftNeighbours: []
-  aboveNeighbours: []
-  belowNeighbours: []
+  upNeighbours:
+  - {fileID: 1196809893583817041}
+  - {fileID: 9088737001066412842, guid: 1d0809ff38743cd46a0c5f2cc70193fd, type: 3}
+  - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
+  - {fileID: 3296245747524927174, guid: 0bb7a71fc04929244a3aeff8f09f5ea3, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 1196809893583817041}
+  - {fileID: 3296245747524927174, guid: 0bb7a71fc04929244a3aeff8f09f5ea3, type: 3}
+  - {fileID: 6917541155803654142, guid: 4d73e4b1781aded4b82be6caa755adc6, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 1196809893583817041}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 1196809893583817041}
+  - {fileID: 9088737001066412842, guid: 1d0809ff38743cd46a0c5f2cc70193fd, type: 3}
+  - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
+  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
+  - {fileID: 5732100880684727847, guid: f191b8a530ab39342a6d1fbe66e934ca, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
+  belowNeighbours:
+  - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   excludedNeighboursUp: []
   excludedNeighboursRight: []
   excludedNeighboursDown: []
