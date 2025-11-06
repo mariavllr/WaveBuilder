@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4984548093732847965
+--- !u!1 &420028513900348241
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,25 +8,25 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3853468966797440786}
-  - component: {fileID: 8547741745608498355}
-  - component: {fileID: 969499797041342262}
-  - component: {fileID: 5732100880684727847}
-  - component: {fileID: 2766968040407872232}
+  - component: {fileID: 1053821532211550699}
+  - component: {fileID: 4120853637762094670}
+  - component: {fileID: 2221613568191586948}
+  - component: {fileID: 1196809893583817041}
+  - component: {fileID: 728434685219042770}
   m_Layer: 0
-  m_Name: borderSand
+  m_Name: base_sand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3853468966797440786
+--- !u!4 &1053821532211550699
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4984548093732847965}
+  m_GameObject: {fileID: 420028513900348241}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -35,21 +35,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8547741745608498355
+--- !u!33 &4120853637762094670
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4984548093732847965}
-  m_Mesh: {fileID: -1436989654760718354, guid: c5de2fd051a07b64abeb97362bd46282, type: 3}
---- !u!23 &969499797041342262
+  m_GameObject: {fileID: 420028513900348241}
+  m_Mesh: {fileID: 6298058823516296241, guid: d4b4c882b2444af42827d18c7ebab6d4, type: 3}
+--- !u!23 &2221613568191586948
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4984548093732847965}
+  m_GameObject: {fileID: 420028513900348241}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -66,8 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -1255982633427224767, guid: c5de2fd051a07b64abeb97362bd46282, type: 3}
-  - {fileID: 5086727986680746777, guid: c5de2fd051a07b64abeb97362bd46282, type: 3}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -89,23 +88,23 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5732100880684727847
+--- !u!114 &1196809893583817041
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4984548093732847965}
+  m_GameObject: {fileID: 420028513900348241}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileType: borderSand
-  probability: 1
-  rotateRight: 1
-  rotate180: 1
-  rotateLeft: 1
+  tileType: sand
+  probability: 10
+  rotateRight: 0
+  rotate180: 0
+  rotateLeft: 0
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
@@ -121,10 +120,10 @@ MonoBehaviour:
   excludedNeighboursLeft: []
   excludeInTopLayer: 0
   upSocket:
-    socket_name: 16
+    socket_name: 11
     horizontalFace: 1
-    isSymmetric: 0
-    isFlipped: 1
+    isSymmetric: 1
+    isFlipped: 0
     verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0
@@ -137,7 +136,7 @@ MonoBehaviour:
     rotationIndex: 0
     rotationallyInvariant: 0
   leftSocket:
-    socket_name: 3
+    socket_name: 11
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -145,9 +144,9 @@ MonoBehaviour:
     rotationIndex: 0
     rotationallyInvariant: 0
   downSocket:
-    socket_name: 16
+    socket_name: 11
     horizontalFace: 1
-    isSymmetric: 0
+    isSymmetric: 1
     isFlipped: 0
     verticalFace: 0
     rotationIndex: 0
@@ -161,20 +160,20 @@ MonoBehaviour:
     rotationIndex: 0
     rotationallyInvariant: 1
   belowSocket:
-    socket_name: 17
+    socket_name: 10
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
     verticalFace: 1
     rotationIndex: 0
-    rotationallyInvariant: 0
---- !u!65 &2766968040407872232
+    rotationallyInvariant: 1
+--- !u!65 &728434685219042770
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4984548093732847965}
+  m_GameObject: {fileID: 420028513900348241}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -187,5 +186,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.49906933, y: 0.5000001, z: 2.0000362}
-  m_Center: {x: 0.75046533, y: 0.25000006, z: 0.000018179417}
+  m_Size: {x: 2, y: 0.5, z: 2}
+  m_Center: {x: 0, y: 0.27, z: 0}

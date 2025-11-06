@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8269232501068359707
+--- !u!1 &8613270095364418547
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,25 +8,25 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8757785526632395425}
-  - component: {fileID: 5631254476707085572}
-  - component: {fileID: 7620877087710431694}
-  - component: {fileID: 1844171690833133885}
-  - component: {fileID: 7727396537786585702}
+  - component: {fileID: 8839427767801913666}
+  - component: {fileID: 139251138733159569}
+  - component: {fileID: 7451493952540979035}
+  - component: {fileID: 6050265361964801049}
+  - component: {fileID: 1456103970428533626}
   m_Layer: 0
-  m_Name: grass_end_cornerExt
+  m_Name: grass_to_sand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8757785526632395425
+--- !u!4 &8839427767801913666
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8269232501068359707}
+  m_GameObject: {fileID: 8613270095364418547}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -35,21 +35,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5631254476707085572
+--- !u!33 &139251138733159569
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8269232501068359707}
-  m_Mesh: {fileID: 5024878010445989081, guid: c47ec70355fbfad45b4d1b213bc0e093, type: 3}
---- !u!23 &7620877087710431694
+  m_GameObject: {fileID: 8613270095364418547}
+  m_Mesh: {fileID: -2778674004973538344, guid: 976d7d65452d310469320972298e5c10, type: 3}
+--- !u!23 &7451493952540979035
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8269232501068359707}
+  m_GameObject: {fileID: 8613270095364418547}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -66,8 +66,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 45be1909352617f43a8aac53ef0f6ec3, type: 2}
-  - {fileID: 2100000, guid: 19c8ca7f9fe9093458a65fe6ecaf83ae, type: 2}
+  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -89,19 +88,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1844171690833133885
+--- !u!114 &6050265361964801049
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8269232501068359707}
+  m_GameObject: {fileID: 8613270095364418547}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileType: grass_end_ExtCorner
+  tileType: grass_to_sand
   probability: 10
   rotateRight: 1
   rotate180: 1
@@ -110,66 +109,69 @@ MonoBehaviour:
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
   upNeighbours:
-  - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
+  - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
+  - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
+  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
+  - {fileID: 8913561890965976763, guid: 00bbbb8bfb251f144b7534fb8815f50b, type: 3}
+  - {fileID: 1474986422897661062, guid: e6af77cbe7e3c0246b9ad585be09ecf6, type: 3}
+  - {fileID: 1222247260181770688, guid: d2539fadcd0331943b7ab951d0e6a46d, type: 3}
+  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
+  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
+  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
-  - {fileID: 0}
+  - {fileID: 6050265361964801049}
   - {fileID: 0}
   - {fileID: 0}
   downNeighbours:
-  - {fileID: 2530941585740922925, guid: e4c626b4e24c9ff4fb746b7eb686f563, type: 3}
-  - {fileID: 7442139215768019311, guid: b10132c2edab8fd498605350d4856bb3, type: 3}
+  - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
+  - {fileID: 3296245747524927174, guid: 0bb7a71fc04929244a3aeff8f09f5ea3, type: 3}
+  - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
-  - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8304928268084086392, guid: 13acc795abedd87488ed9f6c35438114, type: 3}
+  - {fileID: 6050265361964801049}
   - {fileID: 0}
   aboveNeighbours:
   - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   belowNeighbours:
   - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
-  excludedNeighboursUp:
-  - grass_end_ExtCorner
-  - grass_end
-  - beach
-  - beach_cornerExt
-  - beach_grassEnd_L
-  - beach_grassEnd_R
+  excludedNeighboursUp: []
   excludedNeighboursRight: []
   excludedNeighboursDown: []
-  excludedNeighboursLeft:
-  - grass_end_ExtCorner
-  - grass_end
-  - beach
-  - beach_cornerExt
-  - beach_grassEnd_L
-  - beach_grassEnd_R
+  excludedNeighboursLeft: []
   excludeInTopLayer: 0
   upSocket:
-    socket_name: 18
-    horizontalFace: 1
-    isSymmetric: 1
-    isFlipped: 0
-    verticalFace: 0
-    rotationIndex: 0
-    rotationallyInvariant: 0
-  rightSocket:
-    socket_name: 19
+    socket_name: 12
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 0
     verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0
+  rightSocket:
+    socket_name: 11
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
   leftSocket:
-    socket_name: 18
+    socket_name: 0
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -177,7 +179,7 @@ MonoBehaviour:
     rotationIndex: 0
     rotationallyInvariant: 0
   downSocket:
-    socket_name: 19
+    socket_name: 12
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 1
@@ -200,13 +202,13 @@ MonoBehaviour:
     verticalFace: 1
     rotationIndex: 0
     rotationallyInvariant: 1
---- !u!65 &7727396537786585702
+--- !u!65 &1456103970428533626
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8269232501068359707}
+  m_GameObject: {fileID: 8613270095364418547}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -219,5 +221,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.9994626, y: 0.5, z: 1.9994626}
-  m_Center: {x: 0.00026872754, y: 0.25, z: -0.00026872754}
+  m_Size: {x: 2, y: 0.5, z: 1.9999999}
+  m_Center: {x: 0, y: 0.25, z: 0.0042313933}

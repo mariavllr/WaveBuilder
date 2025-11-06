@@ -3502,7 +3502,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 0
-  GENERATE_ALL: 1
+  GENERATE_ALL: 0
   cardGenerator: {fileID: 1993922141}
   initialCubeSize: 5
   centerCubeCells: 0
