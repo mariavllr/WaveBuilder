@@ -42,13 +42,8 @@ public class Cell : MonoBehaviour
 
     public void MakeVisible(bool visibility)
     {
-        var renderers = GetComponentsInChildren<MeshRenderer>();
-        if (renderers.Length == 0) return;
-        foreach (var r in renderers)
-        {
-            Debug.Log("Afectando a: " + r.gameObject.name);
-            r.enabled = visibility;
-        }
+        meshRenderer = GetComponentInChildren<MeshRenderer>();
+        if (meshRenderer != null) meshRenderer.enabled = visibility;
     }
 
     public void ChangeAlpha(float alpha)

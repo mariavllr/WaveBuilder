@@ -100,13 +100,13 @@ Material:
     - _CaveBlend: 0
     - _CaveDistortion: 0.04
     - _DepthCompareDistance: 0.1
-    - _DepthFadeDistance: 5
+    - _DepthFadeDistance: 0
     - _FoamBlend: 0.09
     - _FresnelPower: 1
     - _GradientRefractionScale: 10
     - _HorizonDistance: 26
     - _IntersectionFoamBlend: 1.09
-    - _IntersectionFoamCutoff: 3.46
+    - _IntersectionFoamCutoff: 4.11
     - _IntersectionFoamDepth: 0.45
     - _IntersectionFoamDirection: 0.65
     - _IntersectionFoamFade: 1.35
@@ -141,9 +141,9 @@ Material:
     - _WaterAlpha: 1
     - _WaterMetallic: 0.559
     - _WaterSmoothness: 0.581
-    - _WaveLength: 1
+    - _WaveLength: 1.82
     - _WaveSpeed: 0.2
-    - _WaveSteepness: 0.1
+    - _WaveSteepness: 0
     - _WaveStepness: 0.35
     m_Colors:
     - _BaseColor: {r: 0, g: 0.1989687, b: 1.110646, a: 1}
@@ -151,7 +151,7 @@ Material:
     - _CaveOffset: {r: 0, g: 0, b: 0, a: 0}
     - _CaveScale: {r: 0.1, g: 0.1, b: 0, a: 0}
     - _CaveSecondaryColor: {r: 0, g: 0, b: 0, a: 0}
-    - _DeepColor: {r: 0.004012088, g: 0.24701397, b: 0.30377355, a: 1}
+    - _DeepColor: {r: 0.10188681, g: 0.10188681, b: 0.10188681, a: 1}
     - _FoamUVsOffset: {r: 1, g: 1, b: 0, a: 0}
     - _FresnelColor: {r: 2.670157, g: 2.670157, b: 2.670157, a: 0}
     - _HorizonColor: {r: 7.3772106, g: 3.6607668, b: 6.6577153, a: 1}

@@ -493,14 +493,6 @@ public class WaveFunctionGame : MonoBehaviour
 
                 instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
                 instantiatedTile.gameObject.SetActive(true);
-
-
-                //Ocultar la mesh de solid de los bordes, para que see vea bien el contorno de la isla
-                if (z == 0 || x == 0 || z == dimensionsZ-1 || x == dimensionsX-1)
-                {
-                    gridComponents[index].MakeVisible(false);
-                }
-
                 iterations++;
             }
         }
@@ -671,7 +663,7 @@ public class WaveFunctionGame : MonoBehaviour
         if (selectedTile is null)
         {
             Debug.LogError("INCOMPATIBILITY!");
-           // Regenerate();
+            Regenerate();
             return;
         }
 
@@ -886,7 +878,7 @@ public class WaveFunctionGame : MonoBehaviour
                     CheckNeighbours(x, y, z, ref newGenerationCell);
 
                     //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
-                    /*var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                    var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
 
                     if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
                     {
@@ -917,7 +909,7 @@ public class WaveFunctionGame : MonoBehaviour
 
                         //UpdateGeneration();
                         iterations++;
-                    }*/
+                    }
                 }
             }
         }
