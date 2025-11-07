@@ -23,6 +23,9 @@ public class WaveFunctionGame : MonoBehaviour
     public Material previewMaterial;
     public float alphaCube = 0.1f;
 
+    public HashSet<(string tileType, Vector3 rotation)> globalValidTiles = new(); //para trackear las tiles validas en el mapa en cada iteracion
+    public List<string> validTilesList = new();
+
     //sounds
     public AudioSource audioSource;
     public AudioClip changeCellSound;
@@ -39,7 +42,7 @@ public class WaveFunctionGame : MonoBehaviour
     [SerializeField] GameObject newTilesContainer;          //When rotation tiles are generated, the new gameobjects need to be stored somewhere
 
     [Header("Grid")]
-    [SerializeField] private List<Cell> gridComponents;   //A list with all the cells inside the grid
+    [SerializeField] public List<Cell> gridComponents;   //A list with all the cells inside the grid
     [SerializeField] private Cell cellObj;                //They can be collapsed or not. Tiles are their children.
 
     [Header("Optimization")]
@@ -915,6 +918,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         gridComponents = newGenerationCell;
+        StartCoroutine(UpdateGlobalValidTilesNextFrame());
 
         if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
         {
@@ -923,11 +927,43 @@ public class WaveFunctionGame : MonoBehaviour
 
         else
         {
-            print("END generation");
+            //print("END generation");
 
             // stopwatch.Stop();
             //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
 
+        }
+    }
+
+
+    //ESTE METODO PERMITE TENER UNA LISTA GLOBAL DE TILES VALIDAS EN TODO EL MAPA PARA PODER SACAR EN CARDGENERATOR SOLO TILES VALIDAS (que pueden colocarse en al menos 1 celda)
+
+    private IEnumerator UpdateGlobalValidTilesNextFrame()
+    {
+        yield return null; // Espera 1 frame por seguridad
+        UpdateGlobalValidTiles();
+    }
+
+    private void UpdateGlobalValidTiles()
+    {
+        globalValidTiles.Clear();
+        validTilesList.Clear();
+
+        foreach (Cell cell in gridComponents)
+        {
+            if (!cell.collapsed && cell.visitable)
+            {
+                foreach (Tile t in cell.tileOptions)
+                {
+                    globalValidTiles.Add((t.tileType, t.rotation));
+                }
+            }
+        }
+        //debug
+        foreach (var validTile in globalValidTiles)
+        {
+
+           validTilesList.Add(validTile.tileType);
         }
     }
 

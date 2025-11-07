@@ -4,9 +4,12 @@ using UnityEngine;
 using DG.Tweening;
 using System;
 using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
+using System.Collections;
 
 public class CardGenerator : MonoBehaviour
 {
+    private WaveFunctionGame wfc;
     [SerializeField] public List<Tile> tilesList;
     public Queue<Tile> tileQueue;
     public int queueSize;
@@ -15,6 +18,7 @@ public class CardGenerator : MonoBehaviour
     private bool isDragging = false;
     public float dragCooldown = 0.3f;
     public float timerCooldown = 0;
+    private int numberOfGeneratedTiles = 0;
 
     private LocalKeyword SelectableKeyword;
 
@@ -23,6 +27,7 @@ public class CardGenerator : MonoBehaviour
     private void Start()
     {
         tileQueue = new Queue<Tile>();
+        wfc = FindAnyObjectByType<WaveFunctionGame>();
         InicializeTileQueue();
     }
 
@@ -55,7 +60,7 @@ public class CardGenerator : MonoBehaviour
     {  
         for (int i = 0; i < queueSize; i++)
         {
-            Tile tile = EnqueueTile();          
+            Tile tile = EnqueueTile(tileQueue);          
         }
 
         Tile first = tileQueue.First();
@@ -69,22 +74,52 @@ public class CardGenerator : MonoBehaviour
 
         foreach (Material mat in materials)
         {
-            SelectableKeyword = new LocalKeyword(mat.shader, "_SELECTABLE");
-            if(!selectable) mat.SetKeyword(SelectableKeyword, false);
-            else mat.SetKeyword(SelectableKeyword, true);
+            //SelectableKeyword = new LocalKeyword(mat.shader, "_SELECTABLE");
+            //if(!selectable) mat.SetKeyword(SelectableKeyword, false);
+            //else mat.SetKeyword(SelectableKeyword, true);
         }
     }
 
     private Tile GetRandomTile()
     {
+        //en la primera tanda que salgan full random
+        if (numberOfGeneratedTiles < queueSize)
+        {
+            List<(Tile tile, int weight)> weightedTiles = tilesList.Select(tile => (tile, tile.probability)).ToList();
+            numberOfGeneratedTiles++;
+            return ChooseTile(weightedTiles);
+        }
+
+        else
+        {
+        //Filtrado por las tiles válidas actualmente en el mapa
+                List<Tile> validForNow = tilesList
+                 .Where(tile => wfc.globalValidTiles.Contains((tile.tileType, tile.rotation)))
+                 .ToList();
+
+            if (validForNow.Count == 0)
+            {
+                    Debug.LogError("[CARD GENERATOR] NO TILES: No hay tiles válidas actualmente. Eligiendo una aleatoria...");
+                    List<(Tile tile, int weight)> weightedTiles = tilesList.Select(tile => (tile, tile.probability)).ToList();
+                    return ChooseTile(weightedTiles);
+            }
+
+            return validForNow[Random.Range(0, validForNow.Count)];
+        }
+
+        
         //De manera random completamente
         //return tilesList[Random.Range(0, tilesList.Count)];
 
         //Con pesos
         // Choose a tile for that cell
-        List<(Tile tile, int weight)> weightedTiles = tilesList.Select(tile => (tile, tile.probability)).ToList();
-        return ChooseTile(weightedTiles);
+      //  List<(Tile tile, int weight)> weightedTiles = validForNow.Select(tile => (tile, tile.probability)).ToList();
+      //  return ChooseTile(weightedTiles);
+
+        
     }
+
+ 
 
     Tile ChooseTile(List<(Tile tile, int weight)> weightedTiles)
     {
@@ -106,14 +141,26 @@ public class CardGenerator : MonoBehaviour
         return null; // This should not happen if the list is not empty
     }
 
-    private Tile EnqueueTile()
+    private Tile EnqueueTile(Queue<Tile> queue, Tile specificTile = null)
     {
-        Tile tileToEnqueue = GetRandomTile();
+        Tile tileToEnqueue;
+        //Caso 1: Tile random
+        if(specificTile == null)
+        {
+            tileToEnqueue = GetRandomTile();
+        }
+
+        //Caso 2: tile especifica
+        else
+        {
+            tileToEnqueue = specificTile;
+        }
+
         tileToEnqueue.gameObject.SetActive(true);
 
         // Si la cola no está vacía, colocar la nueva tile debajo de la última
         Vector3 newTilePosition;
-        if (tileQueue.Count > 0)
+        if (queue.Count > 0)
         {
             Tile lastTile = tileQueue.Last();
             newTilePosition = lastTile.transform.position - new Vector3(0, distance, 0);
@@ -130,7 +177,7 @@ public class CardGenerator : MonoBehaviour
             instantiatedTile.gameObject.transform.Rotate(instantiatedTile.rotation, Space.Self);
         }
 
-        tileQueue.Enqueue(instantiatedTile);
+        queue.Enqueue(instantiatedTile);
 
         //EFECTO REBOTE
         float delayBetweenBounces = 0.1f;
@@ -169,14 +216,95 @@ public class CardGenerator : MonoBehaviour
         timerCooldown = dragCooldown;
     }
 
-   private void OnTileRemoved(GameObject removedTile, Cell cell)
+
+    //-----------LOGICA PARA QUE SIEMPRE SALGAN TILES POSIBLES DE COLOCAR---------
+    public void ValidateFirstTile()
+    {
+        if (tileQueue.Count == 0) return;
+
+        Tile tile = tileQueue.First();
+
+        bool stillValid = wfc.gridComponents
+            .Any(cell => !cell.collapsed && cell.visitable &&
+                         cell.tileOptions.Any(opt =>
+                             opt.tileType == tile.tileType)); //LA ROTACIÓN NO IMPORTA PARA SABER SI ES VÁLIDA O NO, el jugador puede rotarla
+
+        if (!stillValid)
+        {
+            Debug.Log("[CARD GENERATOR] REEMPLAZAR PRIMERA: La primera tile ya no es válida, reemplazando...");
+            ReplaceFirstTile();
+        }
+    }
+
+    public void ReplaceFirstTile()
+    {
+        if (tileQueue.Count == 0) return;
+
+        Tile oldTile = tileQueue.First();
+
+        //Animación de la tile antigua (se encoge antes de ser destruida)
+        oldTile.transform
+            .DOScale(Vector3.zero, 0.5f)
+            .SetEase(Ease.InBack)
+            .OnComplete(() =>
+            {
+                Destroy(oldTile.gameObject);
+
+                //Crear una nueva cola temporal
+                Queue<Tile> newQueue = new Queue<Tile>();
+
+                //Crear nueva tile válida
+                Tile newTile = GetRandomTile();
+                newTile.gameObject.SetActive(true);
+                Debug.Log(newTile.name);
+
+                Tile instantiatedTile = Instantiate(newTile, transform.position, Quaternion.identity, transform);
+                if (instantiatedTile.rotation != Vector3.zero)
+                {
+                    instantiatedTile.gameObject.transform.Rotate(instantiatedTile.rotation, Space.Self);
+                }
+
+                //Añadir que pueda ser arrastrada
+                instantiatedTile.gameObject.AddComponent<DragObject>();
+
+                //Efecto rebote de aparición
+                instantiatedTile.transform.localScale = Vector3.zero;
+                instantiatedTile.transform
+                    .DOScale(1.2f, 0.35f)
+                    .SetEase(Ease.OutBack)
+                    .OnComplete(() =>
+                    {
+                        instantiatedTile.transform.DOScale(1f, 0.15f);
+                    });
+
+                newQueue.Enqueue(instantiatedTile);
+                MakeTileSelectable(true, instantiatedTile);
+
+                //Meter las otras dos
+                tileQueue.Dequeue();
+                newQueue.Enqueue(tileQueue.First());
+
+                tileQueue.Dequeue();
+                newQueue.Enqueue(tileQueue.First());
+
+                //Sustituimos la cola original
+                tileQueue = newQueue;
+            });
+    }
+
+
+    //------------EVENTOS-----------
+
+    private void OnTileRemoved(GameObject removedTile, Cell cell)
     {
         isDragging = false;
         tileQueue.Dequeue();
 
         MoveUpQueue();
-        EnqueueTile();
+        EnqueueTile(tileQueue);
         tileQueue.First().gameObject.AddComponent<DragObject>();
+
+        ValidateFirstTile();
     }
 
     //Cuando rote, queremos que busque su tile rotada en la tile list. Siempre rotará +90 grados.
@@ -237,7 +365,7 @@ public class CardGenerator : MonoBehaviour
         tileQueue.Dequeue();
 
         MoveUpQueue();
-        EnqueueTile();
+        EnqueueTile(tileQueue);
         tileQueue.First().gameObject.AddComponent<DragObject>();
     }
 
