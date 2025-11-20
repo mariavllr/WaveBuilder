@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: cornerInterior
-  probability: 6
+  probability: 1
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1

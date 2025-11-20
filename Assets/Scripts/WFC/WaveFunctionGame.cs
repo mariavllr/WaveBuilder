@@ -7,11 +7,14 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using DG.Tweening;
 using TMPro;
+using System;
+using Random = UnityEngine.Random;
 
 public class WaveFunctionGame : MonoBehaviour
 {
     [SerializeField] private int iterations = 0;
     [SerializeField] private bool GENERATE_ALL = false;
+
 
     [Header("Game")]
     [SerializeField] CardGenerator cardGenerator;
@@ -24,7 +27,6 @@ public class WaveFunctionGame : MonoBehaviour
     public float alphaCube = 0.1f;
 
     public HashSet<(string tileType, Vector3 rotation)> globalValidTiles = new(); //para trackear las tiles validas en el mapa en cada iteracion
-    public List<string> validTilesList = new();
 
     //sounds
     public AudioSource audioSource;
@@ -47,7 +49,8 @@ public class WaveFunctionGame : MonoBehaviour
 
     [Header("Optimization")]
     [SerializeField] private bool useOptimization;
-    [SerializeField] private bool inOrderGeneration;
+    [SerializeField] private bool OneTileCollapseOptimization;
+    [SerializeField] private bool randomGeneration;
 
     [Header("Debug")]
     public int placedTiles = 0;
@@ -58,6 +61,17 @@ public class WaveFunctionGame : MonoBehaviour
     public bool isRunning = true;
 
     public bool tutorial = false; //Si hay tutorial, no se generara el mapa hasta que el tutorial acabe
+
+
+    //para testear el rendimiento
+    public bool STOPWATCH;
+    private bool incompatibility = false;
+    int inc_counter = 0; //incompatibilidades en cada generacion
+    int totalIncompatibilities = 0; //incompatibilidades totales
+    int regenerations_counter = 0; //numero de regeneraciones
+    double stopwatchSum = 0f; //suma de todos los tiempos para hacer la media
+    double maxTime = 0f; //tiempo maximo de generacion
+    double minTime = 0f; //minimo tiempo de generacion
 
 
     //Events
@@ -91,6 +105,7 @@ public class WaveFunctionGame : MonoBehaviour
         gridComponents = new List<Cell>();
         audioSource = GetComponent<AudioSource>();
 
+        stopwatch = new Stopwatch();
         Init();
     }
 
@@ -99,14 +114,15 @@ public class WaveFunctionGame : MonoBehaviour
     {
         centerCubeCells = 0;
         iterations = 0;
-        //stopwatch = new Stopwatch();
-        //stopwatch.Start();
+        
 
         //INITIALIZE
         InitializeGrid();
         DefineMapLimits();
         CreateSolidFloor();
         CreateSolidCeiling();
+        CreateFixedTiles();
+
         if (!GENERATE_ALL) GetCenterCube();
 
         //AÑADIR TODAS LAS FICHAS AL CARD GENERATOR
@@ -122,7 +138,13 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
-        //stopwatch.Start();
+        //Si no hay una incompatibilidad, se cuenta como generación con éxito y se reinicia el reloj
+        if (STOPWATCH && !incompatibility)
+        {
+            stopwatch.Reset();
+            stopwatch.Start();
+        }
+        
 
         if (!tutorial)
         {
@@ -592,15 +614,61 @@ public class WaveFunctionGame : MonoBehaviour
     }
 
     /// <summary>
+    /// Creates tiles that are defined as fixed in the map
+    /// </summary>
+    void CreateFixedTiles()
+    {
+        foreach(Tile tile in tileObjects)
+        {
+            //If tile.fixedTile is > 0, that is the number of that tile that has to appear in the map. Else, that tile is not fixed
+            if (tile.fixedTile > 0)
+            {
+                int fixedTilesToPlace = tile.fixedTile;
+
+                for (int i = 0; i < fixedTilesToPlace; i++)
+                {
+                    // Find a random cell that is not collapsed yet
+                    List<Cell> availableCells = gridComponents.Where(c => !c.collapsed).ToList();
+                    if (availableCells.Count == 0)
+                    {
+                        Debug.LogWarning("No more available cells to place fixed tiles.");
+                        return;
+                    }
+                    Cell cellToCollapse = availableCells[Random.Range(0, availableCells.Count)];
+                    cellToCollapse.collapsed = true;
+
+                    // Make the neighbours of the collapsed cell visitable for optimization purposes
+                    GetNeighboursCloseToCollapsedCell(cellToCollapse);
+                    cellToCollapse.tileOptions = new Tile[] { tile };
+                    // limpiar hijos previos
+                    if (cellToCollapse.transform.childCount != 0)
+                    {
+                        foreach (Transform child in cellToCollapse.transform)
+                        {
+                            Destroy(child.gameObject);
+                        }
+                    }
+                    Tile instantiatedTile = Instantiate(tile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
+                    if (instantiatedTile.rotation != Vector3.zero)
+                    {
+                        instantiatedTile.gameObject.transform.Rotate(tile.rotation, Space.Self);
+                    }
+                    instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
+                    instantiatedTile.gameObject.SetActive(true);
+                    iterations++;
+                }
+            }
+        }
+    }
+    
+    
+    
+    /// <summary>
     /// Reorders the grid based on the entropy of the cells, collapsing the one with less entropy
     /// </summary>
     IEnumerator CheckEntropy()
     {
         List<Cell> tempGrid = new List<Cell>(gridComponents);
-
-       /* print("colapsadas: " + tempGrid.Count(cell => cell.collapsed) + " de " + tempGrid.Count);
-        print("no estan en el cubo: " + tempGrid.Count(cell => !cell.centerCubeCell) + " de " + tempGrid.Count);
-        print("-----");*/
 
         tempGrid.RemoveAll(c => c.collapsed);
         if(cubeStep) tempGrid.RemoveAll(c => !c.centerCubeCell);
@@ -615,8 +683,8 @@ public class WaveFunctionGame : MonoBehaviour
         // The result of this calculation determines the order of the elements in the sorted list.
         // If the result is negative, it means a should come before b; if positive, it means a should come after b;
         // and if zero, their order remains unchanged.
-        int stopIndex = default;
-        if (!inOrderGeneration)
+        int stopIndex = tempGrid.Count;
+        if (!randomGeneration)
         {
             tempGrid.Sort((a, b) => { return a.tileOptions.Length - b.tileOptions.Length; });
 
@@ -648,12 +716,7 @@ public class WaveFunctionGame : MonoBehaviour
     {
         Cell cellToCollapse;
 
-            // If non-ordered generation, select a random cell, if not, select the first one
-            if (!inOrderGeneration) cellToCollapse = tempGrid[Random.Range(0, stopIndex)];
-            else cellToCollapse = tempGrid[0];
-
-  
-
+        cellToCollapse = tempGrid[Random.Range(0, stopIndex)];
         cellToCollapse.collapsed = true;
 
         // Make the neighbours of the collapsed cell visitable for optimization purposes
@@ -666,6 +729,14 @@ public class WaveFunctionGame : MonoBehaviour
         if (selectedTile is null)
         {
             Debug.LogError("INCOMPATIBILITY!");
+            incompatibility = true;
+
+            //Si hay una incompatibilidad, se regenera SIN parar el tiempo
+            if (STOPWATCH)
+            {
+                inc_counter++;
+            }  
+
             Regenerate();
             return;
         }
@@ -883,41 +954,17 @@ public class WaveFunctionGame : MonoBehaviour
                     //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
                     var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
 
-                    if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
+                    if (OneTileCollapseOptimization && !newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
                     {
-                        Cell cellToCollapse = newGenerationCell[index];
-                        cellToCollapse.collapsed = true;
-
-                        // Make the neighbours of the collapsed cell visitable for optimization purposes
-                        GetNeighboursCloseToCollapsedCell(cellToCollapse);
-
-                        Tile foundTile = cellToCollapse.tileOptions[0];
-
-                        if (cellToCollapse.transform.childCount != 0)
-                        {
-                            foreach (Transform child in cellToCollapse.transform)
-                            {
-                                Destroy(child.gameObject);
-                            }
-                        }
-
-                        Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
-                        if (instantiatedTile.rotation != Vector3.zero)
-                        {
-                            instantiatedTile.gameObject.transform.Rotate(foundTile.rotation, Space.Self);
-                        }
-
-                        instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
-                        instantiatedTile.gameObject.SetActive(true);
-
-                        //UpdateGeneration();
-                        iterations++;
+                        CollapseCellWithOneTileOption(newGenerationCell, index);
                     }
                 }
             }
         }
 
         gridComponents = newGenerationCell;
+        if (GENERATE_ALL) iterations++;
+
         StartCoroutine(UpdateGlobalValidTilesNextFrame());
 
         if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
@@ -925,14 +972,82 @@ public class WaveFunctionGame : MonoBehaviour
             StartCoroutine(CheckEntropy());
         }
 
-        else
+        else if (STOPWATCH && GENERATE_ALL)
         {
-            //print("END generation");
+            //GENERACION CON EXITO
+            stopwatch.Stop();
+            incompatibility = false; //esto marca que en la proxima generacion se debe reiniciar el reloj
 
-            // stopwatch.Stop();
-            //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
+            print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms. Number of incompatibilities: {inc_counter}");
+            stopwatchSum += stopwatch.Elapsed.TotalSeconds;
 
+            if(maxTime < stopwatch.Elapsed.TotalSeconds)
+            {
+                maxTime = stopwatch.Elapsed.TotalSeconds;
+            }
+            if (minTime > stopwatch.Elapsed.TotalSeconds || minTime == 0)
+            {
+                minTime = stopwatch.Elapsed.TotalSeconds;
+            }
+
+            regenerations_counter++;
+            totalIncompatibilities += inc_counter;
+            inc_counter = 0;
+            Debug.Log("GENERATION NUMBER " + regenerations_counter + " completed!");
+
+
+            //FIN
+            if (regenerations_counter == 50)
+            {
+                //Cuantas veces falla de media antes de tener exito? Ejemplo, de media necesito 2 intentos por generacion para tener exito
+                float averageIncompatibilitiesPerGeneration = (float)totalIncompatibilities / (float)regenerations_counter;
+
+                //Cual es la probabilidad de que el algoritmo falle cada vez que se intenta? Ejemplo, de media, las probabilidades de que falle al intentarlo es del 40%
+                int totalAttempts = totalIncompatibilities + regenerations_counter;
+                float incompatibilitiesRate = (float)totalIncompatibilities / totalAttempts; 
+
+                Debug.Log($"-------------------END {regenerations_counter} REGENERATIONS.---------------------");
+                Debug.Log($"INCOMPATIBILITIES RATE: {incompatibilitiesRate * 100} % fail rate");
+                Debug.Log($"AVERAGE INCOMPATIBILITIES PER GENERATION: {averageIncompatibilitiesPerGeneration} fails or retries before success");
+
+                Debug.Log($"AVERAGE TIME: {(stopwatchSum / regenerations_counter)} ms. Max. time: {maxTime}. Min. time: {minTime}.");
+
+                stopwatchSum = 0;
+                regenerations_counter = 0;
+                totalIncompatibilities = 0;
+            }
+
+            else Regenerate();
         }
+    }
+
+    void CollapseCellWithOneTileOption(List<Cell> newGenerationCell, int index)
+    {
+        Cell cellToCollapse = newGenerationCell[index];
+        cellToCollapse.collapsed = true;
+
+        // Make the neighbours of the collapsed cell visitable for optimization purposes
+        GetNeighboursCloseToCollapsedCell(cellToCollapse);
+
+        Tile foundTile = cellToCollapse.tileOptions[0];
+
+        if (cellToCollapse.transform.childCount != 0)
+        {
+            foreach (Transform child in cellToCollapse.transform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+
+        Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
+        if (instantiatedTile.rotation != Vector3.zero)
+        {
+            instantiatedTile.gameObject.transform.Rotate(foundTile.rotation, Space.Self);
+        }
+
+        instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
+        instantiatedTile.gameObject.SetActive(true);
+        iterations++;
     }
 
 
@@ -947,7 +1062,6 @@ public class WaveFunctionGame : MonoBehaviour
     private void UpdateGlobalValidTiles()
     {
         globalValidTiles.Clear();
-        validTilesList.Clear();
 
         foreach (Cell cell in gridComponents)
         {
@@ -958,12 +1072,6 @@ public class WaveFunctionGame : MonoBehaviour
                     globalValidTiles.Add((t.tileType, t.rotation));
                 }
             }
-        }
-        //debug
-        foreach (var validTile in globalValidTiles)
-        {
-
-           validTilesList.Add(validTile.tileType);
         }
     }
 

@@ -46,8 +46,11 @@ public class Tile : MonoBehaviour
         public bool rotationallyInvariant;
     }
 
+    [Header("Tile properties")]
     public string tileType;
     public int probability;
+    public int fixedTile; //If 0, not fixed. If >1, fixed tile with that number of tiles.
+    public (int, int) fixedTileWithRange; //The tile will appear between these two numbers of times.
 
     [Header("Create rotated tiles")]
     public bool rotateRight;
@@ -70,8 +73,6 @@ public class Tile : MonoBehaviour
     public List<string> excludedNeighboursRight = new();
     public List<string> excludedNeighboursDown = new();
     public List<string> excludedNeighboursLeft = new();
-
-    public bool excludeInTopLayer;
 
     [Tooltip("Para definir la direccion la derecha siempre ser� el eje X (rojo) y arriba ser� el eje Z (azul)")]
     [Header("Sockets")]
