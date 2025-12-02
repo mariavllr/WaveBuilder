@@ -10,9 +10,6 @@ public class DragObject : MonoBehaviour
     private float objectZ;
     private Tile tile;
 
-    public static event Action<Tile> OnTileDragged;
-    public static event Action<GameObject, Cell> OnTileReleased;
-
 
     //Para mostrar las celdas validas y mostrar una preview del objeto colocado
     private List<Cell> validCells = new List<Cell>(); // para acceder a las celdas válidas, se actualiza desde WaveFunctionGame
@@ -26,15 +23,15 @@ public class DragObject : MonoBehaviour
     Material previewMaterial;
     private void Awake()
     {
-        DeleteTile.OnDeleteTile += OnTileDeleted;
-        CardGenerator.OnTileRotated += OnTileRotated;
+        GameEvents.OnDeleteTile += OnTileDeleted;
+        GameEvents.OnTileRotated += OnTileRotated;
         wfc = FindAnyObjectByType<WaveFunctionGame>();
         cardGenerator = FindAnyObjectByType<CardGenerator>();
     }
     private void OnDestroy()
     {
-        DeleteTile.OnDeleteTile -= OnTileDeleted;
-        CardGenerator.OnTileRotated -= OnTileRotated;
+        GameEvents.OnDeleteTile -= OnTileDeleted;
+        GameEvents.OnTileRotated -= OnTileRotated;
     }
     public void SetValidCells(List<Cell> cells)
     {
@@ -64,7 +61,7 @@ public class DragObject : MonoBehaviour
             if (Physics.Raycast(ray, out hit) && hit.transform == transform)
             {
                 isDragging = true;
-                OnTileDragged?.Invoke(tile);
+                GameEvents.TileDragged(tile);
                 objectZ = mainCamera.WorldToScreenPoint(transform.position).z;
                 offset = transform.position - GetWorldMousePosition();
             }
@@ -105,7 +102,8 @@ public class DragObject : MonoBehaviour
             if (Input.GetMouseButtonUp(0)) // Suelta el click
             {
                 isDragging = false;
-                OnTileReleased?.Invoke(this.gameObject, closest); // Disparamos el evento
+                //OnTileReleased?.Invoke(this.gameObject, closest); // Disparamos el evento
+                GameEvents.TileReleased(tile, closest);
 
                 if (currentPreviewInstance != null)
                 {

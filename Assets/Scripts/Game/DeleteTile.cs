@@ -5,7 +5,6 @@ using UnityEngine.EventSystems; // Necesario para eventos de UI
 
 public class DeleteTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    public static event Action OnDeleteTile;
     private WaveFunctionGame wfc;
 
     RectTransform rectTransform;
@@ -47,7 +46,7 @@ public class DeleteTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
             //Accion
             Debug.Log("Borrar tile");
-            OnDeleteTile?.Invoke();
+            GameEvents.DeleteTile();
         }
 
     }

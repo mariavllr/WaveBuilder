@@ -9,6 +9,7 @@ public class Cell : MonoBehaviour
     public bool haSidoVisitado; //debug
     public bool visitable = false; //optimization
     public int index; //debug
+    public Vector3Int coords; 
     public bool showDebugVisitableCells;
     public bool centerCubeCell;
 
@@ -16,12 +17,13 @@ public class Cell : MonoBehaviour
 
 
 
-    public void CreateCell(bool collapseState, Tile[] tiles, int cellIndex)
+    public void CreateCell(bool collapseState, Tile[] tiles, int cellIndex, Vector3Int cellCoords)
     {
         collapsed = collapseState;
         tileOptions = tiles;
         haSidoVisitado = false;
         index = cellIndex;
+        coords = cellCoords;
         centerCubeCell = false;
 
         meshRenderer = GetComponentInChildren<MeshRenderer>();

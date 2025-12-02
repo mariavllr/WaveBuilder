@@ -22,7 +22,6 @@ public class CardGenerator : MonoBehaviour
 
     private LocalKeyword SelectableKeyword;
 
-    public static event Action<Vector3, Tile> OnTileRotated;
 
     private void Start()
     {
@@ -33,16 +32,16 @@ public class CardGenerator : MonoBehaviour
 
     private void OnEnable()
     {
-        DragObject.OnTileDragged += OnTileDragged;
-        DragObject.OnTileReleased += OnTileRemoved;
-        DeleteTile.OnDeleteTile += OnDeleteTile;
+        GameEvents.OnTileDragged += OnTileDragged;
+        GameEvents.OnTileReleased += OnTileRemoved;
+        GameEvents.OnDeleteTile += OnDeleteTile;
     }
 
     private void OnDestroy()
     {
-        DragObject.OnTileReleased -= OnTileRemoved; 
-        DragObject.OnTileDragged -= OnTileDragged;
-        DeleteTile.OnDeleteTile -= OnDeleteTile; 
+        GameEvents.OnTileReleased -= OnTileRemoved; 
+        GameEvents.OnTileDragged -= OnTileDragged;
+        GameEvents.OnDeleteTile -= OnDeleteTile; 
     }
 
 
@@ -295,7 +294,7 @@ public class CardGenerator : MonoBehaviour
 
     //------------EVENTOS-----------
 
-    private void OnTileRemoved(GameObject removedTile, Cell cell)
+    private void OnTileRemoved(Tile removedTile, Cell cell)
     {
         isDragging = false;
         tileQueue.Dequeue();
@@ -354,9 +353,7 @@ public class CardGenerator : MonoBehaviour
             Debug.LogError($"ROTATING TILE: Tile with name {tileName} and rotation {newRotation} not found.");
         }
 
-
-
-        OnTileRotated?.Invoke(actualTile.rotation, actualTile);
+        GameEvents.TileRotated(actualTile.rotation, actualTile);
     }
 
     private void OnDeleteTile()

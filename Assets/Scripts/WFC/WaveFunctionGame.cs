@@ -81,17 +81,17 @@ public class WaveFunctionGame : MonoBehaviour
 
     private void OnEnable()
     {
-        DragObject.OnTileDragged += OnTileDrag;
-        DragObject.OnTileReleased += OnTileRemoved;
-        CardGenerator.OnTileRotated += OnTileRotation;
-        DeleteTile.OnDeleteTile += OnTileDeleted;
+        GameEvents.OnTileDragged += OnTileDrag;
+        GameEvents.OnTileReleased += OnTileRemoved;
+        GameEvents.OnTileRotated += OnTileRotation;
+        GameEvents.OnDeleteTile += OnTileDeleted;
     }
 
     private void OnDestroy()
     {
-        DragObject.OnTileDragged -= OnTileDrag;
-        DragObject.OnTileReleased -= OnTileRemoved;
-        CardGenerator.OnTileRotated -= OnTileRotation;
+        GameEvents.OnTileDragged -= OnTileDrag;
+        GameEvents.OnTileReleased -= OnTileRemoved;
+        GameEvents.OnTileRotated -= OnTileRotation;
     }
 
     void Awake()
@@ -440,7 +440,7 @@ public class WaveFunctionGame : MonoBehaviour
                 for (int x = 0; x < dimensionsX; x++)
                 {
                     Cell newCell = Instantiate(cellObj, new Vector3(x*cellSize, y * cellSize, z*cellSize), Quaternion.identity, gameObject.transform);
-                    newCell.CreateCell(false, tileObjects, x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
+                    newCell.CreateCell(false, tileObjects, x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), new Vector3Int(x, y, z));
                     gridComponents.Add(newCell);
                 }
             }
@@ -1255,8 +1255,9 @@ public class WaveFunctionGame : MonoBehaviour
 
 
     //---------------COLOCAR TILE EN CELDA---------------
-    private void OnTileRemoved(GameObject tileRemoved, Cell closest)
+    private void OnTileRemoved(Tile tile, Cell closest)
     {
+        GameObject tileRemoved = tile.gameObject;
         actualTileDragged = null;
         Cell cellToCollapse = closest;
         if (cellToCollapse == null)

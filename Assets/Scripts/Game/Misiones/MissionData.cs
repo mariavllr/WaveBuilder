@@ -4,6 +4,7 @@ using UnityEngine;
 public class MissionData : ScriptableObject
 {
     public int missionID;
-    public string missionName;
+    public string missionName; //Nombre interno de la mision
+    public string missionDescription; //Nombre visible de la mision
     public int givenPoints;
 }
