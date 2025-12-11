@@ -3861,7 +3861,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 0
-  GENERATE_ALL: 0
+  GENERATE_ALL: 1
   cardGenerator: {fileID: 1993922141}
   initialCubeSize: 3
   centerCubeCells: 0
@@ -3902,11 +3902,26 @@ MonoBehaviour:
   - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
   - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
   - {fileID: 1222247260181770688, guid: d2539fadcd0331943b7ab951d0e6a46d, type: 3}
+  - {fileID: 8304928268084086392, guid: 13acc795abedd87488ed9f6c35438114, type: 3}
+  - {fileID: 9088737001066412842, guid: 1d0809ff38743cd46a0c5f2cc70193fd, type: 3}
+  - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
+  - {fileID: 3296245747524927174, guid: 0bb7a71fc04929244a3aeff8f09f5ea3, type: 3}
+  - {fileID: 5711855720254036686, guid: 6c643727c8918384a89daa84b85684ed, type: 3}
+  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
+  - {fileID: 6917541155803654142, guid: 4d73e4b1781aded4b82be6caa755adc6, type: 3}
+  - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
+  - {fileID: 5556657275122696391, guid: 4993281c4e3dd9c4f946efb4517c9d88, type: 3}
+  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
   cellSize: 2
   newTilesContainer: {fileID: 2111692170}
   gridComponents: []
   cellObj: {fileID: -4312026199669856736, guid: 9469c2b24035b984b8ee9081628e4604, type: 3}
-  useOptimization: 0
+  probabilityConstraint: 1
+  excludedNeighborConstraint: 1
+  floorCeilingConstraint: 1
+  fixedTilesConstraint: 1
+  borderConstraint: 1
+  useOptimization: 1
   OneTileCollapseOptimization: 1
   randomGeneration: 0
   placedTiles: 0
@@ -3914,7 +3929,8 @@ MonoBehaviour:
   timerText: {fileID: 563761360}
   isRunning: 0
   tutorial: 0
-  STOPWATCH: 0
+  stopOnIncompatibility: 0
+  STOPWATCH: 1
 --- !u!82 &1154171696
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6361,7 +6377,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1993922141
 MonoBehaviour:
   m_ObjectHideFlags: 0

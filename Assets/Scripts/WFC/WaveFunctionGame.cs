@@ -10,6 +10,14 @@ using TMPro;
 using System;
 using Random = UnityEngine.Random;
 
+[System.Serializable]
+public class CollapseRecord
+{
+    public int cellIndex;
+    public Tile[] previousOptions;
+    public Tile chosenTile;
+}
+
 public class WaveFunctionGame : MonoBehaviour
 {
     [SerializeField] private int iterations = 0;
@@ -19,7 +27,7 @@ public class WaveFunctionGame : MonoBehaviour
     [Header("Game")]
     [SerializeField] CardGenerator cardGenerator;
     [SerializeField] private int initialCubeSize;
-    public int centerCubeCells; 
+    public int centerCubeCells;
     List<Cell> validCells = new List<Cell>();
     bool cubeStep = true;
     public GameObject actualTileDragged;
@@ -47,10 +55,22 @@ public class WaveFunctionGame : MonoBehaviour
     [SerializeField] public List<Cell> gridComponents;   //A list with all the cells inside the grid
     [SerializeField] private Cell cellObj;                //They can be collapsed or not. Tiles are their children.
 
+    [Header("Global Constraints")]
+    public bool probabilityConstraint = true;
+    public bool excludedNeighborConstraint = true;
+    public bool floorCeilingConstraint = true;
+    public bool fixedTilesConstraint = true;
+    public bool borderConstraint = true;
+
     [Header("Optimization")]
     [SerializeField] private bool useOptimization;
     [SerializeField] private bool OneTileCollapseOptimization;
     [SerializeField] private bool randomGeneration;
+
+    //Backtracking
+   /* Stack<CollapseRecord> collapseHistory = new Stack<CollapseRecord>();
+    public int maxBacktracks = 1000;
+    private int backtracks = 0;*/
 
     [Header("Debug")]
     public int placedTiles = 0;
@@ -61,7 +81,7 @@ public class WaveFunctionGame : MonoBehaviour
     public bool isRunning = true;
 
     public bool tutorial = false; //Si hay tutorial, no se generara el mapa hasta que el tutorial acabe
-
+    public bool stopOnIncompatibility = false;
 
     //para testear el rendimiento
     public bool STOPWATCH;
@@ -78,6 +98,7 @@ public class WaveFunctionGame : MonoBehaviour
     public delegate void OnRegenerate();
     public static event OnRegenerate onRegenerate;
     Stopwatch stopwatch;
+
 
     private void OnEnable()
     {
@@ -114,14 +135,19 @@ public class WaveFunctionGame : MonoBehaviour
     {
         centerCubeCells = 0;
         iterations = 0;
-        
+
 
         //INITIALIZE
         InitializeGrid();
-        DefineMapLimits();
-        CreateSolidFloor();
-        CreateSolidCeiling();
-        CreateFixedTiles();
+
+        if (borderConstraint) DefineMapLimits();
+        if (floorCeilingConstraint)
+        {
+            CreateSolidFloor();
+            CreateSolidCeiling();
+        }
+
+        if (fixedTilesConstraint) CreateFixedTiles();
 
         if (!GENERATE_ALL) GetCenterCube();
 
@@ -144,7 +170,7 @@ public class WaveFunctionGame : MonoBehaviour
             stopwatch.Reset();
             stopwatch.Start();
         }
-        
+
 
         if (!tutorial)
         {
@@ -178,7 +204,7 @@ public class WaveFunctionGame : MonoBehaviour
             int seconds = Mathf.FloorToInt(elapsedTime % 60);
 
             timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
-        }  
+        }
     }
 
     public void PauseTimer() => isRunning = false;
@@ -364,45 +390,45 @@ public class WaveFunctionGame : MonoBehaviour
                 // HORIZONTAL FACES: Same socket and be symmetric OR one flip and the other not
                 // It also checks f the excluded list of each face does not include the other tile, and vice versa
 
-                // Up neighbours
+                // Up neighbours 
                 if (otherTile.downSocket.socket_name == tile.upSocket.socket_name
-                    && !tile.excludedNeighboursUp.Contains(otherTile.tileType)
-                    && !otherTile.excludedNeighboursDown.Contains(tile.tileType))
+                && (!excludedNeighborConstraint || (!tile.excludedNeighboursUp.Contains(otherTile.tileType)
+                && !otherTile.excludedNeighboursDown.Contains(tile.tileType))))
                 {
                     if (tile.upSocket.isSymmetric || otherTile.downSocket.isSymmetric
                     || (otherTile.downSocket.isFlipped && !tile.upSocket.isFlipped)
                     || (!otherTile.downSocket.isFlipped && tile.upSocket.isFlipped))
-                    tile.upNeighbours.Add(otherTile);
+                        tile.upNeighbours.Add(otherTile);
                 }
-                // Down neighbours
+                // Down neighbours 
                 if (otherTile.upSocket.socket_name == tile.downSocket.socket_name
-                    && !tile.excludedNeighboursDown.Contains(otherTile.tileType)
-                    && !otherTile.excludedNeighboursUp.Contains(tile.tileType))
+                && (!excludedNeighborConstraint || (!tile.excludedNeighboursDown.Contains(otherTile.tileType)
+                && !otherTile.excludedNeighboursUp.Contains(tile.tileType))))
                 {
                     if (otherTile.upSocket.isSymmetric || tile.downSocket.isSymmetric
                     || (otherTile.upSocket.isFlipped && !tile.downSocket.isFlipped)
                     || (!otherTile.upSocket.isFlipped && tile.downSocket.isFlipped))
-                    tile.downNeighbours.Add(otherTile);
+                        tile.downNeighbours.Add(otherTile);
                 }
-                // Right neighbours
+                // Right neighbours 
                 if (otherTile.leftSocket.socket_name == tile.rightSocket.socket_name
-                    && !tile.excludedNeighboursRight.Contains(otherTile.tileType)
-                    && !otherTile.excludedNeighboursLeft.Contains(tile.tileType))
+                && (!excludedNeighborConstraint || (!tile.excludedNeighboursRight.Contains(otherTile.tileType)
+                && !otherTile.excludedNeighboursLeft.Contains(tile.tileType))))
                 {
                     if (otherTile.leftSocket.isSymmetric || tile.rightSocket.isSymmetric
                     || (otherTile.leftSocket.isFlipped && !tile.rightSocket.isFlipped)
                     || (!otherTile.leftSocket.isFlipped && tile.rightSocket.isFlipped))
-                    tile.rightNeighbours.Add(otherTile);
+                        tile.rightNeighbours.Add(otherTile);
                 }
-                // Left neighbours
+                // Left neighbours 
                 if (otherTile.rightSocket.socket_name == tile.leftSocket.socket_name
-                    && !tile.excludedNeighboursLeft.Contains(otherTile.tileType)
-                    && !otherTile.excludedNeighboursRight.Contains(tile.tileType))
+                && (!excludedNeighborConstraint || (!tile.excludedNeighboursLeft.Contains(otherTile.tileType)
+                && !otherTile.excludedNeighboursRight.Contains(tile.tileType))))
                 {
                     if (otherTile.rightSocket.isSymmetric || tile.leftSocket.isSymmetric
                         || (otherTile.rightSocket.isFlipped && !tile.leftSocket.isFlipped)
                         || (!otherTile.rightSocket.isFlipped && tile.leftSocket.isFlipped))
-                    tile.leftNeighbours.Add(otherTile);
+                        tile.leftNeighbours.Add(otherTile);
                 }
 
                 // VERTICAL FACES: both faces must have invariable rotation or the same rotation index
@@ -410,10 +436,10 @@ public class WaveFunctionGame : MonoBehaviour
                 // Below neighbours
                 if (otherTile.belowSocket.socket_name == tile.aboveSocket.socket_name)
                 {
-                    if((otherTile.belowSocket.rotationallyInvariant
+                    if ((otherTile.belowSocket.rotationallyInvariant
                         && tile.aboveSocket.rotationallyInvariant)
                         || (otherTile.belowSocket.rotationIndex == tile.aboveSocket.rotationIndex))
-                    tile.aboveNeighbours.Add(otherTile);
+                        tile.aboveNeighbours.Add(otherTile);
                 }
 
                 // Above neighbours
@@ -422,7 +448,7 @@ public class WaveFunctionGame : MonoBehaviour
                     if ((otherTile.aboveSocket.rotationallyInvariant
                         && tile.belowSocket.rotationallyInvariant)
                         || (otherTile.aboveSocket.rotationIndex == tile.belowSocket.rotationIndex))
-                    tile.belowNeighbours.Add(otherTile);
+                        tile.belowNeighbours.Add(otherTile);
                 }
             }
         }
@@ -433,18 +459,58 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     void InitializeGrid()
     {
+        //First, create the grid
         for (int y = 0; y < dimensionsY; y++)
         {
             for (int z = 0; z < dimensionsZ; z++)
             {
                 for (int x = 0; x < dimensionsX; x++)
                 {
-                    Cell newCell = Instantiate(cellObj, new Vector3(x*cellSize, y * cellSize, z*cellSize), Quaternion.identity, gameObject.transform);
+                    Cell newCell = Instantiate(cellObj, new Vector3(x * cellSize, y * cellSize, z * cellSize), Quaternion.identity, gameObject.transform);
                     newCell.CreateCell(false, tileObjects, x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), new Vector3Int(x, y, z));
                     gridComponents.Add(newCell);
                 }
             }
         }
+
+        //Then, save the neighbors for each cell
+       /* if (OneTileCollapseOptimization)
+        {
+            // Crear un diccionario para acceso rápido
+            Dictionary<Vector3Int, Cell> lookup = new Dictionary<Vector3Int, Cell>();
+            foreach (Cell c in gridComponents)
+                lookup[c.coords] = c;
+
+            foreach (Cell cell in gridComponents)
+            {
+                cell.neighbors.Clear();
+
+                // up (z+1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 0, 1), out Cell up))
+                    cell.neighbors[Direction.Up] = up;
+
+                // down  (z-1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 0, -1), out Cell down))
+                    cell.neighbors[Direction.Down] = down;
+
+                // right (x+1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(1, 0, 0), out Cell right))
+                    cell.neighbors[Direction.Right] = right;
+
+                // left (x-1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(-1, 0, 0), out Cell left))
+                    cell.neighbors[Direction.Left] = left;
+
+                // above (y+1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 1, 0), out Cell above))
+                    cell.neighbors[Direction.Above] = above;
+
+                // below (y-1)
+                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, -1, 0), out Cell below))
+                    cell.neighbors[Direction.Below] = below;
+            }
+        }*/
+
     }
 
 
@@ -528,7 +594,7 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     void CreateSolidCeiling()
     {
-        int y = dimensionsY-1;
+        int y = dimensionsY - 1;
         for (int z = 0; z < dimensionsZ; z++)
         {
             for (int x = 0; x < dimensionsX; x++)
@@ -618,7 +684,7 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     void CreateFixedTiles()
     {
-        foreach(Tile tile in tileObjects)
+        foreach (Tile tile in tileObjects)
         {
             //If tile.fixedTile is > 0, that is the number of that tile that has to appear in the map. Else, that tile is not fixed
             if (tile.fixedTile > 0)
@@ -660,9 +726,9 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
     }
-    
-    
-    
+
+
+
     /// <summary>
     /// Reorders the grid based on the entropy of the cells, collapsing the one with less entropy
     /// </summary>
@@ -671,7 +737,7 @@ public class WaveFunctionGame : MonoBehaviour
         List<Cell> tempGrid = new List<Cell>(gridComponents);
 
         tempGrid.RemoveAll(c => c.collapsed);
-        if(cubeStep) tempGrid.RemoveAll(c => !c.centerCubeCell);
+        if (cubeStep) tempGrid.RemoveAll(c => !c.centerCubeCell);
 
 
         if (tempGrid.Count == 0)
@@ -715,16 +781,25 @@ public class WaveFunctionGame : MonoBehaviour
     void CollapseCell(ref List<Cell> tempGrid, int stopIndex)
     {
         Cell cellToCollapse;
-
         cellToCollapse = tempGrid[Random.Range(0, stopIndex)];
-        cellToCollapse.collapsed = true;
 
+      
         // Make the neighbours of the collapsed cell visitable for optimization purposes
         GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
         // Choose a tile for that cell
         List<(Tile tile, int weight)> weightedTiles = cellToCollapse.tileOptions.Select(tile => (tile, tile.probability)).ToList();
-        Tile selectedTile = ChooseTile(weightedTiles);
+
+        Tile selectedTile;
+        if (probabilityConstraint)
+        {
+            selectedTile = ChooseTile(weightedTiles);
+        }
+
+        else
+        {
+            selectedTile = ChooseRandomTile(cellToCollapse.tileOptions.ToList());
+        }
 
         if (selectedTile is null)
         {
@@ -732,16 +807,31 @@ public class WaveFunctionGame : MonoBehaviour
             incompatibility = true;
 
             //Si hay una incompatibilidad, se regenera SIN parar el tiempo
-            if (STOPWATCH)
-            {
-                inc_counter++;
-            }  
+             if (STOPWATCH)
+             {
+                 inc_counter++;
+             }
 
-            Regenerate();
-            return;
+             if(!stopOnIncompatibility) Regenerate();
+             return;
+
+            // [BACKTRACKING] Manejar la incompatibilidad
+            //HandleConflict();
+            //return;
         }
 
+        //--------Backtracking, save state-----------
+        /* collapseHistory.Push(new CollapseRecord
+         {
+             cellIndex = cellToCollapse.index,
+             previousOptions = (Tile[])cellToCollapse.tileOptions.Clone(),
+             chosenTile = selectedTile
+         });
+
+         */
+        //-------------------------------------------
         cellToCollapse.tileOptions = new Tile[] { selectedTile };
+        //cellToCollapse.lastTriedTile = selectedTile;
         Tile foundTile = cellToCollapse.tileOptions[0];
 
         if (cellToCollapse.transform.childCount != 0)
@@ -761,9 +851,94 @@ public class WaveFunctionGame : MonoBehaviour
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
 
+        cellToCollapse.collapsed = true;
+       // backtracks = 0; // Reset backtrack counter on successful collapse
+
         if (cubeStep) UpdateGenerationCube();
         else if (GENERATE_ALL) UpdateGeneration();
     }
+
+   /* void HandleConflict()
+    {
+        backtracks++;
+
+        if (collapseHistory.Count == 0 || backtracks == maxBacktracks)
+        {
+            backtracks = 0;
+            Debug.Log("No hay decisiones para deshacer o se ha alcanzado el maximo de backtracks. Regenerando...");
+            if (STOPWATCH) inc_counter++;
+            if (!stopOnIncompatibility) Regenerate();
+            return;
+        }
+
+        // Deshacemos la ÚLTIMA decisión
+        CollapseRecord last = collapseHistory.Pop();
+        Cell cell = gridComponents[last.cellIndex];
+
+        Debug.Log($"[BACKTRACKING]: Revirtiendo celda {cell.index}");
+
+        // Restaurar el dominio anterior
+        cell.collapsed = false;
+        cell.tileOptions = (Tile[])last.previousOptions.Clone();
+
+        // Borrar instanciados
+        foreach (Transform child in cell.transform)
+            GameObject.Destroy(child.gameObject);
+        iterations--;
+
+        // Quitar de las opciones el tile que falló
+        cell.tileOptions = cell.tileOptions.Where(t => t != last.chosenTile).ToArray();
+
+        // Si ya no quedan opciones, seguir retrocediendo
+        if (cell.tileOptions.Length == 0)
+        {
+            Debug.LogWarning("Celda sin opciones: seguimos retrocediendo...");
+            HandleConflict();    // Recursivo: retrocede más
+            return;
+        }
+
+        // Restaurar vecinos indirectamente propagará restricciones
+        UpdateGeneration();
+
+    }
+    
+    private void UncollapseCell(int index)
+    {
+        if (backtrackStack.ContainsKey(index) && backtrackStack[index].Count > 0)
+        {
+            backtracks++;
+            iterations--;
+            if (backtracks == maxBacktracks) return;
+
+            CellSnapshot snapshot = backtrackStack[index].Pop();
+            Cell cell = gridComponents[index];
+
+            // Restaurar dominio (si existe snapshot)
+            if (snapshot.tileOptions != null)
+                cell.tileOptions = (Tile[])snapshot.tileOptions.Clone();
+
+            // Forzar que NO esté colapsada después del rollback
+            cell.collapsed = false;
+
+            // Eliminar visual (si existe)
+            if (cell.transform.childCount != 0)
+            {
+                foreach (Transform child in cell.transform)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+
+            // Marcar para re-procesado
+            cell.visitable = true;
+            cell.haSidoVisitado = false;
+        }
+        else
+        {
+            
+        }
+    }*/
+
 
     /// <summary>
     /// Makes the neighbours wiithin a given distance og the collapsed cell visitable for optimization purposes
@@ -872,6 +1047,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
     }
 
+
     /// <summary>
     /// Chooses a tile based on the weights of the tiles
     /// </summary>
@@ -892,6 +1068,18 @@ public class WaveFunctionGame : MonoBehaviour
             if (randomNumber < weight) return tile;
             randomNumber -= weight;
         }
+        return null; // This should not happen if the list is not empty
+    }
+
+    Tile ChooseRandomTile(List<Tile> tiles)
+    {
+        System.Random random = new System.Random();
+        int randomNumber = random.Next(0, tiles.Count - 1);
+
+        Tile t = tiles[randomNumber];
+
+        if (t != null) return t;
+
         return null; // This should not happen if the list is not empty
     }
 
@@ -928,9 +1116,9 @@ public class WaveFunctionGame : MonoBehaviour
             print("END");
             cubeStep = false;
 
-           // stopwatch.Stop();
+            // stopwatch.Stop();
             //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
-            
+
         }
     }
 
@@ -952,11 +1140,17 @@ public class WaveFunctionGame : MonoBehaviour
                     CheckNeighbours(x, y, z, ref newGenerationCell);
 
                     //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
-                    var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
 
-                    if (OneTileCollapseOptimization && !newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1)
+                    if (OneTileCollapseOptimization)
                     {
-                        CollapseCellWithOneTileOption(newGenerationCell, index);
+                        var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                        //bool allNeighborsCollapsed = newGenerationCell[index].neighbors.Values.All(neighbor => neighbor.collapsed);
+
+                        if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1
+                            && newGenerationCell[index].visitable)
+                        {
+                            CollapseCellWithOneTileOption(newGenerationCell, index);
+                        }
                     }
                 }
             }
@@ -981,7 +1175,7 @@ public class WaveFunctionGame : MonoBehaviour
             print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms. Number of incompatibilities: {inc_counter}");
             stopwatchSum += stopwatch.Elapsed.TotalSeconds;
 
-            if(maxTime < stopwatch.Elapsed.TotalSeconds)
+            if (maxTime < stopwatch.Elapsed.TotalSeconds)
             {
                 maxTime = stopwatch.Elapsed.TotalSeconds;
             }
@@ -1004,7 +1198,7 @@ public class WaveFunctionGame : MonoBehaviour
 
                 //Cual es la probabilidad de que el algoritmo falle cada vez que se intenta? Ejemplo, de media, las probabilidades de que falle al intentarlo es del 40%
                 int totalAttempts = totalIncompatibilities + regenerations_counter;
-                float incompatibilitiesRate = (float)totalIncompatibilities / totalAttempts; 
+                float incompatibilitiesRate = (float)totalIncompatibilities / totalAttempts;
 
                 Debug.Log($"-------------------END {regenerations_counter} REGENERATIONS.---------------------");
                 Debug.Log($"INCOMPATIBILITIES RATE: {incompatibilitiesRate * 100} % fail rate");
@@ -1023,13 +1217,31 @@ public class WaveFunctionGame : MonoBehaviour
 
     void CollapseCellWithOneTileOption(List<Cell> newGenerationCell, int index)
     {
-        Cell cellToCollapse = newGenerationCell[index];
-        cellToCollapse.collapsed = true;
 
+        Cell cellToCollapse = newGenerationCell[index];
+        
+        /* if (cellToCollapse.neighbors.TryGetValue(Direction.Up, out Cell up))
+         {
+             Debug.Log($"CELL {index}. Neighbor UP: {up.index}");
+         }*/
+
+       
         // Make the neighbours of the collapsed cell visitable for optimization purposes
         GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
         Tile foundTile = cellToCollapse.tileOptions[0];
+
+        //--------Backtracking, save state-----------
+        /*collapseHistory.Push(new CollapseRecord
+        {
+            cellIndex = cellToCollapse.index,
+            previousOptions = (Tile[])cellToCollapse.tileOptions.Clone(),
+            chosenTile = foundTile
+        });
+
+        cellToCollapse.lastTriedTile = foundTile;*/
+        //-------------------------------------------
+
 
         if (cellToCollapse.transform.childCount != 0)
         {
@@ -1048,6 +1260,7 @@ public class WaveFunctionGame : MonoBehaviour
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
         iterations++;
+        cellToCollapse.collapsed = true;
     }
 
 
@@ -1100,11 +1313,13 @@ public class WaveFunctionGame : MonoBehaviour
 
         else
         {
+            //define neighbors inside Cell
+
+
+            //Check neighbors
             gridComponents[index].haSidoVisitado = true;
             List<Tile> options = new List<Tile>(tileObjects);
 
-            // Log initial options
-           // Debug.Log($"Initial Options for Cell[{index}]: {string.Join(", ", options.Select(o => o.tileType))}");
 
             // Checks the down cell
             if (z > 0)
@@ -1115,7 +1330,7 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.upNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-              //  Debug.Log($"Down Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                //  Debug.Log($"Down Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
             // Checks the right cell
@@ -1127,7 +1342,7 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.leftNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-               // Debug.Log($"Right Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                // Debug.Log($"Right Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
             // Checks the up cell
@@ -1139,7 +1354,7 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.downNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-               // Debug.Log($"Up Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                // Debug.Log($"Up Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
             // Checks the left cell
@@ -1151,7 +1366,7 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.rightNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-               // Debug.Log($"Left Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                // Debug.Log($"Left Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
             // Checks the cell below
@@ -1163,7 +1378,7 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.aboveNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-               // Debug.Log($"Below Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                // Debug.Log($"Below Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
             // Checks the cell above
@@ -1175,12 +1390,12 @@ public class WaveFunctionGame : MonoBehaviour
                     var valid = possibleOptions.belowNeighbours;
                     validOptions = validOptions.Concat(valid).ToList();
                 }
-               // Debug.Log($"Above Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
+                // Debug.Log($"Above Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
                 CheckValidity(options, validOptions, index);
             }
 
             // Log options after validity check
-           // Debug.Log($"Options after CheckValidity for Cell[{index}]: {string.Join(", ", options.Select(o => o.tileType))}");
+            // Debug.Log($"Options after CheckValidity for Cell[{index}]: {string.Join(", ", options.Select(o => o.tileType))}");
 
             Tile[] newTileList = new Tile[options.Count];
 
@@ -1190,27 +1405,28 @@ public class WaveFunctionGame : MonoBehaviour
             }
 
             newGenerationCell[index].RecreateCell(newTileList);
+
         }
-    }
 
-    /// <summary>
-    /// Removes all the options from the optionList that are not in the validOption list
-    /// </summary>
-    /// <param name="optionList"></param> List of options to be checked
-    /// <param name="validOption"></param> List of valid options
-    void CheckValidity(List<Tile> optionList, List<Tile> validOption, int indexCell)
-    {
-        HashSet<Tile> validSet = new HashSet<Tile>(validOption);
-
-        var optionCopy = optionList.ToList(); // Copia para evitar modificar la original mientras iteramos
-
-        optionList.Clear(); // Limpia la lista original antes de llenarla con los válidos
-
-        foreach (var option in optionCopy)
+        /// <summary>
+        /// Removes all the options from the optionList that are not in the validOption list
+        /// </summary>
+        /// <param name="optionList"></param> List of options to be checked
+        /// <param name="validOption"></param> List of valid options
+        void CheckValidity(List<Tile> optionList, List<Tile> validOption, int indexCell)
         {
-            if (validSet.Contains(option) && option.tileType != "limit")
+            HashSet<Tile> validSet = new HashSet<Tile>(validOption);
+
+            var optionCopy = optionList.ToList(); // Copia para evitar modificar la original mientras iteramos
+
+            optionList.Clear(); // Limpia la lista original antes de llenarla con los válidos
+
+            foreach (var option in optionCopy)
             {
-                optionList.Add(option); // Solo añadimos los válidos
+                if (validSet.Contains(option) && option.tileType != "limit")
+                {
+                    optionList.Add(option); // Solo añadimos los válidos
+                }
             }
         }
     }
@@ -1296,7 +1512,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
         if (instantiatedTile.rotation != Vector3.zero)
-        {          
+        {
             //Rotar la tile
             instantiatedTile.gameObject.transform.Rotate(foundTile.rotation, Space.Self);
 
@@ -1307,9 +1523,9 @@ public class WaveFunctionGame : MonoBehaviour
 
         //Desactivar ser arrastrado
         DragObject drag = instantiatedTile.GetComponent<DragObject>();
-        if(drag != null)
+        if (drag != null)
         {
-            Destroy(drag); 
+            Destroy(drag);
         }
 
         // Efecto de rebote con DOTween
@@ -1335,10 +1551,10 @@ public class WaveFunctionGame : MonoBehaviour
 
     private void OnTileDeleted()
     {
-        if(actualTileDragged != null) Destroy(actualTileDragged);
-        foreach(Cell cell in gridComponents)
+        if (actualTileDragged != null) Destroy(actualTileDragged);
+        foreach (Cell cell in gridComponents)
         {
-            if(!cell.collapsed) cell.MakeVisible(false);
+            if (!cell.collapsed) cell.MakeVisible(false);
         }
     }
 

@@ -101,7 +101,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: cornerExt_sand
-  probability: 5
+  probability: 50
+  fixedTile: 0
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1
@@ -172,7 +173,6 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
-  excludeInTopLayer: 0
   upSocket:
     socket_name: 12
     horizontalFace: 1
