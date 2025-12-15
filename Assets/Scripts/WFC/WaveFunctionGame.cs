@@ -43,7 +43,7 @@ public class WaveFunctionGame : MonoBehaviour
 
 
     [Header("Map generation")]
-    [SerializeField] private int dimensionsX, dimensionsZ, dimensionsY;
+    [SerializeField] public int dimensionsX, dimensionsZ, dimensionsY;
     [SerializeField] Tile floorTile;                     //Tile for the floor
     [SerializeField] Tile emptyTile;                     //Tile for the ceiling
     [SerializeField] Tile limitTile;                    //Tile for the borders of the map
@@ -85,19 +85,20 @@ public class WaveFunctionGame : MonoBehaviour
 
     //para testear el rendimiento
     public bool STOPWATCH;
-    private bool incompatibility = false;
-    int inc_counter = 0; //incompatibilidades en cada generacion
-    int totalIncompatibilities = 0; //incompatibilidades totales
-    int regenerations_counter = 0; //numero de regeneraciones
-    double stopwatchSum = 0f; //suma de todos los tiempos para hacer la media
-    double maxTime = 0f; //tiempo maximo de generacion
-    double minTime = 0f; //minimo tiempo de generacion
+    
 
 
     //Events
     public delegate void OnRegenerate();
+    public delegate void OnIncompatibility();
+    public delegate void OnStartGeneration();
+    public delegate void OnEndGeneration();
+
     public static event OnRegenerate onRegenerate;
-    Stopwatch stopwatch;
+    public static event OnIncompatibility onIncompatibility;
+    public static event OnStartGeneration onStartGeneration;
+    public static event OnEndGeneration onEndGeneration;
+
 
 
     private void OnEnable()
@@ -125,8 +126,6 @@ public class WaveFunctionGame : MonoBehaviour
         newTilesContainer.SetActive(false); // Hide the new tiles container in the editor
         gridComponents = new List<Cell>();
         audioSource = GetComponent<AudioSource>();
-
-        stopwatch = new Stopwatch();
         Init();
     }
 
@@ -164,11 +163,12 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
-        //Si no hay una incompatibilidad, se cuenta como generación con éxito y se reinicia el reloj
-        if (STOPWATCH && !incompatibility)
+        if (STOPWATCH && GENERATE_ALL)
         {
-            stopwatch.Reset();
-            stopwatch.Start();
+            if(onStartGeneration != null)
+            {
+                onStartGeneration();
+            }
         }
 
 
@@ -804,13 +804,17 @@ public class WaveFunctionGame : MonoBehaviour
         if (selectedTile is null)
         {
             Debug.LogError("INCOMPATIBILITY!");
-            incompatibility = true;
+            if(onIncompatibility != null)
+            {
+                onIncompatibility();
+            }
+            //incompatibility = true;
 
             //Si hay una incompatibilidad, se regenera SIN parar el tiempo
-             if (STOPWATCH)
+             /*if (STOPWATCH)
              {
                  inc_counter++;
-             }
+             }*/
 
              if(!stopOnIncompatibility) Regenerate();
              return;
@@ -830,6 +834,8 @@ public class WaveFunctionGame : MonoBehaviour
 
          */
         //-------------------------------------------
+
+        cellToCollapse.previousEntropy = cellToCollapse.tileOptions.Length;
         cellToCollapse.tileOptions = new Tile[] { selectedTile };
         //cellToCollapse.lastTriedTile = selectedTile;
         Tile foundTile = cellToCollapse.tileOptions[0];
@@ -1131,6 +1137,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         List<Cell> newGenerationCell = new List<Cell>(gridComponents);
 
+
         for (int y = 0; y < dimensionsY; y++)
         {
             for (int z = 0; z < dimensionsZ; z++)
@@ -1147,7 +1154,7 @@ public class WaveFunctionGame : MonoBehaviour
                         //bool allNeighborsCollapsed = newGenerationCell[index].neighbors.Values.All(neighbor => neighbor.collapsed);
 
                         if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1
-                            && newGenerationCell[index].visitable)
+                            && newGenerationCell[index].visitable && newGenerationCell[index].previousEntropy == 1)
                         {
                             CollapseCellWithOneTileOption(newGenerationCell, index);
                         }
@@ -1168,50 +1175,10 @@ public class WaveFunctionGame : MonoBehaviour
 
         else if (STOPWATCH && GENERATE_ALL)
         {
-            //GENERACION CON EXITO
-            stopwatch.Stop();
-            incompatibility = false; //esto marca que en la proxima generacion se debe reiniciar el reloj
-
-            print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms. Number of incompatibilities: {inc_counter}");
-            stopwatchSum += stopwatch.Elapsed.TotalSeconds;
-
-            if (maxTime < stopwatch.Elapsed.TotalSeconds)
+            if(onEndGeneration != null)
             {
-                maxTime = stopwatch.Elapsed.TotalSeconds;
+                onEndGeneration();
             }
-            if (minTime > stopwatch.Elapsed.TotalSeconds || minTime == 0)
-            {
-                minTime = stopwatch.Elapsed.TotalSeconds;
-            }
-
-            regenerations_counter++;
-            totalIncompatibilities += inc_counter;
-            inc_counter = 0;
-            Debug.Log("GENERATION NUMBER " + regenerations_counter + " completed!");
-
-
-            //FIN
-            if (regenerations_counter == 50)
-            {
-                //Cuantas veces falla de media antes de tener exito? Ejemplo, de media necesito 2 intentos por generacion para tener exito
-                float averageIncompatibilitiesPerGeneration = (float)totalIncompatibilities / (float)regenerations_counter;
-
-                //Cual es la probabilidad de que el algoritmo falle cada vez que se intenta? Ejemplo, de media, las probabilidades de que falle al intentarlo es del 40%
-                int totalAttempts = totalIncompatibilities + regenerations_counter;
-                float incompatibilitiesRate = (float)totalIncompatibilities / totalAttempts;
-
-                Debug.Log($"-------------------END {regenerations_counter} REGENERATIONS.---------------------");
-                Debug.Log($"INCOMPATIBILITIES RATE: {incompatibilitiesRate * 100} % fail rate");
-                Debug.Log($"AVERAGE INCOMPATIBILITIES PER GENERATION: {averageIncompatibilitiesPerGeneration} fails or retries before success");
-
-                Debug.Log($"AVERAGE TIME: {(stopwatchSum / regenerations_counter)} ms. Max. time: {maxTime}. Min. time: {minTime}.");
-
-                stopwatchSum = 0;
-                regenerations_counter = 0;
-                totalIncompatibilities = 0;
-            }
-
-            else Regenerate();
         }
     }
 

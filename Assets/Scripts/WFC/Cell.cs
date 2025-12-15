@@ -30,6 +30,7 @@ public class Cell : MonoBehaviour
     public Vector3Int coords; 
     public bool showDebugVisitableCells;
     public bool centerCubeCell;
+    public int previousEntropy;
 
     MeshRenderer meshRenderer;
 
@@ -47,12 +48,15 @@ public class Cell : MonoBehaviour
         centerCubeCell = false;
         meshRenderer = GetComponentInChildren<MeshRenderer>();
 
+        previousEntropy = -1;
+
         if (!showDebugVisitableCells) Destroy(transform.GetChild(0).gameObject);
     }
 
     //Devuelve true si se ha cambiado el dominio
     public void RecreateCell(Tile[] tiles)
     {
+        previousEntropy = tileOptions.Length;
         tileOptions = tiles;
     }
 
