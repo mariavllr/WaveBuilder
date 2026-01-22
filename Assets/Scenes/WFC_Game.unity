@@ -3921,7 +3921,7 @@ MonoBehaviour:
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
   borderConstraint: 1
-  useOptimization: 0
+  useOptimization: 1
   OneTileCollapseOptimization: 1
   randomGeneration: 0
   placedTiles: 0

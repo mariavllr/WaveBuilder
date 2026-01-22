@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4403146024009399223
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 490605307345719262}
+  - component: {fileID: 1752596526155674815}
+  - component: {fileID: 3566630737709216652}
+  - component: {fileID: 6752673170315650365}
+  m_Layer: 0
+  m_Name: wallCorner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &490605307345719262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4403146024009399223}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.00000008146034, y: 0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &1752596526155674815
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4403146024009399223}
+  m_Mesh: {fileID: -4105812506911450906, guid: 7f2d0fc4470e6f94c956d35e9cbdf2bd, type: 3}
+--- !u!23 &3566630737709216652
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4403146024009399223}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: -1114067011517105867, guid: 7f2d0fc4470e6f94c956d35e9cbdf2bd, type: 3}
+  - {fileID: -6203605201111989995, guid: 7f2d0fc4470e6f94c956d35e9cbdf2bd, type: 3}
+  - {fileID: -2973018733225293636, guid: 7f2d0fc4470e6f94c956d35e9cbdf2bd, type: 3}
+  - {fileID: -6120325400536396939, guid: 7f2d0fc4470e6f94c956d35e9cbdf2bd, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &6752673170315650365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4403146024009399223}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tileType: wall_corner_ext
+  probability: 10
+  fixedTile: 0
+  rotateRight: 1
+  rotate180: 1
+  rotateLeft: 1
+  rotation: {x: 0, y: 0, z: 0}
+  scale: {x: 0, y: 0, z: 0}
+  positionOffset: {x: 0, y: 0, z: 0}
+  upNeighbours:
+  - {fileID: 5832731095630810467, guid: b55992128d8a15e41a1a88d70ad3e7d9, type: 3}
+  - {fileID: 5605412094997227702, guid: 8e2763adbc54a9b4e83ab837c1ae258e, type: 3}
+  - {fileID: 6190252357975205256, guid: e53ae98a46f45ce449c029225caebf7b, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 5832731095630810467, guid: b55992128d8a15e41a1a88d70ad3e7d9, type: 3}
+  - {fileID: 6190252357975205256, guid: e53ae98a46f45ce449c029225caebf7b, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 5605412094997227702, guid: 8e2763adbc54a9b4e83ab837c1ae258e, type: 3}
+  aboveNeighbours:
+  - {fileID: 6752673170315650365, guid: ce51a446f451dfa4399eabab89f56e69, type: 3}
+  belowNeighbours:
+  - {fileID: 6752673170315650365, guid: 46edb03ca9c763f48aabab0ccbf4128e, type: 3}
+  excludedNeighboursUp: []
+  excludedNeighboursRight: []
+  excludedNeighboursDown:
+  - wall_corner_int
+  - wall_corner_ext
+  excludedNeighboursLeft:
+  - wall_corner_int
+  - wall_corner_ext
+  upSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 33408ebf5d302d549a7459836640cc04, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  rightSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 33408ebf5d302d549a7459836640cc04, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  leftSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 53c51a1b959e2994c9174019267b8964, type: 2}
+    horizontalFace: 1
+    isSymmetric: 0
+    isFlipped: 1
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  downSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 53c51a1b959e2994c9174019267b8964, type: 2}
+    horizontalFace: 1
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  aboveSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: aa1804e7bd7e03c40bbf449b7bd36ca0, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1
+  belowSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 1fe6e9e949c1c734693d8b5233e54ae8, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1

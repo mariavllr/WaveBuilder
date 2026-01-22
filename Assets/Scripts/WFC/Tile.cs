@@ -33,7 +33,13 @@ public class Tile : MonoBehaviour
     [Serializable]
     public struct Socket
     {
+        [Header("Legacy System (Old Tileset)")]
         public Border socket_name;
+
+        [Header("New System (Scriptable Object)")]
+        public SocketDefinition socketDefinition; // NUEVO: Para los nuevos tilesets
+
+
         //for horizontal faces
         [Header("For HORIZONTAL faces")]
         public bool horizontalFace;
@@ -44,6 +50,9 @@ public class Tile : MonoBehaviour
         public bool verticalFace;
         public int rotationIndex;
         public bool rotationallyInvariant;
+
+        // Helper para saber qué sistema usar
+        public bool HasCustomDefinition => socketDefinition != null;
     }
 
     [Header("Tile properties")]

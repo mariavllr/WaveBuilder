@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &7273907225222439646
+--- !u!1 &6769660296734701010
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,25 +8,24 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1465193872255497538}
-  - component: {fileID: 3366608638326480547}
-  - component: {fileID: 1012456143866537945}
-  - component: {fileID: 5711855720254036686}
-  - component: {fileID: 2871321283701599539}
+  - component: {fileID: 726850195656316730}
+  - component: {fileID: 3274084478043407206}
+  - component: {fileID: 6816462701035000088}
+  - component: {fileID: 5605412094997227702}
   m_Layer: 0
-  m_Name: cornerInt_wall_sand
+  m_Name: wall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1465193872255497538
+--- !u!4 &726850195656316730
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7273907225222439646}
+  m_GameObject: {fileID: 6769660296734701010}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -35,21 +34,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3366608638326480547
+--- !u!33 &3274084478043407206
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7273907225222439646}
-  m_Mesh: {fileID: -4281728699612984470, guid: d6e4786ec1fd66d41849e56bd66e2122, type: 3}
---- !u!23 &1012456143866537945
+  m_GameObject: {fileID: 6769660296734701010}
+  m_Mesh: {fileID: -6281424698479989189, guid: 96d30b1c0048572419c05d0cbbe21199, type: 3}
+--- !u!23 &6816462701035000088
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7273907225222439646}
+  m_GameObject: {fileID: 6769660296734701010}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -66,7 +65,10 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d53ab46b6e70f274ab2e4b10fff3961c, type: 2}
+  - {fileID: 5233825809293494839, guid: 96d30b1c0048572419c05d0cbbe21199, type: 3}
+  - {fileID: -3963241562183589234, guid: 96d30b1c0048572419c05d0cbbe21199, type: 3}
+  - {fileID: -6867524174320841699, guid: 96d30b1c0048572419c05d0cbbe21199, type: 3}
+  - {fileID: 1200001592809414786, guid: 96d30b1c0048572419c05d0cbbe21199, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -88,20 +90,21 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &5711855720254036686
+--- !u!114 &5605412094997227702
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7273907225222439646}
+  m_GameObject: {fileID: 6769660296734701010}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileType: cornerInt_wall_sand
-  probability: 5
+  tileType: wall
+  probability: 40
+  fixedTile: 0
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1
@@ -109,54 +112,58 @@ MonoBehaviour:
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
   upNeighbours:
-  - {fileID: 6917541155803654142, guid: 4d73e4b1781aded4b82be6caa755adc6, type: 3}
+  - {fileID: 5832731095630810467, guid: b55992128d8a15e41a1a88d70ad3e7d9, type: 3}
+  - {fileID: 5605412094997227702}
+  - {fileID: 6190252357975205256, guid: e53ae98a46f45ce449c029225caebf7b, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
-  - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 5605412094997227702}
+  - {fileID: 6752673170315650365, guid: ec90b228f0755354d97ad71b38c779d3, type: 3}
   - {fileID: 0}
   downNeighbours:
-  - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
+  - {fileID: 5832731095630810467, guid: b55992128d8a15e41a1a88d70ad3e7d9, type: 3}
+  - {fileID: 5605412094997227702}
+  - {fileID: 6752673170315650365, guid: ec90b228f0755354d97ad71b38c779d3, type: 3}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
-  - {fileID: 0}
+  - {fileID: 5605412094997227702}
+  - {fileID: 6190252357975205256, guid: e53ae98a46f45ce449c029225caebf7b, type: 3}
   - {fileID: 0}
   aboveNeighbours:
-  - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
+  - {fileID: 6752673170315650365, guid: ce51a446f451dfa4399eabab89f56e69, type: 3}
   belowNeighbours:
-  - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
-  excludedNeighboursUp:
-  - cornerInt_wall_sand
-  excludedNeighboursRight:
-  - cornerInt_wall_sand
-  - sand_wall
-  excludedNeighboursDown:
-  - cornerInt_wall_sand
-  - sand_wall
-  excludedNeighboursLeft:
-  - cornerInt_wall_sand
-  excludeInTopLayer: 0
+  - {fileID: 6752673170315650365, guid: 46edb03ca9c763f48aabab0ccbf4128e, type: 3}
+  excludedNeighboursUp: []
+  excludedNeighboursRight: []
+  excludedNeighboursDown: []
+  excludedNeighboursLeft: []
   upSocket:
-    socket_name: 13
-    horizontalFace: 1
-    isSymmetric: 0
-    isFlipped: 0
-    verticalFace: 0
-    rotationIndex: 0
-    rotationallyInvariant: 0
-  rightSocket:
-    socket_name: 10
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 33408ebf5d302d549a7459836640cc04, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
     verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0
+  rightSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 53c51a1b959e2994c9174019267b8964, type: 2}
+    horizontalFace: 1
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
   leftSocket:
-    socket_name: 13
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 53c51a1b959e2994c9174019267b8964, type: 2}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 1
@@ -164,47 +171,29 @@ MonoBehaviour:
     rotationIndex: 0
     rotationallyInvariant: 0
   downSocket:
-    socket_name: 10
-    horizontalFace: 0
-    isSymmetric: 0
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 33408ebf5d302d549a7459836640cc04, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
     isFlipped: 0
-    verticalFace: 1
-    rotationIndex: 0
-    rotationallyInvariant: 1
-  aboveSocket:
-    socket_name: 15
-    horizontalFace: 0
-    isSymmetric: 0
-    isFlipped: 0
-    verticalFace: 1
+    verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0
-  belowSocket:
-    socket_name: 10
+  aboveSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: aa1804e7bd7e03c40bbf449b7bd36ca0, type: 2}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
     verticalFace: 1
     rotationIndex: 0
     rotationallyInvariant: 1
---- !u!65 &2871321283701599539
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7273907225222439646}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.0000007, y: 2, z: 2.0000002}
-  m_Center: {x: -0.00000047683716, y: 1, z: 0}
+  belowSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 1fe6e9e949c1c734693d8b5233e54ae8, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1

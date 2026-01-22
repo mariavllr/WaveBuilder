@@ -376,6 +376,31 @@ public class WaveFunctionGame : MonoBehaviour
     }
 
 
+
+
+    /// <summary>
+    /// Compara dos sockets soportando tanto el sistema antiguo (Enum) como el nuevo (ScriptableObject)
+    /// </summary>
+    bool SocketsMatch(Tile.Socket socketA, Tile.Socket socketB)
+    {
+        // Caso 1: Ambos usan el nuevo sistema (ScriptableObjects)
+        if (socketA.HasCustomDefinition && socketB.HasCustomDefinition)
+        {
+            return socketA.socketDefinition == socketB.socketDefinition;
+        }
+
+        // Caso 2: Ambos usan el sistema antiguo (Enum)
+        // Solo si NINGUNO tiene definición custom
+        if (!socketA.HasCustomDefinition && !socketB.HasCustomDefinition)
+        {
+            return socketA.socket_name == socketB.socket_name;
+        }
+
+        // Caso 3: Mezcla de sistemas (Uno nuevo y uno viejo) -> No conectan nunca
+        return false;
+    }
+
+
     /// <summary>
     /// Defines the neighbour tiles of each tile in the array
     /// </summary>
@@ -391,7 +416,7 @@ public class WaveFunctionGame : MonoBehaviour
                 // It also checks f the excluded list of each face does not include the other tile, and vice versa
 
                 // Up neighbours 
-                if (otherTile.downSocket.socket_name == tile.upSocket.socket_name
+                if (SocketsMatch(otherTile.downSocket, tile.upSocket)
                 && (!excludedNeighborConstraint || (!tile.excludedNeighboursUp.Contains(otherTile.tileType)
                 && !otherTile.excludedNeighboursDown.Contains(tile.tileType))))
                 {
@@ -401,7 +426,7 @@ public class WaveFunctionGame : MonoBehaviour
                         tile.upNeighbours.Add(otherTile);
                 }
                 // Down neighbours 
-                if (otherTile.upSocket.socket_name == tile.downSocket.socket_name
+                if (SocketsMatch(otherTile.upSocket, tile.downSocket)
                 && (!excludedNeighborConstraint || (!tile.excludedNeighboursDown.Contains(otherTile.tileType)
                 && !otherTile.excludedNeighboursUp.Contains(tile.tileType))))
                 {
@@ -411,7 +436,7 @@ public class WaveFunctionGame : MonoBehaviour
                         tile.downNeighbours.Add(otherTile);
                 }
                 // Right neighbours 
-                if (otherTile.leftSocket.socket_name == tile.rightSocket.socket_name
+                if (SocketsMatch(otherTile.leftSocket, tile.rightSocket)
                 && (!excludedNeighborConstraint || (!tile.excludedNeighboursRight.Contains(otherTile.tileType)
                 && !otherTile.excludedNeighboursLeft.Contains(tile.tileType))))
                 {
@@ -421,7 +446,7 @@ public class WaveFunctionGame : MonoBehaviour
                         tile.rightNeighbours.Add(otherTile);
                 }
                 // Left neighbours 
-                if (otherTile.rightSocket.socket_name == tile.leftSocket.socket_name
+                if (SocketsMatch(otherTile.rightSocket, tile.leftSocket)
                 && (!excludedNeighborConstraint || (!tile.excludedNeighboursLeft.Contains(otherTile.tileType)
                 && !otherTile.excludedNeighboursRight.Contains(tile.tileType))))
                 {
@@ -434,7 +459,7 @@ public class WaveFunctionGame : MonoBehaviour
                 // VERTICAL FACES: both faces must have invariable rotation or the same rotation index
 
                 // Below neighbours
-                if (otherTile.belowSocket.socket_name == tile.aboveSocket.socket_name)
+                if (SocketsMatch(otherTile.belowSocket, tile.aboveSocket))
                 {
                     if ((otherTile.belowSocket.rotationallyInvariant
                         && tile.aboveSocket.rotationallyInvariant)
@@ -443,7 +468,7 @@ public class WaveFunctionGame : MonoBehaviour
                 }
 
                 // Above neighbours
-                if (otherTile.aboveSocket.socket_name == tile.belowSocket.socket_name)
+                if (SocketsMatch(otherTile.aboveSocket, tile.belowSocket))
                 {
                     if ((otherTile.aboveSocket.rotationallyInvariant
                         && tile.belowSocket.rotationallyInvariant)
