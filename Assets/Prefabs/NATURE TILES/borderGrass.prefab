@@ -32,7 +32,8 @@ Transform:
   m_LocalPosition: {x: 12.097294, y: 0.00000047683716, z: 8.235256}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 77729501215859453}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4617336066895746656
@@ -102,12 +103,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileType: border
   probability: 1
+  fixedTile: 0
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
+  useSkirts: 1
+  skirtNorth: {fileID: 0}
+  skirtSouth: {fileID: 0}
+  skirtEast: {fileID: 747586806466902087}
+  skirtWest: {fileID: 0}
+  skirtCornerNE: {fileID: 0}
+  skirtCornerNW: {fileID: 0}
+  skirtCornerSE: {fileID: 0}
+  skirtCornerSW: {fileID: 0}
   upNeighbours:
   - {fileID: -2698591520516281}
   - {fileID: 0}
@@ -155,9 +166,9 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
-  excludeInTopLayer: 0
   upSocket:
     socket_name: 8
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 1
@@ -166,6 +177,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   rightSocket:
     socket_name: 0
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -174,6 +186,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   leftSocket:
     socket_name: 3
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -182,6 +195,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   downSocket:
     socket_name: 8
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 0
@@ -190,6 +204,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   aboveSocket:
     socket_name: 3
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
@@ -198,6 +213,7 @@ MonoBehaviour:
     rotationallyInvariant: 1
   belowSocket:
     socket_name: 5
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
@@ -225,3 +241,70 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.38217258, y: 0.5001228, z: 2.0000002}
   m_Center: {x: 0.8089137, y: 0.2500614, z: 0.00000011920929}
+--- !u!1001 &476994449498916118
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2523124020148151290}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_Name
+      value: S_borderGrass
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+--- !u!4 &77729501215859453 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+  m_PrefabInstance: {fileID: 476994449498916118}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &747586806466902087 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+  m_PrefabInstance: {fileID: 476994449498916118}
+  m_PrefabAsset: {fileID: 0}

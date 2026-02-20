@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3379881080356812338}
   - component: {fileID: 3331224410884613075}
   - component: {fileID: 3344181416162378270}
+  - component: {fileID: 3957499166303202774}
   m_Layer: 0
   m_Name: sand_palm
   m_TagString: Untagged
@@ -210,3 +211,24 @@ MonoBehaviour:
     verticalFace: 1
     rotationIndex: 0
     rotationallyInvariant: 1
+--- !u!65 &3957499166303202774
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6895449764140365574}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2.8305016, z: 2}
+  m_Center: {x: 0, y: 1.4152508, z: 0}

@@ -3862,7 +3862,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 0
-  GENERATE_ALL: 1
+  GENERATE_ALL: 0
   cardGenerator: {fileID: 1993922141}
   initialCubeSize: 3
   centerCubeCells: 0
@@ -3872,9 +3872,9 @@ MonoBehaviour:
   audioSource: {fileID: 1154171696}
   changeCellSound: {fileID: 8300000, guid: 98c66415d582c1942b26896ba6873faf, type: 3}
   collapseCellSound: {fileID: 8300000, guid: 8645ef972d1dceb4a9374400079e2d28, type: 3}
-  dimensionsX: 10
-  dimensionsZ: 10
-  dimensionsY: 5
+  dimensionsX: 12
+  dimensionsZ: 12
+  dimensionsY: 4
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   limitTile: {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
@@ -3901,7 +3901,7 @@ MonoBehaviour:
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
   borderConstraint: 1
-  useOptimization: 1
+  useOptimization: 0
   OneTileCollapseOptimization: 1
   randomGeneration: 0
   placedTiles: 0
@@ -5994,7 +5994,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0

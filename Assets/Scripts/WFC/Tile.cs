@@ -70,6 +70,18 @@ public class Tile : MonoBehaviour
     public Vector3 scale;
     public Vector3 positionOffset;
 
+    [Header("Mesh Skirts")]
+    public bool useSkirts = false;
+    public GameObject skirtNorth;
+    public GameObject skirtSouth;
+    public GameObject skirtEast;
+    public GameObject skirtWest;
+    public GameObject skirtCornerNE;
+    public GameObject skirtCornerNW;
+    public GameObject skirtCornerSE;
+    public GameObject skirtCornerSW;
+
+
     public List<Tile> upNeighbours = new List<Tile>();
     public List<Tile> rightNeighbours = new List<Tile>();
     public List<Tile> downNeighbours = new List<Tile>();
@@ -83,7 +95,7 @@ public class Tile : MonoBehaviour
     public List<string> excludedNeighboursDown = new();
     public List<string> excludedNeighboursLeft = new();
 
-    [Tooltip("Para definir la direccion la derecha siempre ser� el eje X (rojo) y arriba ser� el eje Z (azul)")]
+    [Tooltip("Para definir la direccion la derecha siempre sera el eje X (rojo) y arriba sera el eje Z (azul)")]
     [Header("Sockets")]
     public Socket upSocket;
     public Socket rightSocket;
@@ -91,6 +103,21 @@ public class Tile : MonoBehaviour
     public Socket downSocket;
     public Socket aboveSocket;
     public Socket belowSocket;
+
+    public void RefreshSkirts(bool hasN, bool hasS, bool hasE, bool hasW,
+                               bool hasNE, bool hasNW, bool hasSE, bool hasSW)
+    {
+        if (skirtNorth != null) skirtNorth.SetActive(!hasN);
+        if (skirtSouth != null) skirtSouth.SetActive(!hasS);
+        if (skirtEast != null) skirtEast.SetActive(!hasE);
+        if (skirtWest != null) skirtWest.SetActive(!hasW);
+
+        // Esquina exterior: ambos lados adyacentes vacíos
+        if (skirtCornerNE != null) skirtCornerNE.SetActive(!hasN && !hasE);
+        if (skirtCornerNW != null) skirtCornerNW.SetActive(!hasN && !hasW);
+        if (skirtCornerSE != null) skirtCornerSE.SetActive(!hasS && !hasE);
+        if (skirtCornerSW != null) skirtCornerSW.SetActive(!hasS && !hasW);
+    }
 
     public override bool Equals(object obj)
     {

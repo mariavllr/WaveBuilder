@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: path_corner
-  probability: 77
+  probability: 5
   fixedTile: 0
   rotateRight: 1
   rotate180: 1
@@ -117,16 +117,12 @@ MonoBehaviour:
   rightNeighbours:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
-  - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
+  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
+  - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
+  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
   - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
   - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
-  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
-  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
-  - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
-  - {fileID: 8304928268084086392, guid: 13acc795abedd87488ed9f6c35438114, type: 3}
-  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
-  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
-  - {fileID: 0}
+  - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -146,14 +142,10 @@ MonoBehaviour:
   downNeighbours:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
-  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
-  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
   - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
   - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
+  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -187,6 +179,7 @@ MonoBehaviour:
   excludedNeighboursLeft: []
   upSocket:
     socket_name: 1
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -195,6 +188,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   rightSocket:
     socket_name: 0
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -203,6 +197,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   leftSocket:
     socket_name: 1
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -211,6 +206,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   downSocket:
     socket_name: 0
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -219,6 +215,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   aboveSocket:
     socket_name: 3
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
@@ -227,6 +224,7 @@ MonoBehaviour:
     rotationallyInvariant: 1
   belowSocket:
     socket_name: 10
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0

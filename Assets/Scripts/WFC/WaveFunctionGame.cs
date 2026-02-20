@@ -122,6 +122,8 @@ public class WaveFunctionGame : MonoBehaviour
         ClearNeighbours(ref tileObjects);
         CreateRemainingCells(ref tileObjects);
         DefineNeighbourTiles(ref tileObjects, ref tileObjects);
+        //Eliminar el limite para que no pueda colocarse en el mapa mas
+        tileObjects = tileObjects.Where(tile => tile.tileType != "limit").ToArray();
 
         newTilesContainer.SetActive(false); // Hide the new tiles container in the editor
         gridComponents = new List<Cell>();
@@ -237,19 +239,12 @@ public class WaveFunctionGame : MonoBehaviour
     /// <param name="nameVariation"></param> Suffix added to the new tile variation
     private Tile CreateNewTileVariation(Tile tile, string nameVariation)
     {
-        string name = tile.gameObject.name + nameVariation;
-        GameObject newTile = new GameObject(name);
-        newTile.gameObject.tag = tile.gameObject.tag;
+        GameObject newTile = Instantiate(tile.gameObject, newTilesContainer.transform);
+        newTile.name = tile.gameObject.name + nameVariation;
+        newTile.tag = tile.gameObject.tag;
         newTile.SetActive(false);
-        newTile.transform.parent = newTilesContainer.transform;
-        // newTile.hideFlags = HideFlags.HideInHierarchy;
 
-        MeshFilter meshFilter = newTile.AddComponent<MeshFilter>();
-        meshFilter.sharedMesh = tile.gameObject.GetComponent<MeshFilter>().sharedMesh;
-        MeshRenderer meshRenderer = newTile.AddComponent<MeshRenderer>();
-        meshRenderer.sharedMaterials = tile.gameObject.GetComponent<MeshRenderer>().sharedMaterials;
-
-        Tile tileRotated = newTile.AddComponent<Tile>();
+        Tile tileRotated = newTile.GetComponent<Tile>();
         tileRotated.tileType = tile.tileType;
         tileRotated.probability = tile.probability;
         tileRotated.positionOffset = tile.positionOffset;
@@ -257,7 +252,8 @@ public class WaveFunctionGame : MonoBehaviour
         tileRotated.rotate180 = tile.rotate180;
         tileRotated.rotateLeft = tile.rotateLeft;
 
-        BoxCollider boxCollider = newTile.AddComponent<BoxCollider>();
+        // useSkirts y todas las referencias de skirts ya están
+        // correctamente remapeadas por el Instantiate
 
         return tileRotated;
     }
@@ -327,6 +323,30 @@ public class WaveFunctionGame : MonoBehaviour
         tileRotated.excludedNeighboursLeft = originalTile.excludedNeighboursDown;
         tileRotated.excludedNeighboursUp = originalTile.excludedNeighboursLeft;
         tileRotated.excludedNeighboursDown = originalTile.excludedNeighboursRight;
+
+        if (tileRotated.useSkirts)
+        {
+
+            // Guardar referencias actuales de tileRotated
+            var n = tileRotated.skirtNorth;
+            var s = tileRotated.skirtSouth;
+            var e = tileRotated.skirtEast;
+            var w = tileRotated.skirtWest;
+            var ne = tileRotated.skirtCornerNE;
+            var nw = tileRotated.skirtCornerNW;
+            var se = tileRotated.skirtCornerSE;
+            var sw = tileRotated.skirtCornerSW;
+
+            tileRotated.skirtNorth = w;
+            tileRotated.skirtEast = n;
+            tileRotated.skirtSouth = e;
+            tileRotated.skirtWest = s;
+            tileRotated.skirtCornerNE = nw;
+            tileRotated.skirtCornerSE = ne;
+            tileRotated.skirtCornerSW = se;
+            tileRotated.skirtCornerNW = sw;
+        }
+
     }
 
     /// <summary>
@@ -350,6 +370,28 @@ public class WaveFunctionGame : MonoBehaviour
         tileRotated.excludedNeighboursRight = originalTile.excludedNeighboursLeft;
         tileRotated.excludedNeighboursUp = originalTile.excludedNeighboursDown;
         tileRotated.excludedNeighboursDown = originalTile.excludedNeighboursUp;
+
+        if (tileRotated.useSkirts)
+        {
+            var n = tileRotated.skirtNorth;
+            var s = tileRotated.skirtSouth;
+            var e = tileRotated.skirtEast;
+            var w = tileRotated.skirtWest;
+            var ne = tileRotated.skirtCornerNE;
+            var nw = tileRotated.skirtCornerNW;
+            var se = tileRotated.skirtCornerSE;
+            var sw = tileRotated.skirtCornerSW;
+
+            tileRotated.skirtNorth = s;
+            tileRotated.skirtEast = w;
+            tileRotated.skirtSouth = n;
+            tileRotated.skirtWest = e;
+            tileRotated.skirtCornerNE = sw;
+            tileRotated.skirtCornerSE = nw;
+            tileRotated.skirtCornerSW = ne;
+            tileRotated.skirtCornerNW = se;
+        }
+
     }
 
     /// <summary>
@@ -373,10 +415,54 @@ public class WaveFunctionGame : MonoBehaviour
         tileRotated.excludedNeighboursLeft = originalTile.excludedNeighboursUp;
         tileRotated.excludedNeighboursUp = originalTile.excludedNeighboursRight;
         tileRotated.excludedNeighboursDown = originalTile.excludedNeighboursLeft;
+        if (tileRotated.useSkirts)
+        {
+            var n = tileRotated.skirtNorth;
+            var s = tileRotated.skirtSouth;
+            var e = tileRotated.skirtEast;
+            var w = tileRotated.skirtWest;
+            var ne = tileRotated.skirtCornerNE;
+            var nw = tileRotated.skirtCornerNW;
+            var se = tileRotated.skirtCornerSE;
+            var sw = tileRotated.skirtCornerSW;
+
+            tileRotated.skirtNorth = e;
+            tileRotated.skirtEast = s;
+            tileRotated.skirtSouth = w;
+            tileRotated.skirtWest = n;
+            tileRotated.skirtCornerNE = se;
+            tileRotated.skirtCornerSE = sw;
+            tileRotated.skirtCornerSW = nw;
+            tileRotated.skirtCornerNW = ne;
+        }
     }
 
+    void RefreshSkirtsAround(Cell cell)
+    {
+        RefreshSkirtsForCell(cell);
 
+        int i = cell.index;
+        int cellX = i % dimensionsX;
+        int cellZ = (i / dimensionsX) % dimensionsZ;
 
+        List<int> neighborOffsets = new List<int>();
+        neighborOffsets.Add(dimensionsX);
+        neighborOffsets.Add(-dimensionsX);
+        neighborOffsets.Add(1);
+        neighborOffsets.Add(-1);
+        if (cellZ < dimensionsZ - 1 && cellX < dimensionsX - 1) neighborOffsets.Add(dimensionsX + 1);
+        if (cellZ < dimensionsZ - 1 && cellX > 0) neighborOffsets.Add(dimensionsX - 1);
+        if (cellZ > 0 && cellX < dimensionsX - 1) neighborOffsets.Add(-dimensionsX + 1);
+        if (cellZ > 0 && cellX > 0) neighborOffsets.Add(-dimensionsX - 1);
+
+        foreach (int offset in neighborOffsets)
+        {
+            int neighborIndex = i + offset;
+            if (neighborIndex >= 0 && neighborIndex < gridComponents.Count)
+                if (gridComponents[neighborIndex].collapsed)
+                    RefreshSkirtsForCell(gridComponents[neighborIndex]);
+        }
+    }
 
     /// <summary>
     /// Compara dos sockets soportando tanto el sistema antiguo (Enum) como el nuevo (ScriptableObject)
@@ -844,21 +930,8 @@ public class WaveFunctionGame : MonoBehaviour
              if(!stopOnIncompatibility) Regenerate();
              return;
 
-            // [BACKTRACKING] Manejar la incompatibilidad
-            //HandleConflict();
-            //return;
         }
 
-        //--------Backtracking, save state-----------
-        /* collapseHistory.Push(new CollapseRecord
-         {
-             cellIndex = cellToCollapse.index,
-             previousOptions = (Tile[])cellToCollapse.tileOptions.Clone(),
-             chosenTile = selectedTile
-         });
-
-         */
-        //-------------------------------------------
 
         cellToCollapse.previousEntropy = cellToCollapse.tileOptions.Length;
         cellToCollapse.tileOptions = new Tile[] { selectedTile };
@@ -883,92 +956,15 @@ public class WaveFunctionGame : MonoBehaviour
         instantiatedTile.gameObject.SetActive(true);
 
         cellToCollapse.collapsed = true;
-       // backtracks = 0; // Reset backtrack counter on successful collapse
+
+        
+        RefreshSkirtsAround(cellToCollapse); // añadir
 
         if (cubeStep) UpdateGenerationCube();
         else if (GENERATE_ALL) UpdateGeneration();
     }
 
-   /* void HandleConflict()
-    {
-        backtracks++;
-
-        if (collapseHistory.Count == 0 || backtracks == maxBacktracks)
-        {
-            backtracks = 0;
-            Debug.Log("No hay decisiones para deshacer o se ha alcanzado el maximo de backtracks. Regenerando...");
-            if (STOPWATCH) inc_counter++;
-            if (!stopOnIncompatibility) Regenerate();
-            return;
-        }
-
-        // Deshacemos la ÚLTIMA decisión
-        CollapseRecord last = collapseHistory.Pop();
-        Cell cell = gridComponents[last.cellIndex];
-
-        Debug.Log($"[BACKTRACKING]: Revirtiendo celda {cell.index}");
-
-        // Restaurar el dominio anterior
-        cell.collapsed = false;
-        cell.tileOptions = (Tile[])last.previousOptions.Clone();
-
-        // Borrar instanciados
-        foreach (Transform child in cell.transform)
-            GameObject.Destroy(child.gameObject);
-        iterations--;
-
-        // Quitar de las opciones el tile que falló
-        cell.tileOptions = cell.tileOptions.Where(t => t != last.chosenTile).ToArray();
-
-        // Si ya no quedan opciones, seguir retrocediendo
-        if (cell.tileOptions.Length == 0)
-        {
-            Debug.LogWarning("Celda sin opciones: seguimos retrocediendo...");
-            HandleConflict();    // Recursivo: retrocede más
-            return;
-        }
-
-        // Restaurar vecinos indirectamente propagará restricciones
-        UpdateGeneration();
-
-    }
-    
-    private void UncollapseCell(int index)
-    {
-        if (backtrackStack.ContainsKey(index) && backtrackStack[index].Count > 0)
-        {
-            backtracks++;
-            iterations--;
-            if (backtracks == maxBacktracks) return;
-
-            CellSnapshot snapshot = backtrackStack[index].Pop();
-            Cell cell = gridComponents[index];
-
-            // Restaurar dominio (si existe snapshot)
-            if (snapshot.tileOptions != null)
-                cell.tileOptions = (Tile[])snapshot.tileOptions.Clone();
-
-            // Forzar que NO esté colapsada después del rollback
-            cell.collapsed = false;
-
-            // Eliminar visual (si existe)
-            if (cell.transform.childCount != 0)
-            {
-                foreach (Transform child in cell.transform)
-                {
-                    Destroy(child.gameObject);
-                }
-            }
-
-            // Marcar para re-procesado
-            cell.visitable = true;
-            cell.haSidoVisitado = false;
-        }
-        else
-        {
-            
-        }
-    }*/
+  
 
 
     /// <summary>
@@ -1156,114 +1152,155 @@ public class WaveFunctionGame : MonoBehaviour
     void UpdateGeneration()
     {
         foreach (Cell cell in gridComponents)
-        {
             cell.haSidoVisitado = false;
-        }
 
-        List<Cell> newGenerationCell = new List<Cell>(gridComponents);
-
-
-        for (int y = 0; y < dimensionsY; y++)
+        if (GENERATE_ALL)
         {
-            for (int z = 0; z < dimensionsZ; z++)
+            // Flujo original: un único pase, sin bucle
+            List<Cell> newGenerationCell = new List<Cell>(gridComponents);
+
+
+            for (int y = 0; y < dimensionsY; y++)
             {
-                for (int x = 0; x < dimensionsX; x++)
+                for (int z = 0; z < dimensionsZ; z++)
                 {
-                    CheckNeighbours(x, y, z, ref newGenerationCell);
-
-                    //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
-
-                    if (OneTileCollapseOptimization)
+                    for (int x = 0; x < dimensionsX; x++)
                     {
-                        var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
-                        //bool allNeighborsCollapsed = newGenerationCell[index].neighbors.Values.All(neighbor => neighbor.collapsed);
+                        CheckNeighbours(x, y, z, ref newGenerationCell);
 
-                        if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1
-                            && newGenerationCell[index].visitable && newGenerationCell[index].previousEntropy == 1)
+                        //OPTIMIZACION: Si la celda tiene solo una opcion, que se colapse
+
+                        if (OneTileCollapseOptimization)
                         {
-                            CollapseCellWithOneTileOption(newGenerationCell, index);
+                            var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                            //bool allNeighborsCollapsed = newGenerationCell[index].neighbors.Values.All(neighbor => neighbor.collapsed);
+
+                            if (!newGenerationCell[index].collapsed && newGenerationCell[index].tileOptions.Length == 1
+                                && newGenerationCell[index].visitable && newGenerationCell[index].previousEntropy == 1)
+                            {
+                                CollapseCellWithOneTileOption(newGenerationCell, index);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        gridComponents = newGenerationCell;
-        if (GENERATE_ALL) iterations++;
+            gridComponents = newGenerationCell;
+            if (GENERATE_ALL) iterations++;
 
-        StartCoroutine(UpdateGlobalValidTilesNextFrame());
+            UpdateGlobalValidTiles();
 
-        if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
-        {
-            StartCoroutine(CheckEntropy());
-        }
-
-        else if (STOPWATCH && GENERATE_ALL)
-        {
-            if(onEndGeneration != null)
+            if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
             {
-                onEndGeneration();
+                StartCoroutine(CheckEntropy());
             }
+
+            else if (STOPWATCH && GENERATE_ALL)
+            {
+                if (onEndGeneration != null)
+                {
+                    onEndGeneration();
+                }
+            }
+        }
+
+        else
+        {
+            // Flujo juego: bucle hasta convergencia
+            bool anyChanged = true;
+            int safetyLimit = 100;
+
+            while (anyChanged && safetyLimit-- > 0)
+            {
+                anyChanged = false;
+                List<Cell> newGenerationCell = new List<Cell>(gridComponents);
+
+                for (int y = 0; y < dimensionsY; y++)
+                    for (int z = 0; z < dimensionsZ; z++)
+                        for (int x = 0; x < dimensionsX; x++)
+                        {
+                            int index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                            int prevLength = gridComponents[index].tileOptions.Length;
+
+                            CheckNeighbours(x, y, z, ref newGenerationCell);
+
+                            if (!gridComponents[index].collapsed &&
+                                newGenerationCell[index].tileOptions.Length != prevLength)
+                                anyChanged = true;
+                        }
+
+                gridComponents = newGenerationCell;
+            }
+
+            UpdateGlobalValidTiles();
+
+            // Colapsos forzados con animación, solo en modo juego
+            if (OneTileCollapseOptimization)
+                StartCoroutine(CollapseEntropyOneCells());
         }
     }
 
-    void CollapseCellWithOneTileOption(List<Cell> newGenerationCell, int index)
+    IEnumerator CollapseEntropyOneCells()
     {
+        // Recoge todas las celdas forzadas de una vez
+        List<Cell> toCollapse = gridComponents
+            .Where(c => !c.collapsed && c.visitable && c.tileOptions.Length == 1)
+            .ToList();
 
-        Cell cellToCollapse = newGenerationCell[index];
-        
-        /* if (cellToCollapse.neighbors.TryGetValue(Direction.Up, out Cell up))
-         {
-             Debug.Log($"CELL {index}. Neighbor UP: {up.index}");
-         }*/
+        if (toCollapse.Count == 0) yield break;
 
-       
-        // Make the neighbours of the collapsed cell visitable for optimization purposes
+        foreach (Cell cell in toCollapse)
+        {
+            // Podría haber sido colapsada por una iteración anterior del bucle
+            if (cell.collapsed) continue;
+
+            CollapseCellWithOneTileOption(gridComponents, cell.index);
+
+            // Pequeño delay entre colapsos para efecto visual encadenado
+            yield return new WaitForSeconds(0.01f);
+        }
+
+        // Tras colapsar todo, propagar de nuevo y buscar nuevos forzados
+        // (los colapsos anteriores pueden haber creado nuevas entropías 1)
+        bool newForcedCells = gridComponents.Any(c => !c.collapsed && c.visitable && c.tileOptions.Length == 1);
+        if (newForcedCells)
+        {
+            UpdateGeneration(); // Propagación + nueva ronda de animaciones
+        }
+    }
+
+    void CollapseCellWithOneTileOption(List<Cell> cells, int index)
+    {
+        Cell cellToCollapse = cells[index];
         GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
         Tile foundTile = cellToCollapse.tileOptions[0];
 
-        //--------Backtracking, save state-----------
-        /*collapseHistory.Push(new CollapseRecord
-        {
-            cellIndex = cellToCollapse.index,
-            previousOptions = (Tile[])cellToCollapse.tileOptions.Clone(),
-            chosenTile = foundTile
-        });
+        foreach (Transform child in cellToCollapse.transform)
+            Destroy(child.gameObject);
 
-        cellToCollapse.lastTriedTile = foundTile;*/
-        //-------------------------------------------
+        Tile instantiatedTile = Instantiate(foundTile,
+            cellToCollapse.transform.position, Quaternion.identity,
+            cellToCollapse.transform);
 
-
-        if (cellToCollapse.transform.childCount != 0)
-        {
-            foreach (Transform child in cellToCollapse.transform)
-            {
-                Destroy(child.gameObject);
-            }
-        }
-
-        Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
         if (instantiatedTile.rotation != Vector3.zero)
-        {
             instantiatedTile.gameObject.transform.Rotate(foundTile.rotation, Space.Self);
-        }
 
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
-        iterations++;
+
+        // Efecto visual igual que el colapso manual del jugador
+        instantiatedTile.transform.DOJump(instantiatedTile.transform.position,
+            jumpPower: 0.3f, numJumps: 1, duration: 0.1f).SetEase(Ease.OutBounce);
+
+
         cellToCollapse.collapsed = true;
+        iterations++;
+        RefreshSkirtsAround(cellToCollapse); // añadir
     }
 
 
     //ESTE METODO PERMITE TENER UNA LISTA GLOBAL DE TILES VALIDAS EN TODO EL MAPA PARA PODER SACAR EN CARDGENERATOR SOLO TILES VALIDAS (que pueden colocarse en al menos 1 celda)
-
-    private IEnumerator UpdateGlobalValidTilesNextFrame()
-    {
-        yield return null; // Espera 1 frame por seguridad
-        UpdateGlobalValidTiles();
-    }
-
     private void UpdateGlobalValidTiles()
     {
         globalValidTiles.Clear();
@@ -1423,6 +1460,63 @@ public class WaveFunctionGame : MonoBehaviour
         }
     }
 
+    void RefreshSkirtsForCell(Cell cell)
+    {
+        Tile tileInstance = cell.GetComponentInChildren<Tile>();
+        if (tileInstance == null) return;
+        if (!tileInstance.useSkirts) return;
+
+        int i = cell.index;
+
+        // Posición de la celda en X y Z dentro del grid
+        int cellX = i % dimensionsX;
+        int cellZ = (i / dimensionsX) % dimensionsZ;
+
+        // Límites
+        bool atNorthEdge = cellZ == dimensionsZ - 1;
+        bool atSouthEdge = cellZ == 0;
+        bool atEastEdge = cellX == dimensionsX - 1;
+        bool atWestEdge = cellX == 0;
+
+        // Índices cardinales
+        int northIdx = i + dimensionsX;
+        int southIdx = i - dimensionsX;
+        int eastIdx = i + 1;
+        int westIdx = i - 1;
+
+        // Índices diagonales
+        int neIdx = i + dimensionsX + 1;
+        int nwIdx = i + dimensionsX - 1;
+        int seIdx = i - dimensionsX + 1;
+        int swIdx = i - dimensionsX - 1;
+
+        // Cardinales: si está en el borde del mapa, lo tratamos como sólido
+        // para no mostrar falda hacia el exterior
+        bool hasN = atNorthEdge || IsSolidCollapsed(northIdx);
+        bool hasS = atSouthEdge || IsSolidCollapsed(southIdx);
+        bool hasE = atEastEdge || IsSolidCollapsed(eastIdx);
+        bool hasW = atWestEdge || IsSolidCollapsed(westIdx);
+
+        // Diagonales: solo válidas si ninguno de sus dos cardinales está en borde
+        bool hasNE = (!atNorthEdge && !atEastEdge) && IsSolidCollapsed(neIdx);
+        bool hasNW = (!atNorthEdge && !atWestEdge) && IsSolidCollapsed(nwIdx);
+        bool hasSE = (!atSouthEdge && !atEastEdge) && IsSolidCollapsed(seIdx);
+        bool hasSW = (!atSouthEdge && !atWestEdge) && IsSolidCollapsed(swIdx);
+
+        tileInstance.RefreshSkirts(hasN, hasS, hasE, hasW, hasNE, hasNW, hasSE, hasSW);
+    }
+
+    bool IsSolidCollapsed(int index)
+    {
+        if (index < 0 || index >= gridComponents.Count) return false;
+        Cell c = gridComponents[index];
+        if (!c.collapsed || c.tileOptions.Length == 0) return false;
+
+        string type = c.tileOptions[0].tileType;
+        // Las tiles invisibles no tapan huecos
+        return type != "empty" && type != "air" && type != "solid" && type != "limit";
+    }
+
 
     //-----------------TILE EVENTS-------------------
 
@@ -1485,14 +1579,19 @@ public class WaveFunctionGame : MonoBehaviour
 
         Tile selectedTile = tileRemoved.GetComponent<Tile>();
 
-        if (selectedTile is null)
+        Tile persistentTile = tileObjects.FirstOrDefault(
+    t => t.tileType == selectedTile.tileType && t.rotation == selectedTile.rotation
+);
+
+        if (persistentTile == null)
         {
-            Debug.LogError("NO TILE!");
-            return;
+            Debug.LogError($"No se encontró tile persistente para {selectedTile.tileType}");
+            persistentTile = selectedTile; // fallback
         }
 
-        cellToCollapse.tileOptions = new Tile[] { selectedTile };
+        cellToCollapse.tileOptions = new Tile[] { persistentTile }; // <-- referencia persistente
         Tile foundTile = cellToCollapse.tileOptions[0];
+
 
         if (cellToCollapse.transform.childCount != 0)
         {
@@ -1512,6 +1611,8 @@ public class WaveFunctionGame : MonoBehaviour
 
         instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
         instantiatedTile.gameObject.SetActive(true);
+
+        
 
         //Desactivar ser arrastrado
         DragObject drag = instantiatedTile.GetComponent<DragObject>();
@@ -1534,6 +1635,8 @@ public class WaveFunctionGame : MonoBehaviour
         placedTiles++;
 
         placedTilesText.text = "Fichas: " + placedTiles.ToString();
+
+        RefreshSkirtsAround(cellToCollapse);
 
         UpdateGeneration();
     }

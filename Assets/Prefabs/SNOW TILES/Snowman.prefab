@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5629876859773515718}
   - component: {fileID: 4077859273442218697}
   - component: {fileID: 1824791704185434440}
+  - component: {fileID: 6847606066908383519}
   m_Layer: 0
   m_Name: Snowman
   m_TagString: Untagged
@@ -270,3 +271,24 @@ MonoBehaviour:
     verticalFace: 1
     rotationIndex: 0
     rotationallyInvariant: 1
+--- !u!65 &6847606066908383519
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8210085668033329382}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2.8642545, z: 2}
+  m_Center: {x: 0, y: 1.4321272, z: 0}
