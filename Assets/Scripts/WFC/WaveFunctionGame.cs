@@ -22,6 +22,7 @@ public class WaveFunctionGame : MonoBehaviour
 {
     [SerializeField] private int iterations = 0;
     [SerializeField] private bool GENERATE_ALL = false;
+    [SerializeField] private bool animations = true;
 
 
     [Header("Game")]
@@ -33,6 +34,7 @@ public class WaveFunctionGame : MonoBehaviour
     public GameObject actualTileDragged;
     public Material previewMaterial;
     public float alphaCube = 0.1f;
+    private System.Random _rng = new System.Random();
 
     public HashSet<(string tileType, Vector3 rotation)> globalValidTiles = new(); //para trackear las tiles validas en el mapa en cada iteracion
 
@@ -152,7 +154,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (!GENERATE_ALL) GetCenterCube();
 
-        //AÑADIR TODAS LAS FICHAS AL CARD GENERATOR
+        //Aï¿½ADIR TODAS LAS FICHAS AL CARD GENERATOR
         cardGenerator.tilesList = tileObjects.ToList();
 
         for (int i = cardGenerator.tilesList.Count - 1; i >= 0; i--)
@@ -252,7 +254,7 @@ public class WaveFunctionGame : MonoBehaviour
         tileRotated.rotate180 = tile.rotate180;
         tileRotated.rotateLeft = tile.rotateLeft;
 
-        // useSkirts y todas las referencias de skirts ya están
+        // useSkirts y todas las referencias de skirts ya estï¿½n
         // correctamente remapeadas por el Instantiate
 
         return tileRotated;
@@ -476,7 +478,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         // Caso 2: Ambos usan el sistema antiguo (Enum)
-        // Solo si NINGUNO tiene definición custom
+        // Solo si NINGUNO tiene definiciï¿½n custom
         if (!socketA.HasCustomDefinition && !socketB.HasCustomDefinition)
         {
             return socketA.socket_name == socketB.socket_name;
@@ -587,7 +589,7 @@ public class WaveFunctionGame : MonoBehaviour
         //Then, save the neighbors for each cell
        /* if (OneTileCollapseOptimization)
         {
-            // Crear un diccionario para acceso rápido
+            // Crear un diccionario para acceso rï¿½pido
             Dictionary<Vector3Int, Cell> lookup = new Dictionary<Vector3Int, Cell>();
             foreach (Cell c in gridComponents)
                 lookup[c.coords] = c;
@@ -627,14 +629,14 @@ public class WaveFunctionGame : MonoBehaviour
 
     private void GetCenterCube()
     {
-        //Primero, al contador de cells del cubo hay que sumarle las cells que ya se habían visitado (suelo y cielo)
+        //Primero, al contador de cells del cubo hay que sumarle las cells que ya se habï¿½an visitado (suelo y cielo)
         centerCubeCells += iterations;
 
-        // El tamaño del cubo en X y Z es el dado por initialCubeSize
+        // El tamaï¿½o del cubo en X y Z es el dado por initialCubeSize
         int cubeSizeX = initialCubeSize;
         int cubeSizeZ = initialCubeSize;
 
-        // El tamaño en Y es toda la altura menos cielo y suelo
+        // El tamaï¿½o en Y es toda la altura menos cielo y suelo
         int cubeStartY = 1; // Excluye el suelo (y = 0)
         int cubeEndY = dimensionsY - 1; // Excluye el cielo (y = dimensionsY - 1)
 
@@ -644,7 +646,7 @@ public class WaveFunctionGame : MonoBehaviour
         int endX = startX + cubeSizeX;
         int endZ = startZ + cubeSizeZ;
 
-        // Añadir cells del cubo central a la nueva lista
+        // Aï¿½adir cells del cubo central a la nueva lista
         for (int y = cubeStartY; y < cubeEndY; y++)
         {
             for (int z = startZ; z < endZ; z++)
@@ -746,7 +748,7 @@ public class WaveFunctionGame : MonoBehaviour
         {
             for (int x = 0; x < dimensionsX; x++)
             {
-                // ¿es borde en X o Z?
+                // ï¿½es borde en X o Z?
                 bool isBorder = (x == 0 || x == dimensionsX - 1 || z == 0 || z == dimensionsZ - 1);
 
                 if (isBorder)
@@ -958,7 +960,7 @@ public class WaveFunctionGame : MonoBehaviour
         cellToCollapse.collapsed = true;
 
         
-        RefreshSkirtsAround(cellToCollapse); // añadir
+        RefreshSkirtsAround(cellToCollapse); // aï¿½adir
 
         if (cubeStep) UpdateGenerationCube();
         else if (GENERATE_ALL) UpdateGeneration();
@@ -984,7 +986,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         cell.visitable = true;
 
-        // Verificar que los índices están en rango antes de acceder a gridComponents
+        // Verificar que los ï¿½ndices estï¿½n en rango antes de acceder a gridComponents
         if (up >= 0 && up < gridComponents.Count && ((cell.index / dimensionsX) % dimensionsZ) != dimensionsZ - 1)
         {
             gridComponents[up].MakeVisitable();
@@ -1015,7 +1017,7 @@ public class WaveFunctionGame : MonoBehaviour
             gridComponents[below].MakeVisitable();
         }
 
-        // Calcular diagonales 2D solo si están dentro de rango
+        // Calcular diagonales 2D solo si estï¿½n dentro de rango
         int upLeft = up - 1;
         int upRight = up + 1;
         int downLeft = down - 1;
@@ -1086,8 +1088,7 @@ public class WaveFunctionGame : MonoBehaviour
         int totalWeight = weightedTiles.Sum(item => item.weight);
 
         // Generate a random number between 0 and totalWeight - 1
-        System.Random random = new System.Random();
-        int randomNumber = random.Next(0, totalWeight);
+        int randomNumber = _rng.Next(0, totalWeight);
 
         // Iterate through the tiles and find the one corresponding to the random number
         foreach (var (tile, weight) in weightedTiles)
@@ -1100,8 +1101,7 @@ public class WaveFunctionGame : MonoBehaviour
 
     Tile ChooseRandomTile(List<Tile> tiles)
     {
-        System.Random random = new System.Random();
-        int randomNumber = random.Next(0, tiles.Count - 1);
+        int randomNumber = _rng.Next(0, tiles.Count - 1);
 
         Tile t = tiles[randomNumber];
 
@@ -1156,7 +1156,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (GENERATE_ALL)
         {
-            // Flujo original: un único pase, sin bucle
+            // Flujo original: un ï¿½nico pase, sin bucle
             List<Cell> newGenerationCell = new List<Cell>(gridComponents);
 
 
@@ -1234,7 +1234,7 @@ public class WaveFunctionGame : MonoBehaviour
 
             UpdateGlobalValidTiles();
 
-            // Colapsos forzados con animación, solo en modo juego
+            // Colapsos forzados con animaciï¿½n, solo en modo juego
             if (OneTileCollapseOptimization)
                 StartCoroutine(CollapseEntropyOneCells());
         }
@@ -1251,21 +1251,21 @@ public class WaveFunctionGame : MonoBehaviour
 
         foreach (Cell cell in toCollapse)
         {
-            // Podría haber sido colapsada por una iteración anterior del bucle
+            // Podrï¿½a haber sido colapsada por una iteraciï¿½n anterior del bucle
             if (cell.collapsed) continue;
 
             CollapseCellWithOneTileOption(gridComponents, cell.index);
 
-            // Pequeño delay entre colapsos para efecto visual encadenado
-            yield return new WaitForSeconds(0.01f);
+            // Pequeï¿½o delay entre colapsos para efecto visual encadenado
+            if (animations) yield return new WaitForSeconds(0.01f);
         }
 
         // Tras colapsar todo, propagar de nuevo y buscar nuevos forzados
-        // (los colapsos anteriores pueden haber creado nuevas entropías 1)
+        // (los colapsos anteriores pueden haber creado nuevas entropï¿½as 1)
         bool newForcedCells = gridComponents.Any(c => !c.collapsed && c.visitable && c.tileOptions.Length == 1);
         if (newForcedCells)
         {
-            UpdateGeneration(); // Propagación + nueva ronda de animaciones
+            UpdateGeneration(); // Propagaciï¿½n + nueva ronda de animaciones
         }
     }
 
@@ -1290,13 +1290,13 @@ public class WaveFunctionGame : MonoBehaviour
         instantiatedTile.gameObject.SetActive(true);
 
         // Efecto visual igual que el colapso manual del jugador
-        instantiatedTile.transform.DOJump(instantiatedTile.transform.position,
+        if(animations) instantiatedTile.transform.DOJump(instantiatedTile.transform.position,
             jumpPower: 0.3f, numJumps: 1, duration: 0.1f).SetEase(Ease.OutBounce);
 
 
         cellToCollapse.collapsed = true;
         iterations++;
-        RefreshSkirtsAround(cellToCollapse); // añadir
+        RefreshSkirtsAround(cellToCollapse); // anadir
     }
 
 
@@ -1353,74 +1353,50 @@ public class WaveFunctionGame : MonoBehaviour
             // Checks the down cell
             if (z > 0)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[down].tileOptions)
-                {
-                    var valid = possibleOptions.upNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                //  Debug.Log($"Down Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[down].tileOptions)
+                    validSet.UnionWith(opt.upNeighbours);
+                CheckValidity(options, validSet, index);
             }
             // Checks the right cell
             if (x < dimensionsX - 1)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[right].tileOptions)
-                {
-                    var valid = possibleOptions.leftNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                // Debug.Log($"Right Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[right].tileOptions)
+                    validSet.UnionWith(opt.leftNeighbours);
+                CheckValidity(options, validSet, index);
             }
             // Checks the up cell
             if (z < dimensionsZ - 1)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[up].tileOptions)
-                {
-                    var valid = possibleOptions.downNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                // Debug.Log($"Up Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[up].tileOptions)
+                    validSet.UnionWith(opt.downNeighbours);
+                CheckValidity(options, validSet, index);
             }
             // Checks the left cell
             if (x > 0)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[left].tileOptions)
-                {
-                    var valid = possibleOptions.rightNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                // Debug.Log($"Left Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[left].tileOptions)
+                    validSet.UnionWith(opt.rightNeighbours);
+                CheckValidity(options, validSet, index);
             }
             // Checks the cell below
             if (y > 0)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[below].tileOptions)
-                {
-                    var valid = possibleOptions.aboveNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                // Debug.Log($"Below Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[below].tileOptions)
+                    validSet.UnionWith(opt.aboveNeighbours);
+                CheckValidity(options, validSet, index);
             }
             // Checks the cell above
             if (y < dimensionsY - 1)
             {
-                List<Tile> validOptions = new List<Tile>();
-                foreach (Tile possibleOptions in gridComponents[above].tileOptions)
-                {
-                    var valid = possibleOptions.belowNeighbours;
-                    validOptions = validOptions.Concat(valid).ToList();
-                }
-                // Debug.Log($"Above Valid Options for Cell[{index}]: {string.Join(", ", validOptions.Select(o => o.tileType))}");
-                CheckValidity(options, validOptions, index);
+                HashSet<Tile> validSet = new HashSet<Tile>();
+                foreach (Tile opt in gridComponents[above].tileOptions)
+                    validSet.UnionWith(opt.belowNeighbours);
+                CheckValidity(options, validSet, index);
             }
 
             // Log options after validity check
@@ -1442,19 +1418,15 @@ public class WaveFunctionGame : MonoBehaviour
         /// </summary>
         /// <param name="optionList"></param> List of options to be checked
         /// <param name="validOption"></param> List of valid options
-        void CheckValidity(List<Tile> optionList, List<Tile> validOption, int indexCell)
+        void CheckValidity(List<Tile> optionList, HashSet<Tile> validSet, int indexCell)
         {
-            HashSet<Tile> validSet = new HashSet<Tile>(validOption);
-
-            var optionCopy = optionList.ToList(); // Copia para evitar modificar la original mientras iteramos
-
-            optionList.Clear(); // Limpia la lista original antes de llenarla con los válidos
-
+            var optionCopy = optionList.ToList();
+            optionList.Clear();
             foreach (var option in optionCopy)
             {
                 if (validSet.Contains(option) && option.tileType != "limit")
                 {
-                    optionList.Add(option); // Solo añadimos los válidos
+                    optionList.Add(option);
                 }
             }
         }
@@ -1468,36 +1440,36 @@ public class WaveFunctionGame : MonoBehaviour
 
         int i = cell.index;
 
-        // Posición de la celda en X y Z dentro del grid
+        // Posiciï¿½n de la celda en X y Z dentro del grid
         int cellX = i % dimensionsX;
         int cellZ = (i / dimensionsX) % dimensionsZ;
 
-        // Límites
+        // Lï¿½mites
         bool atNorthEdge = cellZ == dimensionsZ - 1;
         bool atSouthEdge = cellZ == 0;
         bool atEastEdge = cellX == dimensionsX - 1;
         bool atWestEdge = cellX == 0;
 
-        // Índices cardinales
+        // ï¿½ndices cardinales
         int northIdx = i + dimensionsX;
         int southIdx = i - dimensionsX;
         int eastIdx = i + 1;
         int westIdx = i - 1;
 
-        // Índices diagonales
+        // ï¿½ndices diagonales
         int neIdx = i + dimensionsX + 1;
         int nwIdx = i + dimensionsX - 1;
         int seIdx = i - dimensionsX + 1;
         int swIdx = i - dimensionsX - 1;
 
-        // Cardinales: si está en el borde del mapa, lo tratamos como sólido
+        // Cardinales: si estï¿½ en el borde del mapa, lo tratamos como sï¿½lido
         // para no mostrar falda hacia el exterior
         bool hasN = atNorthEdge || IsSolidCollapsed(northIdx);
         bool hasS = atSouthEdge || IsSolidCollapsed(southIdx);
         bool hasE = atEastEdge || IsSolidCollapsed(eastIdx);
         bool hasW = atWestEdge || IsSolidCollapsed(westIdx);
 
-        // Diagonales: solo válidas si ninguno de sus dos cardinales está en borde
+        // Diagonales: solo vï¿½lidas si ninguno de sus dos cardinales estï¿½ en borde
         bool hasNE = (!atNorthEdge && !atEastEdge) && IsSolidCollapsed(neIdx);
         bool hasNW = (!atNorthEdge && !atWestEdge) && IsSolidCollapsed(nwIdx);
         bool hasSE = (!atSouthEdge && !atEastEdge) && IsSolidCollapsed(seIdx);
@@ -1523,7 +1495,7 @@ public class WaveFunctionGame : MonoBehaviour
     private void OnTileDrag(Tile draggedTile)
     {
         actualTileDragged = draggedTile.gameObject;
-        //Cuando el jugador escoge una tile, tenemos que mostrar sólo las celdas donde puede encajar
+        //Cuando el jugador escoge una tile, tenemos que mostrar sï¿½lo las celdas donde puede encajar
         List<Cell> tempGrid = new List<Cell>(gridComponents);
 
         tempGrid.RemoveAll(c => c.collapsed);
@@ -1585,7 +1557,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (persistentTile == null)
         {
-            Debug.LogError($"No se encontró tile persistente para {selectedTile.tileType}");
+            Debug.LogError($"No se encontrï¿½ tile persistente para {selectedTile.tileType}");
             persistentTile = selectedTile; // fallback
         }
 
@@ -1622,7 +1594,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         // Efecto de rebote con DOTween
-        instantiatedTile.transform.DOJump(instantiatedTile.transform.position, jumpPower: 0.5f, numJumps: 1, duration: 0.3f).SetEase(Ease.InOutFlash);
+        if(animations) instantiatedTile.transform.DOJump(instantiatedTile.transform.position, jumpPower: 0.5f, numJumps: 1, duration: 0.3f).SetEase(Ease.InOutFlash);
 
 
         foreach (Cell cell in validCells)
