@@ -3864,6 +3864,8 @@ MonoBehaviour:
   iterations: 0
   GENERATE_ALL: 0
   animations: 1
+  animationDuration: 0.1
+  animationDelay: 0.05
   cardGenerator: {fileID: 1993922141}
   initialCubeSize: 3
   centerCubeCells: 0
@@ -3873,8 +3875,8 @@ MonoBehaviour:
   audioSource: {fileID: 1154171696}
   changeCellSound: {fileID: 8300000, guid: 98c66415d582c1942b26896ba6873faf, type: 3}
   collapseCellSound: {fileID: 8300000, guid: 8645ef972d1dceb4a9374400079e2d28, type: 3}
-  dimensionsX: 9
-  dimensionsZ: 9
+  dimensionsX: 15
+  dimensionsZ: 15
   dimensionsY: 5
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
@@ -3921,7 +3923,7 @@ MonoBehaviour:
   isRunning: 0
   tutorial: 0
   stopOnIncompatibility: 0
-  STOPWATCH: 1
+  STOPWATCH: 0
 --- !u!82 &1154171696
 AudioSource:
   m_ObjectHideFlags: 0
@@ -5316,6 +5318,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 400
+  cam: {fileID: 330585545}
+  cameraLocalPosition: {x: 0, y: 0, z: 0}
+  sizePerCell: 0.5
 --- !u!4 &1790256225
 Transform:
   m_ObjectHideFlags: 0
@@ -6005,7 +6010,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6407,9 +6412,12 @@ MonoBehaviour:
   - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
   - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
   queueSize: 3
-  distance: 2.5
+  distance: 3.55
   dragCooldown: 0.5
   timerCooldown: 0
+  mainCamera: {fileID: 330585545}
+  screenAnchor: {x: 0.9, y: 0.35}
+  distanceFromCamera: 20
 --- !u!4 &1993922142
 Transform:
   m_ObjectHideFlags: 0

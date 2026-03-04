@@ -79,7 +79,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Brightness_Rim: 0.9
+    - Brightness_Rim: 0.7
     - Brightness_outline: 11.27
     - Float_1: 1.38
     - Power: 1.39
@@ -88,7 +88,7 @@ Material:
     - ToonRamp: 0
     - ToonRampOffset: 0.61
     - ToonRampSmoothness: 0
-    - Toon_Ramp_Offset: 0.748
+    - Toon_Ramp_Offset: 0
     - Toon_Ramp_Smoothness: 0.041
     - _Brightness: 2
     - _Edge: 0.099

@@ -22,9 +22,20 @@ public class CardGenerator : MonoBehaviour
 
     private LocalKeyword SelectableKeyword;
 
+    [Header("UI 3D Settings")]
+    public Camera mainCamera;
+    [Tooltip("Posición en pantalla (0 a 1). X=0.85 es a la derecha, Y=0.8 es arriba")]
+    public Vector2 screenAnchor = new Vector2(0.85f, 0.8f);
+    [Tooltip("Distancia hacia adelante desde la cámara para que no la atraviese")]
+    public float distanceFromCamera = 20f;
 
     private void Start()
     {
+        if (mainCamera == null) mainCamera = Camera.main;
+
+        // Actualizamos la posición justo antes de generar la cola por primera vez
+        UpdateScreenPosition();
+
         tileQueue = new Queue<Tile>();
         wfc = FindAnyObjectByType<WaveFunctionGame>();
         InicializeTileQueue();
@@ -55,6 +66,29 @@ public class CardGenerator : MonoBehaviour
         }
     }
 
+    //------POSICION EN PANTALLA---------
+    private void LateUpdate()
+    {
+        UpdateScreenPosition();
+    }
+
+
+    private void UpdateScreenPosition()
+    {
+        if (mainCamera == null) return;
+
+        // 1. Mantiene el CardGenerator fijo en la esquina derecha de la pantalla
+        Vector3 targetPos = mainCamera.ViewportToWorldPoint(new Vector3(screenAnchor.x, screenAnchor.y, distanceFromCamera));
+        transform.position = targetPos;
+
+        // 2. Rota el CardGenerator igual que la cámara en el eje Y.
+        // Esto hace que las tiles parezcan estáticas (no giran cuando giras el mundo).
+        transform.rotation = Quaternion.Euler(0, mainCamera.transform.eulerAngles.y, 0);
+    }
+
+
+
+    //------COLA DE TILES--------
     private void InicializeTileQueue()
     {  
         for (int i = 0; i < queueSize; i++)

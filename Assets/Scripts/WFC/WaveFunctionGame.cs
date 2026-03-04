@@ -23,6 +23,8 @@ public class WaveFunctionGame : MonoBehaviour
     [SerializeField] private int iterations = 0;
     [SerializeField] private bool GENERATE_ALL = false;
     [SerializeField] private bool animations = true;
+    [SerializeField] private float animationDuration = 0.1f;
+    [SerializeField] private float animationDelay = 0.01f;
 
 
     [Header("Game")]
@@ -37,6 +39,7 @@ public class WaveFunctionGame : MonoBehaviour
     private System.Random _rng = new System.Random();
 
     public HashSet<(string tileType, Vector3 rotation)> globalValidTiles = new(); //para trackear las tiles validas en el mapa en cada iteracion
+
 
     //sounds
     public AudioSource audioSource;
@@ -68,11 +71,6 @@ public class WaveFunctionGame : MonoBehaviour
     [SerializeField] private bool useOptimization;
     [SerializeField] private bool OneTileCollapseOptimization;
     [SerializeField] private bool randomGeneration;
-
-    //Backtracking
-   /* Stack<CollapseRecord> collapseHistory = new Stack<CollapseRecord>();
-    public int maxBacktracks = 1000;
-    private int backtracks = 0;*/
 
     [Header("Debug")]
     public int placedTiles = 0;
@@ -120,6 +118,14 @@ public class WaveFunctionGame : MonoBehaviour
 
     void Awake()
     {
+        //Si el modo es JUEGO, siempre debe estar activo OneTileCollapseOptimization y no debe estar activo useOptimization
+        if (GENERATE_ALL)
+        {
+            OneTileCollapseOptimization = true;
+            useOptimization = false;
+        }
+
+
         //PREPROCESSING
         ClearNeighbours(ref tileObjects);
         CreateRemainingCells(ref tileObjects);
@@ -136,9 +142,14 @@ public class WaveFunctionGame : MonoBehaviour
 
     private void Init()
     {
+        //Setup camera
+        CameraControl cameraControl = FindAnyObjectByType<CameraControl>();
+        if (cameraControl != null)
+            cameraControl.SetupCamera(dimensionsX, dimensionsZ, dimensionsY, cellSize);
+
+
         centerCubeCells = 0;
         iterations = 0;
-
 
         //INITIALIZE
         InitializeGrid();
@@ -584,46 +595,7 @@ public class WaveFunctionGame : MonoBehaviour
                     gridComponents.Add(newCell);
                 }
             }
-        }
-
-        //Then, save the neighbors for each cell
-       /* if (OneTileCollapseOptimization)
-        {
-            // Crear un diccionario para acceso r�pido
-            Dictionary<Vector3Int, Cell> lookup = new Dictionary<Vector3Int, Cell>();
-            foreach (Cell c in gridComponents)
-                lookup[c.coords] = c;
-
-            foreach (Cell cell in gridComponents)
-            {
-                cell.neighbors.Clear();
-
-                // up (z+1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 0, 1), out Cell up))
-                    cell.neighbors[Direction.Up] = up;
-
-                // down  (z-1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 0, -1), out Cell down))
-                    cell.neighbors[Direction.Down] = down;
-
-                // right (x+1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(1, 0, 0), out Cell right))
-                    cell.neighbors[Direction.Right] = right;
-
-                // left (x-1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(-1, 0, 0), out Cell left))
-                    cell.neighbors[Direction.Left] = left;
-
-                // above (y+1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, 1, 0), out Cell above))
-                    cell.neighbors[Direction.Above] = above;
-
-                // below (y-1)
-                if (lookup.TryGetValue(cell.coords + new Vector3Int(0, -1, 0), out Cell below))
-                    cell.neighbors[Direction.Below] = below;
-            }
-        }*/
-
+        }    
     }
 
 
@@ -760,8 +732,9 @@ public class WaveFunctionGame : MonoBehaviour
                     cellToCollapse.tileOptions = new Tile[] { limitTile };
                     cellToCollapse.collapsed = true;
 
-                    //Necesario para que los alrededores del limite sean visitables
-                    GetNeighboursCloseToCollapsedCell(cellToCollapse);
+                    //Necesario para que los alrededores del limite sean visitables si el modo es GENERAR TODO EL MAPA y se usa la optimizacion de frontera
+                    //En modo juego, los limites del mapa NO deberian ser visitables
+                    if(useOptimization && GENERATE_ALL) GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
                     // limpiar hijos previos
                     if (cellToCollapse.transform.childCount != 0)
@@ -817,7 +790,8 @@ public class WaveFunctionGame : MonoBehaviour
                     cellToCollapse.collapsed = true;
 
                     // Make the neighbours of the collapsed cell visitable for optimization purposes
-                    GetNeighboursCloseToCollapsedCell(cellToCollapse);
+                    //GetNeighboursCloseToCollapsedCell(cellToCollapse);
+
                     cellToCollapse.tileOptions = new Tile[] { tile };
                     // limpiar hijos previos
                     if (cellToCollapse.transform.childCount != 0)
@@ -970,12 +944,30 @@ public class WaveFunctionGame : MonoBehaviour
 
 
     /// <summary>
-    /// Makes the neighbours wiithin a given distance og the collapsed cell visitable for optimization purposes
+    /// Makes the neighbours wiithin a given distance og the collapsed cell visitable for optimization purposes or for game mechanic purposes
     /// (not always looking at every cell)
     /// </summary>
     /// <param name="cell"></param> Collapsed cell
+    /// 
+    /// NOTA: Si se usa para la optimizacion al generar todo el mapa, siempre se llama a esta funcion cuando algo colapsa, incluso tiles invisibles.
+    /// 
+    /// Sin embargo, si se usa en modo juego, la optimizacion no es necesaria pero queremos que solo se puedan colocar nuevas tiles
+    /// en celdas adyacentes a lo ya colapsado, solo celdas visibles. Para evitar que se marque como visitable los bordes invisibles del mapa debido a la tile de limite,
+    /// se debe marcar esa frontera como no visitable.
     private void GetNeighboursCloseToCollapsedCell(Cell cell)
     {
+        // Las tiles de infraestructura no expanden la frontera del jugador si esta en modo juego
+        if (!GENERATE_ALL)
+        {
+            if (cell.tileOptions.Length > 0)
+            {
+                string type = cell.tileOptions[0].tileType;
+                if (type == "empty" || type == "solid" || type == "limit")
+                    return;
+            }
+        }
+
+
         int up, down, left, right, above, below;
         up = cell.index + dimensionsX;
         down = cell.index - dimensionsX;
@@ -983,10 +975,9 @@ public class WaveFunctionGame : MonoBehaviour
         right = cell.index + 1;
         above = cell.index + (dimensionsX * dimensionsZ);
         below = cell.index - (dimensionsX * dimensionsZ);
-
         cell.visitable = true;
 
-        // Verificar que los �ndices est�n en rango antes de acceder a gridComponents
+        // Verificar que los indices estan en rango antes de acceder a gridComponents
         if (up >= 0 && up < gridComponents.Count && ((cell.index / dimensionsX) % dimensionsZ) != dimensionsZ - 1)
         {
             gridComponents[up].MakeVisitable();
@@ -1156,7 +1147,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (GENERATE_ALL)
         {
-            // Flujo original: un �nico pase, sin bucle
+            // Flujo original: un unico pase, sin bucle
             List<Cell> newGenerationCell = new List<Cell>(gridComponents);
 
 
@@ -1234,7 +1225,7 @@ public class WaveFunctionGame : MonoBehaviour
 
             UpdateGlobalValidTiles();
 
-            // Colapsos forzados con animaci�n, solo en modo juego
+            // Colapsos forzados con animacion, solo en modo juego
             if (OneTileCollapseOptimization)
                 StartCoroutine(CollapseEntropyOneCells());
         }
@@ -1244,28 +1235,27 @@ public class WaveFunctionGame : MonoBehaviour
     {
         // Recoge todas las celdas forzadas de una vez
         List<Cell> toCollapse = gridComponents
-            .Where(c => !c.collapsed && c.visitable && c.tileOptions.Length == 1)
+            .Where(c => !c.collapsed && c.tileOptions.Length == 1)
             .ToList();
 
         if (toCollapse.Count == 0) yield break;
 
         foreach (Cell cell in toCollapse)
         {
-            // Podr�a haber sido colapsada por una iteraci�n anterior del bucle
             if (cell.collapsed) continue;
 
             CollapseCellWithOneTileOption(gridComponents, cell.index);
 
-            // Peque�o delay entre colapsos para efecto visual encadenado
-            if (animations) yield return new WaitForSeconds(0.01f);
+            // Pequeno delay entre colapsos para efecto visual encadenado
+            if (animations) yield return new WaitForSeconds(animationDelay);
         }
 
         // Tras colapsar todo, propagar de nuevo y buscar nuevos forzados
-        // (los colapsos anteriores pueden haber creado nuevas entrop�as 1)
+        // (los colapsos anteriores pueden haber creado nuevas entropias 1)
         bool newForcedCells = gridComponents.Any(c => !c.collapsed && c.visitable && c.tileOptions.Length == 1);
         if (newForcedCells)
         {
-            UpdateGeneration(); // Propagaci�n + nueva ronda de animaciones
+            UpdateGeneration(); // Propagacion + nueva ronda de animaciones
         }
     }
 
@@ -1291,7 +1281,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         // Efecto visual igual que el colapso manual del jugador
         if(animations) instantiatedTile.transform.DOJump(instantiatedTile.transform.position,
-            jumpPower: 0.3f, numJumps: 1, duration: 0.1f).SetEase(Ease.OutBounce);
+            jumpPower: 0.3f, numJumps: 1, duration: animationDuration).SetEase(Ease.OutBounce);
 
 
         cellToCollapse.collapsed = true;
