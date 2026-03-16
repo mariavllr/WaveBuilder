@@ -16,39 +16,40 @@ public class MissionManager : MonoBehaviour
         Instance = this;
     }
 
+    private void OnEnable()
+    {
+        GameEvents.OnMissionCompleted += OnMissionCompleted;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnMissionCompleted -= OnMissionCompleted;
+    }
+
     public void InitializeMissions(LevelData levelData)
     {
         activeMissions.Clear();
-
-        foreach (var missionData in levelData.missions)
+        //Para cada mision del nivel
+        foreach (var data in levelData.missions)
         {
-            // EJEMPLO: si es una misión de colocar el campamento
-            if (missionData.missionID == 0)
+            Mission newMission = null;
+
+            switch (data.type)
             {
-                var mission = new Mission_PlaceTileType(missionData, "campfire");
-                activeMissions.Add(mission);
-                mission.StartListening();
-                AddMissionToUI(missionData);
-            }
-            else if (missionData.missionID == 1)
-            {
-                string[] pineTypes = { "pine", "pines", "pineAutumn" };
-                var mission = new Mission_TilesTogether(missionData, pineTypes, 3);
-                activeMissions.Add(mission);
-                mission.StartListening();
-                AddMissionToUI(missionData);
+                case MissionType.PlaceTile:
+                    newMission = new Mission_PlaceTileType(data, data.targetTileTypes[0]);
+                    break;
+                case MissionType.TilesTogether:
+                    newMission = new Mission_TilesTogether(data, data.targetTileTypes, data.amountRequired);
+                    break;
             }
 
-            else if (missionData.missionID == 2)
+            if (newMission != null)
             {
-                string[] town = { "campfire" };
-                var mission = new Mission_TilesTogether(missionData, town, 4);
-                activeMissions.Add(mission);
-                mission.StartListening();
-                AddMissionToUI(missionData);
+                activeMissions.Add(newMission);
+                newMission.StartListening();
+                AddMissionToUI(data);
             }
-
-
         }
     }
 
@@ -59,16 +60,12 @@ public class MissionManager : MonoBehaviour
         missionUI.name = missionData.missionID.ToString();
     }
 
-    public void OnMissionCompleted(Mission mission)
+    public void OnMissionCompleted(MissionData mission)
     {
-        // Mostrar mensaje en pantalla
-        //Debug.Log("Misión completada: " + mission.data.missionName);
-        GameEvents.MissionCompleted(mission.data);
-
         //Borrar mision de la UI
         foreach (Transform child in missionsContainerUI.transform)
         {
-            if (child.name == mission.data.missionID.ToString())
+            if (child.name == mission.missionID.ToString())
             {
                 Destroy(child.gameObject);
                 break;
@@ -77,5 +74,8 @@ public class MissionManager : MonoBehaviour
 
         // Actualizar progreso del jugador
         //SaveSystem.Instance.MarkMissionAsCompleted(mission.data.missionID);
+
+        // Limpia la memoria
+       // activeMissions.Remove(mission);
     }
 }

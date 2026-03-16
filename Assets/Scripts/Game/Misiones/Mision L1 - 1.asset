@@ -12,7 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2f0e0259423af241998bfd55683e9a1, type: 3}
   m_Name: Mision L1 - 1
   m_EditorClassIdentifier: 
+  type: 1
   missionID: 1
   missionName: conseguir_bosque
   missionDescription: Consigue un bosque
   givenPoints: 2
+  targetTileTypes:
+  - pine
+  - pines
+  - pineAutumn
+  amountRequired: 3

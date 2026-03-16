@@ -19,12 +19,14 @@ public class DT_MissionMessage : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnMissionCompleted += ShowMessage;
+        GameEvents.OnMissionCompleted += ShowMissionCompletedMessage;
+        GameEvents.OnScoreUpdated += ShowUpdatedScoreMessage;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnMissionCompleted -= ShowMessage;
+        GameEvents.OnMissionCompleted -= ShowMissionCompletedMessage;
+        GameEvents.OnScoreUpdated -= ShowUpdatedScoreMessage;
     }
 
     void Awake()
@@ -39,10 +41,20 @@ public class DT_MissionMessage : MonoBehaviour
         rect.anchoredPosition = hiddenPos;
     }
 
-    public void ShowMessage(MissionData data)
+    public void ShowMissionCompletedMessage(MissionData data)
     {
         messageText.text = data.missionDescription + " +" + data.givenPoints;
+        ShowMessage();
+    }
 
+    public void ShowUpdatedScoreMessage(int givenPoints)
+    {
+        messageText.text = "+ " + givenPoints;
+        ShowMessage();
+    }
+
+    private void ShowMessage()
+    {
         rect.DOKill();  // Cancelamos cualquier animación previa
 
         Sequence seq = DOTween.Sequence();

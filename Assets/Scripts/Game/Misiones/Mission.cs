@@ -21,7 +21,7 @@ public abstract class Mission
         UnityEngine.Debug.Log($"Misión completada: {data.missionName}");
         StopListening();
 
-        MissionManager.Instance.OnMissionCompleted(this);
+        GameEvents.MissionCompleted(this.data);
     }
 }
 

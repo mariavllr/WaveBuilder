@@ -91,9 +91,20 @@ public class DragObject : MonoBehaviour
                     currentPreviewInstance = CreatePreviewAtCell(currentPreviewCell);
                     //Checkear puntos si se coloca en esa celda
 
+                    //Hover de posible puntuacion encima de la ficha
+                    if (closest != null)
+                    {
+                        int potentialScore = ScoreManager.Instance.CalculatePotentialScore(tile, closest);
+                        ScoreManager.Instance.ShowPreview(potentialScore);
+                    }
 
                     //Sonido de cambiar de cell
                     wfc.audioSource.PlayOneShot(wfc.changeCellSound, 0.5f);
+                }
+
+                if (currentPreviewCell != null)
+                {
+                    ScoreManager.Instance.UpdatePreviewPosition(currentPreviewCell.transform.position);
                 }
             }
 
@@ -112,6 +123,7 @@ public class DragObject : MonoBehaviour
                     currentPreviewCell = null;
                 }
 
+                ScoreManager.Instance.HidePreview();
                 wfc.audioSource.PlayOneShot(wfc.collapseCellSound, 0.5f);
             }
         }
