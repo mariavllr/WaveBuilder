@@ -87,15 +87,20 @@ public class DragObject : MonoBehaviour
                     }
 
                     currentPreviewCell = closest;
-                    // Instanciar nuevo preview
                     currentPreviewInstance = CreatePreviewAtCell(currentPreviewCell);
-                    //Checkear puntos si se coloca en esa celda
 
                     //Hover de posible puntuacion encima de la ficha
                     if (closest != null)
                     {
-                        int potentialScore = ScoreManager.Instance.CalculatePotentialScore(tile, closest);
+                        // 1. Calculamos los puntos y obtenemos qué fichas brillan
+                        List<Tile> affectedTiles;
+                        int potentialScore = ScoreManager.Instance.CalculatePotentialScore(tile, closest, out affectedTiles);
+
+                        // 2. Mostramos el texto animado
                         ScoreManager.Instance.ShowPreview(potentialScore);
+
+                        // 3. Encendemos esas fichas
+                        ScoreManager.Instance.HighlightTiles(affectedTiles);
                     }
 
                     //Sonido de cambiar de cell
@@ -113,7 +118,6 @@ public class DragObject : MonoBehaviour
             if (Input.GetMouseButtonUp(0)) // Suelta el click
             {
                 isDragging = false;
-                //OnTileReleased?.Invoke(this.gameObject, closest); // Disparamos el evento
                 GameEvents.TileReleased(tile, closest);
 
                 if (currentPreviewInstance != null)
@@ -124,6 +128,8 @@ public class DragObject : MonoBehaviour
                 }
 
                 ScoreManager.Instance.HidePreview();
+                ScoreManager.Instance.ClearHighlights();
+
                 wfc.audioSource.PlayOneShot(wfc.collapseCellSound, 0.5f);
             }
         }

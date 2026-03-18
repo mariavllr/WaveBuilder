@@ -5,7 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public struct AdjacencyBonus
 {
-    public string targetTileType; // Ej: "aserradero"
+    public string[] targetTileTypes; // Ej: "aserradero"
     public int bonusPoints;
 }
 
@@ -13,7 +13,7 @@ public struct AdjacencyBonus
 //Esta clase define los puntos base que da cada tile por el hecho de ser colocada
 public class TileScoreData : ScriptableObject
 {
-    public string tileType;       // Ej: "tree"
+    public string[] tileTypes;       // Ej: "tree"
     public int basePoints;        // Ej: 1
 
     // Lista de sinergias que tiene esta ficha

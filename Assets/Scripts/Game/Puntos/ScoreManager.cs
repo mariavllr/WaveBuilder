@@ -8,16 +8,25 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance;
 
     [Header("Referencias")]
-    public WaveFunctionGame wfcGame; // Arrastra tu WaveFunctionGame aquí desde el Inspector
-    public List<TileScoreData> allScoreDataObjects; // Tus Scriptable Objects de puntuación
+    public WaveFunctionGame wfcGame; 
+    public List<TileScoreData> allScoreDataObjects;
+
     [Header("UI")]
+    public TextMeshProUGUI pointsText;
     public TMPro.TextMeshProUGUI scorePreviewText; // Tu texto flotante
     public RectTransform scorePreviewContainer; // El padre (se mueve con la celda)
-    public float floatHeight = 15f;  // Cuántos píxeles sube
-    public float floatDuration = 1f; // Lo lento que sube y baja
-
+    public float floatHeight = 15f;  
+    public float floatDuration = 1f;
+    public float blinkSpeed = 5f;
     private Tween floatTween;
 
+    [Header("Tile Highlight Settings")]
+    [ColorUsage(true, true)]
+    public Color highlightColor = Color.yellow;
+    // Lista para recordar qué fichas están brillando y poder apagarlas luego
+    private List<Tile> currentlyHighlightedTiles = new List<Tile>();
+    private MaterialPropertyBlock mpb;
+    private int highlightColorID;
 
     // OPTIMIZACIÓN O(1): Diccionario anidado [FichaOrigen][FichaVecina] = Puntos
     // Evita tener que iterar listas para buscar si hay sinergias cada vez que pones una ficha.
@@ -30,6 +39,9 @@ public class ScoreManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        highlightColorID = Shader.PropertyToID("_HighlightColor");
+        mpb = new MaterialPropertyBlock();
+
         InitializeOptimizationMaps();
     }
 
@@ -57,15 +69,34 @@ public class ScoreManager : MonoBehaviour
 
     private void InitializeOptimizationMaps()
     {
-        // Mapeamos los datos de los Scriptable Objects al arrancar
+        basePointsMap.Clear();
+        synergyMap.Clear();
+
+        // 1. Recorremos cada Scriptable Object
         foreach (var data in allScoreDataObjects)
         {
-            basePointsMap[data.tileType] = data.basePoints;
-            synergyMap[data.tileType] = new Dictionary<string, int>();
-
-            foreach (var bonus in data.adjacencyBonuses)
+            // 2. Recorremos cada nombre de tile ("pine", "pineAutumn"...)
+            foreach (string typeName in data.tileTypes)
             {
-                synergyMap[data.tileType][bonus.targetTileType] = bonus.bonusPoints;
+                // Asignamos los puntos base a este nombre específico
+                basePointsMap[typeName] = data.basePoints;
+
+                // Nos aseguramos de que existe el diccionario de sinergias para esta ficha
+                if (!synergyMap.ContainsKey(typeName))
+                {
+                    synergyMap[typeName] = new Dictionary<string, int>();
+                }
+
+                // 3. Recorremos los bonus configurados
+                foreach (var bonus in data.adjacencyBonuses)
+                {
+                    // 4. Recorremos los targets de cada bonus
+                    foreach (string targetName in bonus.targetTileTypes)
+                    {
+                        // Guardamos la relación. Ej: synergyMap["pine"]["aserradero"] = 2;
+                        synergyMap[typeName][targetName] = bonus.bonusPoints;
+                    }
+                }
             }
         }
     }
@@ -102,6 +133,7 @@ public class ScoreManager : MonoBehaviour
 
         // 4. Sumar al total
         currentScore += pointsEarnedThisTurn;
+        pointsText.text = "PUNTOS: " + currentScore;
         Debug.Log($"Ficha: {pType} | Puntos turno: {pointsEarnedThisTurn} | Puntuación Total: {currentScore}");
 
         GameEvents.ScoreUpdated(pointsEarnedThisTurn);
@@ -109,7 +141,6 @@ public class ScoreManager : MonoBehaviour
 
     /// <summary>
     /// Utiliza las matemáticas ya existentes en WaveFunctionGame para leer los vecinos directos 
-    /// sin instanciar colliders, raycasts ni iterar toda la grid.
     /// </summary>
     private List<Tile> GetActualNeighbors(Cell centerCell)
     {
@@ -146,23 +177,29 @@ public class ScoreManager : MonoBehaviour
 
     private void TryAddNeighbor(Cell neighborCell, List<Tile> list)
     {
-        // Reutilizamos tu lógica: solo nos interesan celdas colapsadas
-        if (!neighborCell.collapsed || neighborCell.tileOptions.Length == 0) return;
+        //Si la celda no está colapsada, pasamos
+        if (!neighborCell.collapsed) return;
+        Tile realTileInstance = neighborCell.GetComponentInChildren<Tile>();
 
-        Tile tileInfo = neighborCell.tileOptions[0];
-        string type = tileInfo.tileType;
+        // Si por algún motivo está vacía, pasamos
+        if (realTileInstance == null) return;
 
-        // Filtramos límites y estructuras de relleno que tienes en tu WFC
+        string type = realTileInstance.tileType;
+
+        // Filtramos los bordes del mapa y el aire
         if (type != "empty" && type != "solid" && type != "limit" && type != "air")
         {
-            list.Add(tileInfo);
+            list.Add(realTileInstance); // Añadimos la ficha REAL a la lista
         }
     }
 
+    //--------------
     //------UI------
+    //--------------
 
-    public int CalculatePotentialScore(Tile tileToPlace, Cell targetCell)
+    public int CalculatePotentialScore(Tile tileToPlace, Cell targetCell, out List<Tile> contributingTiles)
     {
+        contributingTiles = new List<Tile>();
         if (!basePointsMap.ContainsKey(tileToPlace.tileType)) return 0;
 
         int potentialPoints = basePointsMap[tileToPlace.tileType];
@@ -172,24 +209,33 @@ public class ScoreManager : MonoBehaviour
         foreach (Tile neighbor in neighbors)
         {
             string nType = neighbor.tileType;
+            bool contributed = false;
 
-            // A. ¿La ficha colocada ganaría puntos por el vecino?
-            if (synergyMap[pType].TryGetValue(nType, out int bonusForPlaced))
+            // A. Bonus para la ficha colocada
+            if (synergyMap.ContainsKey(pType) && synergyMap[pType].TryGetValue(nType, out int bonusForPlaced))
             {
                 potentialPoints += bonusForPlaced;
+                contributed = true;
             }
 
-            // B. ¿El vecino ganaría puntos por la ficha recién colocada?
+            // B. Bonus para el vecino
             if (synergyMap.ContainsKey(nType) && synergyMap[nType].TryGetValue(pType, out int bonusForNeighbor))
             {
                 potentialPoints += bonusForNeighbor;
+                contributed = true;
+            }
+
+            // Si este vecino nos dio puntos, lo añadimos a la lista
+            if (contributed)
+            {
+                contributingTiles.Add(neighbor);
             }
         }
 
         return potentialPoints;
     }
 
-    // Muestra el texto con los puntos
+    // --- MOSTRAR TEXTO POSIBLE PUNTUACION ---
     public void ShowPreview(int points)
     {
         // Simplemente encendemos el objeto padre y actualizamos el texto
@@ -224,5 +270,52 @@ public class ScoreManager : MonoBehaviour
             0f,
             scorePreviewText.rectTransform.localPosition.z
         );
+    }
+
+    //---ILUMINAR FICHAS AFECTADAS----
+    private void Update()
+    {
+        //Animacion iluminacion
+        if (currentlyHighlightedTiles.Count > 0)
+        {
+            float pulse = (Mathf.Sin(Time.time * blinkSpeed) + 1f) / 2f;
+            Color animatedColor = Color.Lerp(Color.white, highlightColor, pulse);
+            foreach (Tile tile in currentlyHighlightedTiles)
+            {
+                if (tile != null)
+                {
+                    SetTileHighlightColor(tile, animatedColor);
+                }
+            }
+        }
+    }
+    public void HighlightTiles(List<Tile> tilesToHighlight)
+    {
+        ClearHighlights();
+        currentlyHighlightedTiles.AddRange(tilesToHighlight);
+    }
+
+    public void ClearHighlights()
+    {
+        foreach (Tile tile in currentlyHighlightedTiles)
+        {
+            if (tile != null)
+            {
+                SetTileHighlightColor(tile, Color.white); // Color negro = apagado
+            }
+        }
+        currentlyHighlightedTiles.Clear();
+    }
+
+    private void SetTileHighlightColor(Tile tile, Color color)
+    {
+        // Buscamos los renderers del objeto (puede tener varios si es un modelo compuesto)
+        Renderer[] renderers = tile.GetComponentsInChildren<Renderer>();
+        foreach (Renderer rend in renderers)
+        {
+            rend.GetPropertyBlock(mpb);
+            mpb.SetColor(highlightColorID, color);
+            rend.SetPropertyBlock(mpb); // ¡Aplica el color sin romper el material compartido!
+        }
     }
 }

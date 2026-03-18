@@ -10,16 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f28cce091cd87a4eab48cf7e01dbaa9, type: 3}
-  m_Name: ScoreData_Tree
+  m_Name: ScoreData_House
   m_EditorClassIdentifier: 
   tileTypes:
-  - pine
-  - pines
-  - pineAutumn
+  - campfire
   basePoints: 1
   adjacencyBonuses:
   - targetTileTypes:
-    - pine
-    - pines
-    - pineAutumn
+    - campfire
     bonusPoints: 1
+  - targetTileTypes:
+    - path
+    - path_end
+    - path_corner
+    bonusPoints: 2
