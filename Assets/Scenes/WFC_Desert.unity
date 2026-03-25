@@ -3862,7 +3862,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 0
-  GENERATE_ALL: 0
+  GENERATE_ALL: 1
+  animations: 1
+  animationDuration: 0.1
+  animationDelay: 0.01
   cardGenerator: {fileID: 1993922141}
   initialCubeSize: 3
   centerCubeCells: 0
@@ -5305,6 +5308,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rotationSpeed: 400
+  cam: {fileID: 0}
+  cameraLocalPosition: {x: 0, y: 0, z: 0}
+  sizePerCell: 0.8
 --- !u!4 &1790256225
 Transform:
   m_ObjectHideFlags: 0
@@ -5490,6 +5496,7 @@ GameObject:
   - component: {fileID: 1839935900}
   - component: {fileID: 1839935902}
   - component: {fileID: 1839935903}
+  - component: {fileID: 1839935904}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5551,6 +5558,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   missionsContainerUI: {fileID: 1401028216}
   missionUIPrefab: {fileID: 5488886319123750403, guid: f48a450d49d1c9b419e622f62d80edb3, type: 3}
+--- !u!114 &1839935904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1839935899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2368199e02901614487e6434315bf7fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1875786763
 GameObject:
   m_ObjectHideFlags: 0
@@ -5994,7 +6013,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -6392,6 +6411,9 @@ MonoBehaviour:
   distance: 2.5
   dragCooldown: 0.5
   timerCooldown: 0
+  mainCamera: {fileID: 0}
+  screenAnchor: {x: 0.85, y: 0.8}
+  distanceFromCamera: 20
 --- !u!4 &1993922142
 Transform:
   m_ObjectHideFlags: 0

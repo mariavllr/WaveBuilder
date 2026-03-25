@@ -4000,7 +4000,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   iterations: 0
-  GENERATE_ALL: 0
+  GENERATE_ALL: 1
   animations: 1
   animationDuration: 0.1
   animationDelay: 0.05
@@ -4013,9 +4013,9 @@ MonoBehaviour:
   audioSource: {fileID: 1154171696}
   changeCellSound: {fileID: 8300000, guid: 98c66415d582c1942b26896ba6873faf, type: 3}
   collapseCellSound: {fileID: 8300000, guid: 8645ef972d1dceb4a9374400079e2d28, type: 3}
-  dimensionsX: 15
-  dimensionsZ: 15
-  dimensionsY: 5
+  dimensionsX: 7
+  dimensionsZ: 7
+  dimensionsY: 4
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   limitTile: {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
@@ -4043,6 +4043,8 @@ MonoBehaviour:
   - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
   - {fileID: 1222247260181770688, guid: d2539fadcd0331943b7ab951d0e6a46d, type: 3}
   - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
+  - {fileID: 481162187089817775, guid: a760c8b32d531fa448df00761039e969, type: 3}
+  - {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
   cellSize: 2
   newTilesContainer: {fileID: 2111692170}
   gridComponents: []
@@ -5817,6 +5819,7 @@ GameObject:
   - component: {fileID: 1839935902}
   - component: {fileID: 1839935903}
   - component: {fileID: 1839935904}
+  - component: {fileID: 1839935905}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -5895,6 +5898,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a2ec9f2bd81042147b62e43c93540002, type: 2}
   - {fileID: 11400000, guid: c6cb6060d1687644f91695cddada8f69, type: 2}
   - {fileID: 11400000, guid: 70b0639614f5807479bff62aa0febde7, type: 2}
+  - {fileID: 11400000, guid: 00bb893e59c826e4a8e6a1e655d3dfb1, type: 2}
   pointsText: {fileID: 1634610983}
   scorePreviewText: {fileID: 1064831904}
   scorePreviewContainer: {fileID: 1730239620}
@@ -5903,6 +5907,18 @@ MonoBehaviour:
   blinkSpeed: 5
   highlightColor: {r: 2, g: 2, b: 2, a: 1}
   currentScore: 0
+--- !u!114 &1839935905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1839935899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2368199e02901614487e6434315bf7fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1875786763
 GameObject:
   m_ObjectHideFlags: 0
