@@ -34,9 +34,11 @@ public class Cell : MonoBehaviour
 
     MeshRenderer meshRenderer;
 
-   // public Tile lastTriedTile;
+    [SerializeField] private MeshRenderer gridCubeMeshRenderer;
 
-   // public Dictionary<Direction, Cell> neighbors = new Dictionary<Direction, Cell>();
+    // public Tile lastTriedTile;
+
+    // public Dictionary<Direction, Cell> neighbors = new Dictionary<Direction, Cell>();
 
     public void CreateCell(bool collapseState, Tile[] tiles, int cellIndex, Vector3Int cellCoords)
     {
@@ -69,19 +71,17 @@ public class Cell : MonoBehaviour
 
     public void MakeVisible(bool visibility)
     {
-        meshRenderer = GetComponentInChildren<MeshRenderer>();
-        if (meshRenderer != null) meshRenderer.enabled = visibility;
+        if (gridCubeMeshRenderer != null)
+            gridCubeMeshRenderer.enabled = visibility;
     }
 
     public void ChangeAlpha(float alpha)
     {
-        meshRenderer = GetComponentInChildren<MeshRenderer>();
-        if (meshRenderer != null)
+        if (gridCubeMeshRenderer != null)
         {
-            Color color = meshRenderer.material.color;
+            Color color = gridCubeMeshRenderer.material.color;
             color.a = alpha;
-            meshRenderer.material.color = color;
+            gridCubeMeshRenderer.material.color = color;
         }
-
     }
 }

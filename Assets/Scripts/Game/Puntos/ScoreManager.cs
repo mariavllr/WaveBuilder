@@ -134,7 +134,6 @@ public class ScoreManager : MonoBehaviour
         // 4. Sumar al total
         currentScore += pointsEarnedThisTurn;
         pointsText.text = "PUNTOS: " + currentScore;
-        Debug.Log($"Ficha: {pType} | Puntos turno: {pointsEarnedThisTurn} | Puntuación Total: {currentScore}");
 
         GameEvents.ScoreUpdated(pointsEarnedThisTurn);
     }

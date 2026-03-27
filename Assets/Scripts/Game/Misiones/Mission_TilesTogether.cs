@@ -31,7 +31,6 @@ public class Mission_TilesTogether : Mission
             return;
 
         tiles.Add(new Vector2Int(cell.coords.x, cell.coords.z));
-        Debug.Log("Added tile " + tile.tileType + " at " + cell.coords);
 
         if (CheckForCluster())
             Complete();

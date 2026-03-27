@@ -40,6 +40,7 @@ public class WaveFunctionGame : MonoBehaviour
 
     public HashSet<(string tileType, Vector3 rotation)> globalValidTiles = new(); //para trackear las tiles validas en el mapa en cada iteracion
 
+    public bool skipEntireTileRemoved = false; //Para que funcione fusionar varias tiles en una nueva
 
     //sounds
     public AudioSource audioSource;
@@ -114,6 +115,7 @@ public class WaveFunctionGame : MonoBehaviour
         GameEvents.OnTileDragged -= OnTileDrag;
         GameEvents.OnTileReleased -= OnTileRemoved;
         GameEvents.OnTileRotated -= OnTileRotation;
+        GameEvents.OnDeleteTile -= OnTileDeleted;
     }
 
     void Awake()
@@ -653,13 +655,7 @@ public class WaveFunctionGame : MonoBehaviour
                 Cell cellToCollapse = gridComponents[index];
                 cellToCollapse.tileOptions = new Tile[] { floorTile };
                 cellToCollapse.collapsed = true;
-                if (cellToCollapse.transform.childCount != 0)
-                {
-                    foreach (Transform child in cellToCollapse.transform)
-                    {
-                        Destroy(child.gameObject);
-                    }
-                }
+                DestroyTileChildren(cellToCollapse);
 
                 Tile instantiatedTile = Instantiate(floorTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
                 if (instantiatedTile.rotation != Vector3.zero)
@@ -688,18 +684,12 @@ public class WaveFunctionGame : MonoBehaviour
                 Cell cellToCollapse = gridComponents[index];
                 cellToCollapse.tileOptions = new Tile[] { emptyTile };
                 cellToCollapse.collapsed = true;
-                if (cellToCollapse.transform.childCount != 0)
-                {
-                    foreach (Transform child in cellToCollapse.transform)
-                    {
-                        Destroy(child.gameObject);
-                    }
-                }
+                DestroyTileChildren(cellToCollapse);
 
                 Tile instantiatedTile = Instantiate(emptyTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
                 if (instantiatedTile.rotation != Vector3.zero)
                 {
-                    instantiatedTile.gameObject.transform.Rotate(floorTile.rotation, Space.Self);
+                    instantiatedTile.gameObject.transform.Rotate(emptyTile.rotation, Space.Self);
                 }
 
                 instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
@@ -737,13 +727,7 @@ public class WaveFunctionGame : MonoBehaviour
                     if(useOptimization && GENERATE_ALL) GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
                     // limpiar hijos previos
-                    if (cellToCollapse.transform.childCount != 0)
-                    {
-                        foreach (Transform child in cellToCollapse.transform)
-                        {
-                            Destroy(child.gameObject);
-                        }
-                    }
+                    DestroyTileChildren(cellToCollapse);
 
                     // Instanciar la tile "border"
                     Tile instantiatedTile = Instantiate(limitTile,
@@ -794,13 +778,8 @@ public class WaveFunctionGame : MonoBehaviour
 
                     cellToCollapse.tileOptions = new Tile[] { tile };
                     // limpiar hijos previos
-                    if (cellToCollapse.transform.childCount != 0)
-                    {
-                        foreach (Transform child in cellToCollapse.transform)
-                        {
-                            Destroy(child.gameObject);
-                        }
-                    }
+                    DestroyTileChildren(cellToCollapse);
+
                     Tile instantiatedTile = Instantiate(tile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
                     if (instantiatedTile.rotation != Vector3.zero)
                     {
@@ -914,13 +893,7 @@ public class WaveFunctionGame : MonoBehaviour
         //cellToCollapse.lastTriedTile = selectedTile;
         Tile foundTile = cellToCollapse.tileOptions[0];
 
-        if (cellToCollapse.transform.childCount != 0)
-        {
-            foreach (Transform child in cellToCollapse.transform)
-            {
-                Destroy(child.gameObject);
-            }
-        }
+        DestroyTileChildren(cellToCollapse);
 
         Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
         if (instantiatedTile.rotation != Vector3.zero)
@@ -1092,7 +1065,7 @@ public class WaveFunctionGame : MonoBehaviour
 
     Tile ChooseRandomTile(List<Tile> tiles)
     {
-        int randomNumber = _rng.Next(0, tiles.Count - 1);
+        int randomNumber = _rng.Next(0, tiles.Count);
 
         Tile t = tiles[randomNumber];
 
@@ -1140,7 +1113,7 @@ public class WaveFunctionGame : MonoBehaviour
         }
     }
 
-    void UpdateGeneration()
+    public void UpdateGeneration()
     {
         foreach (Cell cell in gridComponents)
             cell.haSidoVisitado = false;
@@ -1266,8 +1239,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         Tile foundTile = cellToCollapse.tileOptions[0];
 
-        foreach (Transform child in cellToCollapse.transform)
-            Destroy(child.gameObject);
+        DestroyTileChildren(cellToCollapse);
 
         Tile instantiatedTile = Instantiate(foundTile,
             cellToCollapse.transform.position, Quaternion.identity,
@@ -1521,6 +1493,14 @@ public class WaveFunctionGame : MonoBehaviour
     //---------------COLOCAR TILE EN CELDA---------------
     private void OnTileRemoved(Tile tile, Cell closest)
     {
+        if (skipEntireTileRemoved)
+        {
+            skipEntireTileRemoved = false;
+            Destroy(tile.gameObject);
+            foreach (Cell cell in validCells) cell.MakeVisible(false); 
+            return;
+        }
+
         GameObject tileRemoved = tile.gameObject;
         actualTileDragged = null;
         Cell cellToCollapse = closest;
@@ -1547,7 +1527,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (persistentTile == null)
         {
-            Debug.LogError($"No se encontr� tile persistente para {selectedTile.tileType}");
+            Debug.LogError($"No se encontro tile persistente para {selectedTile.tileType}");
             persistentTile = selectedTile; // fallback
         }
 
@@ -1555,13 +1535,7 @@ public class WaveFunctionGame : MonoBehaviour
         Tile foundTile = cellToCollapse.tileOptions[0];
 
 
-        if (cellToCollapse.transform.childCount != 0)
-        {
-            foreach (Transform child in cellToCollapse.transform)
-            {
-                Destroy(child.gameObject);
-            }
-        }
+        DestroyTileChildren(cellToCollapse);
 
         Tile instantiatedTile = Instantiate(foundTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
         if (instantiatedTile.rotation != Vector3.zero)
@@ -1599,8 +1573,8 @@ public class WaveFunctionGame : MonoBehaviour
         placedTilesText.text = "Fichas: " + placedTiles.ToString();
 
         RefreshSkirtsAround(cellToCollapse);
-
         UpdateGeneration();
+
     }
 
 
@@ -1618,14 +1592,8 @@ public class WaveFunctionGame : MonoBehaviour
 
     //---------PUNTOS-------------
 
-    int CheckCellPoints(Cell collapsedCell)
-    {
-        return -1;
-    }
 
-
-
-    Cell FindClosestCell(GameObject origin, List<Cell> cells)
+ /*   Cell FindClosestCell(GameObject origin, List<Cell> cells)
     {
         Cell closest = null;
         float minDistSq = Mathf.Infinity;
@@ -1641,8 +1609,54 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
         return closest;
+    }*/
+
+    /// <summary>
+    /// Force a specific tile on a specific cell. Replace one if it exist.
+    /// </summary>
+    public void ForcePlaceTile(Cell cellToCollapse, Tile persistentTile)
+    {
+        DestroyTileChildren(cellToCollapse);
+
+        cellToCollapse.tileOptions = new Tile[] { persistentTile };
+        Tile instantiatedTile = Instantiate(persistentTile, cellToCollapse.transform.position, Quaternion.identity, cellToCollapse.transform);
+
+        if (instantiatedTile.rotation != Vector3.zero)
+            instantiatedTile.gameObject.transform.Rotate(persistentTile.rotation, Space.Self);
+
+        instantiatedTile.gameObject.transform.position += instantiatedTile.positionOffset;
+        instantiatedTile.gameObject.SetActive(true);
+        cellToCollapse.collapsed = true;
+
+        skipEntireTileRemoved = false;
+
+        // Efecto visual de rebote con DOTween
+        if (animations) instantiatedTile.transform.DOJump(instantiatedTile.transform.position, jumpPower: 0.8f, numJumps: 1, duration: 0.5f).SetEase(Ease.OutBack);
+
+        UpdateGeneration();
     }
 
+    /// <summary>
+    /// Resets a collapsed cell to an uncollapsed state, deleting any previous tile
+    /// </summary>
+    public void ResetCell(Cell cell)
+    {
+        DestroyTileChildren(cell);
+        cell.collapsed = false;
+        cell.tileOptions = tileObjects.ToArray(); // copia, no referencia
+        cell.previousEntropy = tileObjects.Length;
+        cell.visitable = true;
+    }
+
+    //Metodo para destruir los hijos de una celda sin destruir el grid cube u otros elementos, solo la tile
+    private void DestroyTileChildren(Cell cell)
+    {
+        foreach (Transform child in cell.transform)
+        {
+            if (child.GetComponent<Tile>() != null)
+                Destroy(child.gameObject);
+        }
+    }
 
     /// <summary>
     /// Regenerates the map

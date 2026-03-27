@@ -158,5 +158,9 @@ MonoBehaviour:
   haSidoVisitado: 0
   visitable: 0
   index: 0
+  coords: {x: 0, y: 0, z: 0}
   showDebugVisitableCells: 1
   centerCubeCell: 0
+  previousEntropy: 0
+  protectedFromAutoCollapse: 0
+  gridCubeMeshRenderer: {fileID: 1796667294373897557}
