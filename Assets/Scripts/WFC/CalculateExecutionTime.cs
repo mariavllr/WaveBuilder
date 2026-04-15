@@ -9,6 +9,7 @@ public class CalculateExecutionTime : MonoBehaviour
 {
     [Header("Archivo")]
     public string nombreArchivo = "Nombre_Archivo";
+    public int numberOfGenerations;
 
     WaveFunctionGame wfc;
     Stopwatch stopwatch;
@@ -102,7 +103,7 @@ public class CalculateExecutionTime : MonoBehaviour
         tabla[filaGen][columna] = tiempo.ToString("F4");
         GuardarCSV(tabla);
 
-        if (regenerations_counter == 50)
+        if (regenerations_counter == numberOfGenerations)
         {
             float avgIncompatibilities = (float)totalIncompatibilities / regenerations_counter;
             int totalAttempts = totalIncompatibilities + regenerations_counter;

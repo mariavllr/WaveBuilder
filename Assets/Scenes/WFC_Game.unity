@@ -509,8 +509,8 @@ MonoBehaviour:
   audioSource: {fileID: 1154171696}
   changeCellSound: {fileID: 8300000, guid: 98c66415d582c1942b26896ba6873faf, type: 3}
   collapseCellSound: {fileID: 8300000, guid: 8645ef972d1dceb4a9374400079e2d28, type: 3}
-  dimensionsX: 13
-  dimensionsZ: 13
+  dimensionsX: 100
+  dimensionsZ: 100
   dimensionsY: 5
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
@@ -559,7 +559,7 @@ MonoBehaviour:
   isRunning: 0
   tutorial: 0
   stopOnIncompatibility: 0
-  STOPWATCH: 0
+  STOPWATCH: 1
 --- !u!82 &1154171696
 AudioSource:
   m_ObjectHideFlags: 0
@@ -664,12 +664,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1154171692}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nombreArchivo: prueba2
+  nombreArchivo: ARTICULO_H2
+  numberOfGenerations: 100
 --- !u!1 &1401028216 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7174815941341820036, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -986,7 +987,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0

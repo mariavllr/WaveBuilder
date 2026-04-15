@@ -12,7 +12,7 @@ public class DragObject : MonoBehaviour
 
 
     //Para mostrar las celdas validas y mostrar una preview del objeto colocado
-    private List<Cell> validCells = new List<Cell>(); // para acceder a las celdas válidas, se actualiza desde WaveFunctionGame
+    private List<Cell> validCells = new List<Cell>(); // para acceder a las celdas validas, se actualiza desde WaveFunctionGame
 
     private Cell currentPreviewCell = null;
     private GameObject currentPreviewInstance = null;
@@ -51,7 +51,7 @@ public class DragObject : MonoBehaviour
     {
         if (!enabled) return;
 
-        if (!wfc.isRunning && !wfc.tutorial) return; // Si el juego está pausado, no hacer nada
+        if (!wfc.isRunning && !wfc.tutorial) return; // Si el juego esta pausado, no hacer nada
 
         if (Input.GetMouseButtonDown(0) && cardGenerator.timerCooldown <= 0) // Click izquierdo
         {
@@ -92,7 +92,7 @@ public class DragObject : MonoBehaviour
                     //Hover de posible puntuacion encima de la ficha
                     if (closest != null)
                     {
-                        // 1. Calculamos los puntos y obtenemos qué fichas brillan
+                        // 1. Calculamos los puntos y obtenemos que fichas brillan
                         List<Tile> affectedTiles;
                         int potentialScore = ScoreManager.Instance.CalculatePotentialScore(tile, closest, out affectedTiles);
 
@@ -162,7 +162,7 @@ public class DragObject : MonoBehaviour
         }
     }
 
-    //Opcion 1: Calcula celda más cercana a una tile
+    //Opcion 1: Calcula celda mas cercana a una tile
 
     private Cell FindClosestCell(Vector3 origin, List<Cell> cells)
     {
@@ -181,7 +181,7 @@ public class DragObject : MonoBehaviour
         return closest;
     }
 
-    //Opcion 2: Calcula celda más cercana al mouse
+    //Opcion 2: Calcula celda mas cercana al mouse
 
     private Cell FindClosestCellToMouse()
     {
@@ -194,7 +194,7 @@ public class DragObject : MonoBehaviour
         {
             Vector3 cellScreenPos = Camera.main.WorldToScreenPoint(cell.transform.position);
 
-            // Opcional: ignorar si está detrás de la cámara
+            // Opcional: ignorar si esta detras de la camara
             if (cellScreenPos.z < 0)
                 continue;
 
@@ -210,7 +210,7 @@ public class DragObject : MonoBehaviour
         return closest;
     }
 
-    //Opcion 3: Calcula la más cercana al mouse con un RAYCAST
+    //Opcion 3: Calcula la mas cercana al mouse con un RAYCAST
 
   /*  private Cell FindClosestCellToMouseRaycast()
     {
@@ -269,7 +269,7 @@ public class DragObject : MonoBehaviour
         }
         
 
-        // Rotación y offset opcional
+        // Rotacion y offset opcional
         Tile originalTile = GetComponent<Tile>();
         if (originalTile != null)
         {

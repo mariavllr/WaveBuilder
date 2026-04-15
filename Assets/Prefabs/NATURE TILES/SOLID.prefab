@@ -98,13 +98,43 @@ MonoBehaviour:
   - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
   - {fileID: 8913561890965976763, guid: 00bbbb8bfb251f144b7534fb8815f50b, type: 3}
   - {fileID: -4314144731049386129, guid: 77d1cb5b50e11c143930d7508949ed1e, type: 3}
-  - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
-  - {fileID: 1222247260181770688, guid: d2539fadcd0331943b7ab951d0e6a46d, type: 3}
-  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
+  - {fileID: 2530941585740922925, guid: e4c626b4e24c9ff4fb746b7eb686f563, type: 3}
+  - {fileID: 1844171690833133885, guid: a071b336862f83c4c96d996124b9539d, type: 3}
   - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
   - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
   - {fileID: 2591377062762197173}
   - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
+  - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
+  - {fileID: 1998954779518839673, guid: df6e603df0bfe3245ac5d898a00913ab, type: 3}
+  - {fileID: 2831762930634728093, guid: 99a19fb507761844e9dbc3b538cf9baf, type: 3}
+  - {fileID: 7442139215768019311, guid: b10132c2edab8fd498605350d4856bb3, type: 3}
+  - {fileID: 2710682045578985575, guid: f261e5f2d7cf8f44f81776fb946a234a, type: 3}
+  - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
+  - {fileID: 1222247260181770688, guid: d2539fadcd0331943b7ab951d0e6a46d, type: 3}
+  - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
+  - {fileID: 481162187089817775, guid: a760c8b32d531fa448df00761039e969, type: 3}
+  - {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -191,7 +221,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 878182739693685875}
-  m_Mesh: {fileID: 8101177298185590565, guid: 1b583db1357f64844839b74623d9c930, type: 3}
+  m_Mesh: {fileID: 0}
 --- !u!23 &6526773669781815154
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -199,7 +229,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 878182739693685875}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -289,6 +319,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_Solid_corner (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 20e7c700be11d8d4fbd951daa7b10e0a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -355,6 +389,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
       propertyPath: m_Name
       value: S_solid
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -423,6 +461,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_Solid_corner (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 20e7c700be11d8d4fbd951daa7b10e0a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -489,6 +531,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
       propertyPath: m_Name
       value: S_solid (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -557,6 +603,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_Solid_corner
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 20e7c700be11d8d4fbd951daa7b10e0a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -623,6 +673,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
       propertyPath: m_Name
       value: S_solid (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -691,6 +745,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_Solid_corner (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 20e7c700be11d8d4fbd951daa7b10e0a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -757,6 +815,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
       propertyPath: m_Name
       value: S_solid (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 17cb9439d6987b54397fea3caae419ee, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

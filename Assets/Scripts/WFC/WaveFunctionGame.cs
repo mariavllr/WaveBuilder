@@ -29,8 +29,15 @@ public class WaveFunctionGame : MonoBehaviour
 
     [Header("Game")]
     [SerializeField] CardGenerator cardGenerator;
+
+    //cubo inicial
     [SerializeField] private int initialCubeSize;
+    private int cubeStartX, cubeEndX;
+    private int cubeStartY, cubeEndY;
+    private int cubeStartZ, cubeEndZ;
     public int centerCubeCells;
+    private bool collapseOneOptionThisIteration = true;
+
     List<Cell> validCells = new List<Cell>();
     bool cubeStep = true;
     public GameObject actualTileDragged;
@@ -180,7 +187,7 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
-        if (STOPWATCH && GENERATE_ALL)
+        if (STOPWATCH)
         {
             if(onStartGeneration != null)
             {
@@ -603,42 +610,28 @@ public class WaveFunctionGame : MonoBehaviour
 
     private void GetCenterCube()
     {
-        //Primero, al contador de cells del cubo hay que sumarle las cells que ya se hab�an visitado (suelo y cielo)
         centerCubeCells += iterations;
 
-        // El tama�o del cubo en X y Z es el dado por initialCubeSize
         int cubeSizeX = initialCubeSize;
         int cubeSizeZ = initialCubeSize;
 
-        // El tama�o en Y es toda la altura menos cielo y suelo
-        int cubeStartY = 1; // Excluye el suelo (y = 0)
-        int cubeEndY = dimensionsY - 1; // Excluye el cielo (y = dimensionsY - 1)
+        cubeStartY = 1;
+        cubeEndY = dimensionsY - 1;
 
-        // Calcular el centro del cubo en X y Z
-        int startX = (dimensionsX - cubeSizeX) / 2;
-        int startZ = (dimensionsZ - cubeSizeZ) / 2;
-        int endX = startX + cubeSizeX;
-        int endZ = startZ + cubeSizeZ;
+        cubeStartX = (dimensionsX - cubeSizeX) / 2;
+        cubeStartZ = (dimensionsZ - cubeSizeZ) / 2;
+        cubeEndX = cubeStartX + cubeSizeX;
+        cubeEndZ = cubeStartZ + cubeSizeZ;
 
-        // A�adir cells del cubo central a la nueva lista
         for (int y = cubeStartY; y < cubeEndY; y++)
-        {
-            for (int z = startZ; z < endZ; z++)
-            {
-                for (int x = startX; x < endX; x++)
+            for (int z = cubeStartZ; z < cubeEndZ; z++)
+                for (int x = cubeStartX; x < cubeEndX; x++)
                 {
                     int index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
-
-                    if (index > gridComponents.Count - 1 || index < 0)
-                    {
-                        continue;
-                    }
-
+                    if (index < 0 || index >= gridComponents.Count) continue;
                     gridComponents[index].centerCubeCell = true;
                     centerCubeCells++;
                 }
-            }
-        }
     }
 
     /// <summary>
@@ -800,17 +793,27 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     IEnumerator CheckEntropy()
     {
-        List<Cell> tempGrid = new List<Cell>(gridComponents);
+        List<Cell> tempGrid;
 
-        tempGrid.RemoveAll(c => c.collapsed);
-        if (cubeStep) tempGrid.RemoveAll(c => !c.centerCubeCell);
-
-
-        if (tempGrid.Count == 0)
+        if (cubeStep)
         {
-            Debug.Log("No hay mas cells");
-            yield break;
+            tempGrid = new List<Cell>(initialCubeSize * initialCubeSize * (dimensionsY - 2));
+            for (int y = cubeStartY; y < cubeEndY; y++)
+                for (int z = cubeStartZ; z < cubeEndZ; z++)
+                    for (int x = cubeStartX; x < cubeEndX; x++)
+                    {
+                        int idx = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+                        Cell c = gridComponents[idx];
+                        if (!c.collapsed) tempGrid.Add(c);
+                    }
         }
+        else
+        {
+            tempGrid = new List<Cell>(gridComponents);
+            tempGrid.RemoveAll(c => c.collapsed);
+        }
+
+        if (tempGrid.Count == 0) { Debug.Log("No hay mas cells"); yield break; }
         //------------This is done to ensure that the cell with less entropy is selected-----------------
         // The result of this calculation determines the order of the elements in the sorted list.
         // If the result is negative, it means a should come before b; if positive, it means a should come after b;
@@ -1079,37 +1082,26 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     void UpdateGenerationCube()
     {
-        List<Cell> newGenerationCell = new List<Cell>(gridComponents);
-
-        for (int y = 0; y < dimensionsY; y++)
-        {
-            for (int z = 0; z < dimensionsZ; z++)
-            {
-                for (int x = 0; x < dimensionsX; x++)
-                {
-                    CheckNeighbours(x, y, z, ref newGenerationCell);
-
-                }
-            }
-        }
-
-        gridComponents = newGenerationCell;
+        for (int y = cubeStartY; y < cubeEndY; y++)
+            for (int z = cubeStartZ; z < cubeEndZ; z++)
+                for (int x = cubeStartX; x < cubeEndX; x++)
+                    CheckNeighbours(x, y, z, ref gridComponents);
 
         iterations++;
 
         if (iterations <= centerCubeCells)
-        {
             StartCoroutine(CheckEntropy());
-        }
-
         else
         {
-            print("END");
+            print("END GENERATION CUBE");
             cubeStep = false;
-
-            // stopwatch.Stop();
-            //print($"Generation time: {stopwatch.Elapsed.TotalSeconds} ms");
-
+            if (STOPWATCH && !GENERATE_ALL && onEndGeneration != null)
+                onEndGeneration();
+            else
+            {
+                collapseOneOptionThisIteration = false;
+                UpdateGeneration();
+            }
         }
     }
 
@@ -1154,11 +1146,13 @@ public class WaveFunctionGame : MonoBehaviour
 
             UpdateGlobalValidTiles();
 
+            //Si generando el mapa completo aun no se ha terminado, seguir con la siguiente
             if (iterations <= (dimensionsX * dimensionsY * dimensionsZ) && GENERATE_ALL)
             {
                 StartCoroutine(CheckEntropy());
             }
 
+            //Si se ha generado todo el mapa ya y estaba el stopwatch, lanzar el evento para cortar el reloj
             else if (STOPWATCH && GENERATE_ALL)
             {
                 if (onEndGeneration != null)
@@ -1199,8 +1193,9 @@ public class WaveFunctionGame : MonoBehaviour
             UpdateGlobalValidTiles();
 
             // Colapsos forzados con animacion, solo en modo juego
-            if (OneTileCollapseOptimization)
+            if (OneTileCollapseOptimization && collapseOneOptionThisIteration)
                 StartCoroutine(CollapseEntropyOneCells());
+            else collapseOneOptionThisIteration = true;
         }
     }
 

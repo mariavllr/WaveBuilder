@@ -24,16 +24,16 @@ public class CardGenerator : MonoBehaviour
 
     [Header("UI 3D Settings")]
     public Camera mainCamera;
-    [Tooltip("Posición en pantalla (0 a 1). X=0.85 es a la derecha, Y=0.8 es arriba")]
+    [Tooltip("Posicion en pantalla (0 a 1). X=0.85 es a la derecha, Y=0.8 es arriba")]
     public Vector2 screenAnchor = new Vector2(0.85f, 0.8f);
-    [Tooltip("Distancia hacia adelante desde la cámara para que no la atraviese")]
+    [Tooltip("Distancia hacia adelante desde la camara para que no la atraviese")]
     public float distanceFromCamera = 20f;
 
     private void Start()
     {
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // Actualizamos la posición justo antes de generar la cola por primera vez
+        // Actualizamos la posicion justo antes de generar la cola por primera vez
         UpdateScreenPosition();
 
         tileQueue = new Queue<Tile>();
@@ -81,8 +81,8 @@ public class CardGenerator : MonoBehaviour
         Vector3 targetPos = mainCamera.ViewportToWorldPoint(new Vector3(screenAnchor.x, screenAnchor.y, distanceFromCamera));
         transform.position = targetPos;
 
-        // 2. Rota el CardGenerator igual que la cámara en el eje Y.
-        // Esto hace que las tiles parezcan estáticas (no giran cuando giras el mundo).
+        // 2. Rota el CardGenerator igual que la camara en el eje Y.
+        // Esto hace que las tiles parezcan estaticas (no giran cuando giras el mundo).
         transform.rotation = Quaternion.Euler(0, mainCamera.transform.eulerAngles.y, 0);
     }
 
@@ -125,7 +125,7 @@ public class CardGenerator : MonoBehaviour
 
         else
         {
-        //Filtrado por las tiles válidas actualmente en el mapa
+        //Filtrado por las tiles validas actualmente en el mapa
                 List<Tile> validForNow = tilesList
                  .Where(tile => wfc.globalValidTiles.Contains((tile.tileType, tile.rotation)))
                  .ToList();
@@ -191,7 +191,7 @@ public class CardGenerator : MonoBehaviour
 
         tileToEnqueue.gameObject.SetActive(true);
 
-        // Si la cola no está vacía, colocar la nueva tile debajo de la última
+        // Si la cola no esta vacia, colocar la nueva tile debajo de la ultima
         Vector3 newTilePosition;
         if (queue.Count > 0)
         {
@@ -200,7 +200,7 @@ public class CardGenerator : MonoBehaviour
         }
         else
         {
-            // Si la cola está vacía, colocarla en la posición base
+            // Si la cola esta vacia, colocarla en la posicion base
             newTilePosition = transform.position;
         }
 
@@ -260,7 +260,7 @@ public class CardGenerator : MonoBehaviour
         bool stillValid = wfc.gridComponents
             .Any(cell => !cell.collapsed && cell.visitable &&
                          cell.tileOptions.Any(opt =>
-                             opt.tileType == tile.tileType)); //LA ROTACIÓN NO IMPORTA PARA SABER SI ES VÁLIDA O NO, el jugador puede rotarla
+                             opt.tileType == tile.tileType)); //LA ROTACION NO IMPORTA PARA SABER SI ES VALIDA O NO, el jugador puede rotarla
 
         if (!stillValid)
         {
@@ -275,7 +275,7 @@ public class CardGenerator : MonoBehaviour
 
         Tile oldTile = tileQueue.First();
 
-        //Animación de la tile antigua (se encoge antes de ser destruida)
+        //Animacion de la tile antigua (se encoge antes de ser destruida)
         oldTile.transform
             .DOScale(Vector3.zero, 0.5f)
             .SetEase(Ease.InBack)
@@ -286,7 +286,7 @@ public class CardGenerator : MonoBehaviour
                 //Crear una nueva cola temporal
                 Queue<Tile> newQueue = new Queue<Tile>();
 
-                //Crear nueva tile válida
+                //Crear nueva tile valida
                 Tile newTile = GetRandomTile();
                 newTile.gameObject.SetActive(true);
                 Debug.Log(newTile.name);
@@ -300,7 +300,7 @@ public class CardGenerator : MonoBehaviour
                 //Añadir que pueda ser arrastrada
                 instantiatedTile.gameObject.AddComponent<DragObject>();
 
-                //Efecto rebote de aparición
+                //Efecto rebote de aparicion
                 instantiatedTile.transform.localScale = Vector3.zero;
                 instantiatedTile.transform
                     .DOScale(1.2f, 0.35f)
@@ -340,7 +340,7 @@ public class CardGenerator : MonoBehaviour
         ValidateFirstTile();
     }
 
-    //Cuando rote, queremos que busque su tile rotada en la tile list. Siempre rotará +90 grados.
+    //Cuando rote, queremos que busque su tile rotada en la tile list. Siempre rotara +90 grados.
     public void RotateTile()
     {
         Tile actualTile = tileQueue.First();
@@ -351,10 +351,10 @@ public class CardGenerator : MonoBehaviour
         float currentRotation = actualTile.rotation.y;
 
 
-        // Calcular nueva rotación
+        // Calcular nueva rotacion
         float newRotation = (currentRotation + 90) % 360;
 
-        //Solución bug donde tiles que solo necesitan una rotacion (de 0 a 90) da error al intentar rotar 180 o 270. Ejemplo: path
+        //Solucion bug donde tiles que solo necesitan una rotacion (de 0 a 90) da error al intentar rotar 180 o 270. Ejemplo: path
         if(actualTile.rotateRight && !actualTile.rotate180 && !actualTile.rotateLeft)
         {
             if (newRotation == 180) newRotation = 0;
