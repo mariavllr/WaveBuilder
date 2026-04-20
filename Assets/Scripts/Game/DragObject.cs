@@ -113,12 +113,19 @@ public class DragObject : MonoBehaviour
                 }
             }
 
+            //si valid cells == 0
+            else
+            {
+                closest = null;
+            }
+
 
             //---COLOCAR TILE EN CELDA---
             if (Input.GetMouseButtonUp(0)) // Suelta el click
             {
                 isDragging = false;
-                GameEvents.TileReleased(tile, closest);
+                if (closest != null) GameEvents.TileReleased(tile, closest);
+                else GameEvents.DeleteTile();
 
                 if (currentPreviewInstance != null)
                 {

@@ -103,6 +103,8 @@ public class ScoreManager : MonoBehaviour
 
     private void EvaluateTilePlacement(Tile placedTile, Cell placedCell)
     {
+        if(placedTile == null || placedCell == null) return;
+
         // 1. Si la ficha no tiene datos de puntuación, ignoramos
         if (!basePointsMap.ContainsKey(placedTile.tileType)) return;
 

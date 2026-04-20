@@ -1495,7 +1495,6 @@ public class WaveFunctionGame : MonoBehaviour
             .Any(tile => tile.tileType == draggedTile.tileType && tile.rotation == draggedTile.rotation))
         .ToList();
 
-
         foreach (Cell cell in validCells)
         {
             cell.MakeVisible(true);
@@ -1533,9 +1532,6 @@ public class WaveFunctionGame : MonoBehaviour
         if (cellToCollapse == null)
         {
             Debug.Log("No hay celdas!");
-
-            Destroy(tileRemoved);
-            UpdateGeneration();
             return;
         }
 
