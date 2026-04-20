@@ -458,8 +458,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1154171694}
   - component: {fileID: 1154171695}
-  - component: {fileID: 1154171697}
   - component: {fileID: 1154171696}
+  - component: {fileID: 1154171697}
   m_Layer: 0
   m_Name: MapGenerator
   m_TagString: Untagged
@@ -509,8 +509,8 @@ MonoBehaviour:
   audioSource: {fileID: 1154171696}
   changeCellSound: {fileID: 8300000, guid: 98c66415d582c1942b26896ba6873faf, type: 3}
   collapseCellSound: {fileID: 8300000, guid: 8645ef972d1dceb4a9374400079e2d28, type: 3}
-  dimensionsX: 100
-  dimensionsZ: 100
+  dimensionsX: 12
+  dimensionsZ: 12
   dimensionsY: 5
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
@@ -559,7 +559,8 @@ MonoBehaviour:
   isRunning: 0
   tutorial: 0
   stopOnIncompatibility: 0
-  STOPWATCH: 1
+  STOPWATCH: 0
+  testType: 0
 --- !u!82 &1154171696
 AudioSource:
   m_ObjectHideFlags: 0
@@ -669,8 +670,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nombreArchivo: ARTICULO_H2
-  numberOfGenerations: 100
+  nombreArchivo: Nombre_Archivo
+  numberOfGenerations: 0
 --- !u!1 &1401028216 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7174815941341820036, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -987,7 +988,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1426,6 +1427,10 @@ PrefabInstance:
     - target: {fileID: 4066496078947808933, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 4146445757283171736, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target

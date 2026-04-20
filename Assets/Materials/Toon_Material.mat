@@ -79,7 +79,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Brightness_Rim: 0.7
+    - Brightness_Rim: 0.84
     - Brightness_outline: 11.27
     - Float_1: 1.38
     - Power: 1.39
@@ -100,13 +100,13 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RimPower: 4.93
-    - _Saturation: 1
+    - _Saturation: 1.02
     - _Scale: 0.01
     - _SpeedX: 0
     - _SpeedY: 3
     - _Value: 0.93
     m_Colors:
-    - Toon_Ramp_Tint: {r: 0.7207546, g: 0.63709503, b: 0.50996786, a: 1}
+    - Toon_Ramp_Tint: {r: 0.4490565, g: 0.44246557, b: 0.16860797, a: 1}
     - ToonrampTinting: {r: 0.28773588, g: 0.8021357, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color2: {r: 0, g: 0, b: 1, a: 1}

@@ -7,6 +7,8 @@ using Debug = UnityEngine.Debug;
 
 public class CalculateExecutionTime : MonoBehaviour
 {
+    private bool active;
+
     [Header("Archivo")]
     public string nombreArchivo = "Nombre_Archivo";
     public int numberOfGenerations;
@@ -36,37 +38,43 @@ public class CalculateExecutionTime : MonoBehaviour
         WaveFunctionGame.onIncompatibility += OnIncompatibility;
         WaveFunctionGame.onStartGeneration += StartStopwatch;
         WaveFunctionGame.onEndGeneration += StopStopwatch;
+
+        if (wfc.STOPWATCH) active = true;
+        else active = false;
     }
 
     void Start()
     {
-        Debug.Log("PATH: " + FilePath);
-        mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
+        if (active)
+        {
+            Debug.Log("PATH: " + FilePath);
+            mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
 
-        if (!File.Exists(FilePath))
-        {
-            CreateNewFile();
-            tabla = LeerCSV();
-        }
-        else
-        {
-            tabla = LeerCSV();
-            if (ObtenerColumnaMapa(tabla, mapSize) != -1)
+            if (!File.Exists(FilePath))
             {
-                Debug.LogError($"Ya existe una generación para el mapa {mapSize}. No se sobreescribirá.");
-                return;
+                CreateNewFile();
+                tabla = LeerCSV();
             }
-        }
+            else
+            {
+                tabla = LeerCSV();
+                if (ObtenerColumnaMapa(tabla, mapSize) != -1)
+                {
+                    Debug.LogError($"Ya existe una generación para el mapa {mapSize}. No se sobreescribirá.");
+                    return;
+                }
+            }
 
-        AñadirColumna(tabla, mapSize);
-        GuardarCSV(tabla);
+            AñadirColumna(tabla, mapSize);
+            GuardarCSV(tabla);
+        } 
     }
 
     // ------------------- CRONÓMETRO -------------------
 
     public void StartStopwatch()
     {
-        if (!incompatibility)
+        if (!incompatibility && active)
         {
             stopwatch.Reset();
             stopwatch.Start();
@@ -75,100 +83,104 @@ public class CalculateExecutionTime : MonoBehaviour
 
     public void StopStopwatch()
     {
-        stopwatch.Stop();
-        incompatibility = false;
-
-        double tiempo = stopwatch.Elapsed.TotalSeconds;
-
-        print($"Generation time: {tiempo} seconds. Number of incompatibilities: {inc_counter}");
-
-        stopwatchSum += tiempo;
-        if (tiempo > maxTime) maxTime = tiempo;
-        if (tiempo < minTime || minTime == 0) minTime = tiempo;
-
-        regenerations_counter++;
-        totalIncompatibilities += inc_counter;
-        inc_counter = 0;
-
-        Debug.Log("GENERATION NUMBER " + regenerations_counter + " completed!");
-
-        if (tabla == null || tabla.Count == 0)
-            tabla = LeerCSV();
-
-        int columna = ObtenerColumnaMapa(tabla, mapSize);
-        int filaGen = regenerations_counter;
-        AsegurarFilaGeneracion(tabla, filaGen);
-
-
-        tabla[filaGen][columna] = tiempo.ToString("F4");
-        GuardarCSV(tabla);
-
-        if (regenerations_counter == numberOfGenerations)
+        if (active)
         {
-            float avgIncompatibilities = (float)totalIncompatibilities / regenerations_counter;
-            int totalAttempts = totalIncompatibilities + regenerations_counter;
-            float failRate = (float)totalIncompatibilities / totalAttempts * 100f;
+            stopwatch.Stop();
+            incompatibility = false;
 
-            Debug.Log($"END {regenerations_counter} GENERATIONS");
-            Debug.Log($"FAIL RATE: {failRate}%");
-            Debug.Log($"AVG FAILS / GEN: {avgIncompatibilities}");
-            Debug.Log($"AVG TIME: {stopwatchSum / regenerations_counter} s | MAX: {maxTime} | MIN: {minTime}");
+            double tiempo = stopwatch.Elapsed.TotalSeconds;
 
-            // --- Total Incompatibilities ---
-            int filaInc = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Total Incompatibilities") filaInc = i;
+            print($"Generation time: {tiempo} seconds. Number of incompatibilities: {inc_counter}");
 
-            if (filaInc == -1) // si no existe, crearla
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Total Incompatibilities";
-                tabla.Add(fila);
-                filaInc = tabla.Count - 1;
-            }
-            tabla[filaInc][columna] = totalIncompatibilities.ToString();
+            stopwatchSum += tiempo;
+            if (tiempo > maxTime) maxTime = tiempo;
+            if (tiempo < minTime || minTime == 0) minTime = tiempo;
 
-            // --- Total Attempts ---
-            int filaAttempts = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Total Attempts") filaAttempts = i;
+            regenerations_counter++;
+            totalIncompatibilities += inc_counter;
+            inc_counter = 0;
 
-            if (filaAttempts == -1)
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Total Attempts";
-                tabla.Add(fila);
-                filaAttempts = tabla.Count - 1;
-            }
-            tabla[filaAttempts][columna] = totalAttempts.ToString();
+            Debug.Log("GENERATION NUMBER " + regenerations_counter + " completed!");
 
-            // --- Fail Rate ---
-            int filaRate = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Fail Rate") filaRate = i;
+            if (tabla == null || tabla.Count == 0)
+                tabla = LeerCSV();
 
-            if (filaRate == -1)
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Fail Rate";
-                tabla.Add(fila);
-                filaRate = tabla.Count - 1;
-            }
-            tabla[filaRate][columna] = failRate.ToString("F2") + " %";
+            int columna = ObtenerColumnaMapa(tabla, mapSize);
+            int filaGen = regenerations_counter;
+            AsegurarFilaGeneracion(tabla, filaGen);
 
 
-            // Guardar CSV
+            tabla[filaGen][columna] = tiempo.ToString("F4");
             GuardarCSV(tabla);
 
+            if (regenerations_counter == numberOfGenerations)
+            {
+                float avgIncompatibilities = (float)totalIncompatibilities / regenerations_counter;
+                int totalAttempts = totalIncompatibilities + regenerations_counter;
+                float failRate = (float)totalIncompatibilities / totalAttempts * 100f;
 
-            stopwatchSum = 0;
-            regenerations_counter = 0;
-            totalIncompatibilities = 0;
+                Debug.Log($"END {regenerations_counter} GENERATIONS");
+                Debug.Log($"FAIL RATE: {failRate}%");
+                Debug.Log($"AVG FAILS / GEN: {avgIncompatibilities}");
+                Debug.Log($"AVG TIME: {stopwatchSum / regenerations_counter} s | MAX: {maxTime} | MIN: {minTime}");
+
+                // --- Total Incompatibilities ---
+                int filaInc = -1;
+                for (int i = 0; i < tabla.Count; i++)
+                    if (tabla[i][0] == "Total Incompatibilities") filaInc = i;
+
+                if (filaInc == -1) // si no existe, crearla
+                {
+                    string[] fila = new string[tabla[0].Length];
+                    fila[0] = "Total Incompatibilities";
+                    tabla.Add(fila);
+                    filaInc = tabla.Count - 1;
+                }
+                tabla[filaInc][columna] = totalIncompatibilities.ToString();
+
+                // --- Total Attempts ---
+                int filaAttempts = -1;
+                for (int i = 0; i < tabla.Count; i++)
+                    if (tabla[i][0] == "Total Attempts") filaAttempts = i;
+
+                if (filaAttempts == -1)
+                {
+                    string[] fila = new string[tabla[0].Length];
+                    fila[0] = "Total Attempts";
+                    tabla.Add(fila);
+                    filaAttempts = tabla.Count - 1;
+                }
+                tabla[filaAttempts][columna] = totalAttempts.ToString();
+
+                // --- Fail Rate ---
+                int filaRate = -1;
+                for (int i = 0; i < tabla.Count; i++)
+                    if (tabla[i][0] == "Fail Rate") filaRate = i;
+
+                if (filaRate == -1)
+                {
+                    string[] fila = new string[tabla[0].Length];
+                    fila[0] = "Fail Rate";
+                    tabla.Add(fila);
+                    filaRate = tabla.Count - 1;
+                }
+                tabla[filaRate][columna] = failRate.ToString("F2") + " %";
+
+
+                // Guardar CSV
+                GuardarCSV(tabla);
+
+
+                stopwatchSum = 0;
+                regenerations_counter = 0;
+                totalIncompatibilities = 0;
+            }
+            else
+            {
+                // wfc.Regenerate();
+            }
         }
-        else
-        {
-            wfc.Regenerate();
-        }
+        
     }
 
     public void OnIncompatibility()

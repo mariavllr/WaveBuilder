@@ -10,12 +10,12 @@ using TMPro;
 using System;
 using Random = UnityEngine.Random;
 
-[System.Serializable]
-public class CollapseRecord
+
+public enum StopwatchTest
 {
-    public int cellIndex;
-    public Tile[] previousOptions;
-    public Tile chosenTile;
+    ALL_GENERATION,
+    CUBE_GENERATION,
+    TILE_PROPAGATION
 }
 
 public class WaveFunctionGame : MonoBehaviour
@@ -76,7 +76,7 @@ public class WaveFunctionGame : MonoBehaviour
     public bool borderConstraint = true;
 
     [Header("Optimization")]
-    [SerializeField] private bool useOptimization;
+    [SerializeField] private bool useOptimization; //OLD: used to propagate only on frontier, not necessary now
     [SerializeField] private bool OneTileCollapseOptimization;
     [SerializeField] private bool randomGeneration;
 
@@ -93,6 +93,7 @@ public class WaveFunctionGame : MonoBehaviour
 
     //para testear el rendimiento
     public bool STOPWATCH;
+    public StopwatchTest testType;
     
 
 
@@ -128,12 +129,11 @@ public class WaveFunctionGame : MonoBehaviour
     void Awake()
     {
         //Si el modo es JUEGO, siempre debe estar activo OneTileCollapseOptimization y no debe estar activo useOptimization
-        if (GENERATE_ALL)
+        if (!GENERATE_ALL)
         {
             OneTileCollapseOptimization = true;
             useOptimization = false;
         }
-
 
         //PREPROCESSING
         ClearNeighbours(ref tileObjects);
@@ -162,6 +162,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         //INITIALIZE
         InitializeGrid();
+        collapseOneOptionThisIteration = true;
 
         if (borderConstraint) DefineMapLimits();
         if (floorCeilingConstraint)
@@ -171,6 +172,10 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         if (fixedTilesConstraint) CreateFixedTiles();
+
+        //Propagar cambios de tiles predefinidas
+        foreach (Cell c in gridComponents)
+            if (c.collapsed) PropagateFromCell(c);
 
         if (!GENERATE_ALL) GetCenterCube();
 
@@ -187,7 +192,8 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
-        if (STOPWATCH)
+        //COMIENZA EL TEST DE RENDIMIENTO
+        if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION || testType == StopwatchTest.CUBE_GENERATION)
         {
             if(onStartGeneration != null)
             {
@@ -910,10 +916,15 @@ public class WaveFunctionGame : MonoBehaviour
         cellToCollapse.collapsed = true;
 
         
-        RefreshSkirtsAround(cellToCollapse); // a�adir
+        RefreshSkirtsAround(cellToCollapse);
 
-        if (cubeStep) UpdateGenerationCube();
-        else if (GENERATE_ALL) UpdateGeneration();
+        if (cubeStep)
+        {
+            PropagateFromCell(cellToCollapse);  // AC-3 global, se para al converger
+            UpdateGenerationCube();
+        }
+        else if (GENERATE_ALL)
+            UpdateGeneration();
     }
 
   
@@ -1082,12 +1093,12 @@ public class WaveFunctionGame : MonoBehaviour
     /// </summary>
     void UpdateGenerationCube()
     {
-        for (int y = cubeStartY; y < cubeEndY; y++)
+        /*for (int y = cubeStartY; y < cubeEndY; y++)
             for (int z = cubeStartZ; z < cubeEndZ; z++)
                 for (int x = cubeStartX; x < cubeEndX; x++)
                     CheckNeighbours(x, y, z, ref gridComponents);
 
-        iterations++;
+        iterations++;*/
 
         if (iterations <= centerCubeCells)
             StartCoroutine(CheckEntropy());
@@ -1095,13 +1106,17 @@ public class WaveFunctionGame : MonoBehaviour
         {
             print("END GENERATION CUBE");
             cubeStep = false;
-            if (STOPWATCH && !GENERATE_ALL && onEndGeneration != null)
+            //ACABA TEST RENDIMIENTO GENERAR CUBO INICIAL
+            if (testType == StopwatchTest.CUBE_GENERATION && STOPWATCH && !GENERATE_ALL && onEndGeneration != null)
                 onEndGeneration();
             else
             {
                 collapseOneOptionThisIteration = false;
                 UpdateGeneration();
             }
+
+            collapseOneOptionThisIteration = false;
+            UpdateGeneration();
         }
     }
 
@@ -1109,6 +1124,9 @@ public class WaveFunctionGame : MonoBehaviour
     {
         foreach (Cell cell in gridComponents)
             cell.haSidoVisitado = false;
+
+
+        //---------MODO GENERAR TODO EL MAPA---------
 
         if (GENERATE_ALL)
         {
@@ -1152,8 +1170,8 @@ public class WaveFunctionGame : MonoBehaviour
                 StartCoroutine(CheckEntropy());
             }
 
-            //Si se ha generado todo el mapa ya y estaba el stopwatch, lanzar el evento para cortar el reloj
-            else if (STOPWATCH && GENERATE_ALL)
+            //ACABA TEST RENDIMIENTO GENERAR TODO EL MAPA
+            else if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION)
             {
                 if (onEndGeneration != null)
                 {
@@ -1162,8 +1180,16 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
+        //----------MODO JUEGO------------
+
         else
         {
+            //TEST COLOCAR UNA FICHA
+            if (onStartGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
+            {
+                onStartGeneration();
+            }
+
             // Flujo juego: bucle hasta convergencia
             bool anyChanged = true;
             int safetyLimit = 100;
@@ -1192,6 +1218,11 @@ public class WaveFunctionGame : MonoBehaviour
 
             UpdateGlobalValidTiles();
 
+            //FINALIZA TEST COLOCAR UNA FICHA
+            if (onEndGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
+            {
+                onEndGeneration();
+            }
             // Colapsos forzados con animacion, solo en modo juego
             if (OneTileCollapseOptimization && collapseOneOptionThisIteration)
                 StartCoroutine(CollapseEntropyOneCells());
@@ -1516,9 +1547,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         Tile selectedTile = tileRemoved.GetComponent<Tile>();
 
-        Tile persistentTile = tileObjects.FirstOrDefault(
-    t => t.tileType == selectedTile.tileType && t.rotation == selectedTile.rotation
-);
+        Tile persistentTile = tileObjects.FirstOrDefault(t => t.tileType == selectedTile.tileType && t.rotation == selectedTile.rotation);
 
         if (persistentTile == null)
         {
@@ -1567,8 +1596,19 @@ public class WaveFunctionGame : MonoBehaviour
 
         placedTilesText.text = "Fichas: " + placedTiles.ToString();
 
+        //Ahora:
+
+          RefreshSkirtsAround(cellToCollapse);
+          PropagateFromCell(cellToCollapse);  // solo propaga desde donde se colocó
+          UpdateGlobalValidTiles();
+          if (OneTileCollapseOptimization && collapseOneOptionThisIteration)
+              StartCoroutine(CollapseEntropyOneCells());
+          else collapseOneOptionThisIteration = true;
+
+        /* //Antes:
         RefreshSkirtsAround(cellToCollapse);
         UpdateGeneration();
+        */
 
     }
 
@@ -1673,5 +1713,99 @@ public class WaveFunctionGame : MonoBehaviour
         gridComponents.Clear();
 
         Init();
+    }
+
+
+
+
+    // PROPAGACION DE RESTRICCIONES CON AC-3
+    private void PropagateFromCell(Cell placedCell)
+    {
+        if (onStartGeneration != null && STOPWATCH)
+        {
+            onStartGeneration();
+        }
+        var queue = new Queue<int>();
+        var inQueue = new HashSet<int>();
+
+        // Semilla: los 6 vecinos directos de la celda colocada
+        EnqueueNeighbors(placedCell.index, placedCell.coords.x,
+                         placedCell.coords.y, placedCell.coords.z,
+                         queue, inQueue);
+
+        int safety = gridComponents.Count * 2;
+
+        while (queue.Count > 0 && safety-- > 0)
+        {
+            int idx = queue.Dequeue();
+            inQueue.Remove(idx);
+
+            Cell cell = gridComponents[idx];
+            if (cell.collapsed) continue;
+
+            int prevLen = cell.tileOptions.Length;
+
+            // Recomputar dominio en sitio (sin copia del grid completo)
+            int x = cell.coords.x;
+            int y = cell.coords.y;
+            int z = cell.coords.z;
+
+            List<Tile> options = ComputeValidOptions(x, y, z);
+            cell.tileOptions = options.ToArray();
+
+            // Si el dominio se redujo, los vecinos pueden verse afectados
+            if (cell.tileOptions.Length < prevLen)
+            {
+                EnqueueNeighbors(idx, x, y, z, queue, inQueue);
+            }
+        }
+        if (onEndGeneration != null && STOPWATCH)
+        {
+            onEndGeneration();
+        }
+    }
+
+    private List<Tile> ComputeValidOptions(int x, int y, int z)
+    {
+        List<Tile> options = new List<Tile>(tileObjects);
+        var index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+
+        void FilterBy(int neighborIdx, Func<Tile, List<Tile>> getValid)
+        {
+            HashSet<Tile> validSet = new HashSet<Tile>();
+            foreach (Tile opt in gridComponents[neighborIdx].tileOptions)
+                validSet.UnionWith(getValid(opt));
+            options.RemoveAll(o => !validSet.Contains(o) || o.tileType == "limit");
+        }
+
+        if (z > 0) FilterBy(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.upNeighbours);
+        if (z < dimensionsZ - 1) FilterBy(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.downNeighbours);
+        if (x > 0) FilterBy((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.rightNeighbours);
+        if (x < dimensionsX - 1) FilterBy((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.leftNeighbours);
+        if (y > 0) FilterBy(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ), o => o.aboveNeighbours);
+        if (y < dimensionsY - 1) FilterBy(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ), o => o.belowNeighbours);
+
+        return options;
+    }
+
+    private void EnqueueNeighbors(int idx, int x, int y, int z,
+                                   Queue<int> queue, HashSet<int> inQueue)
+    {
+        void TryEnqueue(int ni)
+        {
+            if (ni >= 0 && ni < gridComponents.Count &&
+                !gridComponents[ni].collapsed && !inQueue.Contains(ni))
+            {
+                queue.Enqueue(ni);
+                inQueue.Add(ni);
+            }
+        }
+
+        if (z > 0) TryEnqueue(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (z < dimensionsZ - 1) TryEnqueue(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (x > 0) TryEnqueue((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (x < dimensionsX - 1) TryEnqueue((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (y > 0) TryEnqueue(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ));
+        if (y < dimensionsY - 1) TryEnqueue(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ));
     }
 }
