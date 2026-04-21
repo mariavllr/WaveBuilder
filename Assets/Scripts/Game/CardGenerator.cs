@@ -1,11 +1,12 @@
-using System.Linq;
-using System.Collections.Generic;
-using UnityEngine;
-using DG.Tweening;
-using System;
-using UnityEngine.Rendering;
-using Random = UnityEngine.Random;
+﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.Rendering;
+using static CameraControl;
+using Random = UnityEngine.Random;
 
 public class CardGenerator : MonoBehaviour
 {
@@ -46,13 +47,26 @@ public class CardGenerator : MonoBehaviour
         GameEvents.OnTileDragged += OnTileDragged;
         GameEvents.OnTileReleased += OnTileRemoved;
         GameEvents.OnDeleteTile += OnDeleteTile;
+        WaveFunctionGame.onRegenerate += OnMapRegenerated;
+        CameraControl.onCameraRotated += OnCameraRotated;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnTileDragged -= OnTileDragged;
+        GameEvents.OnTileReleased -= OnTileRemoved;
+        GameEvents.OnDeleteTile -= OnDeleteTile;
+        WaveFunctionGame.onRegenerate -= OnMapRegenerated;
+        CameraControl.onCameraRotated -= OnCameraRotated;
     }
 
     private void OnDestroy()
     {
         GameEvents.OnTileReleased -= OnTileRemoved; 
         GameEvents.OnTileDragged -= OnTileDragged;
-        GameEvents.OnDeleteTile -= OnDeleteTile; 
+        GameEvents.OnDeleteTile -= OnDeleteTile;
+        WaveFunctionGame.onRegenerate -= OnMapRegenerated;
+        CameraControl.onCameraRotated -= OnCameraRotated;
     }
 
 
@@ -64,6 +78,22 @@ public class CardGenerator : MonoBehaviour
         {
             RotateTile();
         }
+    }
+
+    //Rehacer cola si cambia el mapa
+    private void OnMapRegenerated()
+    {
+        isDragging = false;
+        timerCooldown = 0;
+
+        while (tileQueue.Count > 0)
+        {
+            Tile t = tileQueue.Dequeue();
+            if (t != null) Destroy(t.gameObject);
+        }
+
+        numberOfGeneratedTiles = 0;
+        InicializeTileQueue();
     }
 
     //------POSICION EN PANTALLA---------
@@ -103,76 +133,48 @@ public class CardGenerator : MonoBehaviour
 
     private void MakeTileSelectable(bool selectable, Tile tile)
     {
-        Material[] materials = tile.GetComponent<MeshRenderer>().materials;
+        // Incluye el renderer principal y los de las skirts (hijas)
+        // El 'true' incluye también renderers en objetos inactivos
+        Renderer[] renderers = tile.GetComponentsInChildren<Renderer>(true);
 
-        foreach (Material mat in materials)
+        foreach (Renderer rend in renderers)
         {
-            //SelectableKeyword = new LocalKeyword(mat.shader, "_SELECTABLE");
-            //if(!selectable) mat.SetKeyword(SelectableKeyword, false);
-            //else mat.SetKeyword(SelectableKeyword, true);
+            // .materials clona el array -> instancias únicas para ESTA tile.
+            // No afecta al asset compartido ni a otras tiles de la escena.
+            Material[] materials = rend.materials;
+
+            foreach (Material mat in materials)
+            {
+                LocalKeyword keyword = new LocalKeyword(mat.shader, "_SELECTABLE");
+                mat.SetKeyword(keyword, selectable);
+            }
         }
     }
 
     private Tile GetRandomTile()
     {
-        //en la primera tanda que salgan full random
+        // Primera tanda: pesos por tipo sobre la lista completa
         if (numberOfGeneratedTiles < queueSize)
         {
-            List<(Tile tile, int weight)> weightedTiles = tilesList.Select(tile => (tile, tile.probability)).ToList();
             numberOfGeneratedTiles++;
-            return ChooseTile(weightedTiles);
+            return wfc.ChooseTile(tilesList);
         }
 
-        else
+        // Filtrado por tiles válidas actualmente en el mapa
+        List<Tile> validForNow = tilesList
+            .Where(tile => wfc.globalValidTiles.Contains((tile.tileType, tile.rotation)))
+            .ToList();
+
+        // Fallback si no hay ninguna válida
+        if (validForNow.Count == 0)
         {
-        //Filtrado por las tiles validas actualmente en el mapa
-                List<Tile> validForNow = tilesList
-                 .Where(tile => wfc.globalValidTiles.Contains((tile.tileType, tile.rotation)))
-                 .ToList();
-
-            if (validForNow.Count == 0)
-            {
-                    Debug.LogError("[CARD GENERATOR] NO TILES: No hay tiles v�lidas actualmente. Eligiendo una aleatoria...");
-                    List<(Tile tile, int weight)> weightedTiles = tilesList.Select(tile => (tile, tile.probability)).ToList();
-                    return ChooseTile(weightedTiles);
-            }
-
-            return validForNow[Random.Range(0, validForNow.Count)];
+            Debug.LogError("[CARD GENERATOR] NO TILES: No hay tiles válidas actualmente. Eligiendo una aleatoria ponderada...");
+            return wfc.ChooseTile(tilesList);
         }
 
-        
-        //De manera random completamente
-        //return tilesList[Random.Range(0, tilesList.Count)];
-
-        //Con pesos
-        // Choose a tile for that cell
-      //  List<(Tile tile, int weight)> weightedTiles = validForNow.Select(tile => (tile, tile.probability)).ToList();
-      //  return ChooseTile(weightedTiles);
-
-        
+        return wfc.ChooseTile(validForNow);
     }
 
- 
-
-    Tile ChooseTile(List<(Tile tile, int weight)> weightedTiles)
-    {
-        // Calculate the total weight
-        int totalWeight = weightedTiles.Sum(item => item.weight);
-
-
-
-        // Generate a random number between 0 and totalWeight - 1
-        System.Random random = new System.Random();
-        int randomNumber = random.Next(0, totalWeight);
-
-        // Iterate through the tiles and find the one corresponding to the random number
-        foreach (var (tile, weight) in weightedTiles)
-        {
-            if (randomNumber < weight) return tile;
-            randomNumber -= weight;
-        }
-        return null; // This should not happen if the list is not empty
-    }
 
     private Tile EnqueueTile(Queue<Tile> queue, Tile specificTile = null)
     {
@@ -264,7 +266,7 @@ public class CardGenerator : MonoBehaviour
 
         if (!stillValid)
         {
-            Debug.Log("[CARD GENERATOR] REEMPLAZAR PRIMERA: La primera tile ya no es v�lida, reemplazando...");
+            Debug.Log("[CARD GENERATOR] REEMPLAZAR PRIMERA: La primera tile ya no es válida, reemplazando...");
             ReplaceFirstTile();
         }
     }
@@ -297,7 +299,7 @@ public class CardGenerator : MonoBehaviour
                     instantiatedTile.gameObject.transform.Rotate(instantiatedTile.rotation, Space.Self);
                 }
 
-                //A�adir que pueda ser arrastrada
+                //Añadir que pueda ser arrastrada
                 instantiatedTile.gameObject.AddComponent<DragObject>();
 
                 //Efecto rebote de aparicion
@@ -398,6 +400,67 @@ public class CardGenerator : MonoBehaviour
         MoveUpQueue();
         EnqueueTile(tileQueue);
         tileQueue.First().gameObject.AddComponent<DragObject>();
+    }
+
+    //---------------------------------CAMARA---------------------------------
+
+    /// <summary>
+    /// Rota los datos lógicos de una tile a su variante equivalente, sin tocar
+    /// su transform. Usado para compensar giros de cámara y mantener coherencia
+    /// entre lo que el jugador ve en la mano y cómo se coloca la ficha.
+    /// </summary>
+    private void RotateTileLogicOnly(Tile actualTile, int steps)
+    {
+        steps = ((steps % 4) + 4) % 4;
+        if (steps == 0) return;
+
+        float currentRotation = actualTile.rotation.y;
+        float newRotation = (currentRotation + 90f * steps) % 360f;
+
+        // Mismo ajuste que en RotateTile para tiles con rotaciones limitadas
+        if (actualTile.rotateRight && !actualTile.rotate180 && !actualTile.rotateLeft)
+        {
+            if (newRotation == 180) newRotation = 0;
+            else if (newRotation == 270) newRotation = 90;
+        }
+
+        Tile newTile = tilesList.Find(t => t.tileType == actualTile.tileType && t.rotation.y == newRotation);
+
+        if (newTile == null)
+        {
+            Debug.LogError($"[CAMERA ROTATION] No se encontró variante {actualTile.tileType} con rotación {newRotation}");
+            return;
+        }
+
+        // Sustituir datos lógicos SIN tocar transform
+        actualTile.name = newTile.name;
+        actualTile.tileType = newTile.tileType;
+        actualTile.probability = newTile.probability;
+        actualTile.rotation = newTile.rotation;
+        actualTile.upNeighbours = newTile.upNeighbours;
+        actualTile.rightNeighbours = newTile.rightNeighbours;
+        actualTile.downNeighbours = newTile.downNeighbours;
+        actualTile.leftNeighbours = newTile.leftNeighbours;
+        actualTile.aboveNeighbours = newTile.aboveNeighbours;
+        actualTile.belowNeighbours = newTile.belowNeighbours;
+    }
+
+    /// <summary>
+    /// Respuesta al giro de cámara: actualiza lógicamente todas las tiles de la cola
+    /// y reemite TileRotated si hay drag activo para que se refresquen celdas válidas.
+    /// </summary>
+    private void OnCameraRotated(int steps)
+    {
+        foreach (Tile tile in tileQueue)
+        {
+            RotateTileLogicOnly(tile, steps);
+        }
+
+        if (isDragging && tileQueue.Count > 0)
+        {
+            Tile first = tileQueue.First();
+            GameEvents.TileRotated(first.rotation, first);
+        }
     }
 
     //DEBUG

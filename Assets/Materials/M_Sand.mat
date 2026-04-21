@@ -11,8 +11,7 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 1ec834d863aa1bb48a5b15d92fc528d9, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _SELECTABLE
+  m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
@@ -43,7 +42,7 @@ Material:
     - _Hue: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SELECTABLE: 1
+    - _SELECTABLE: 0
     - _Saturation: 0.6
     - _Value: 0.5
     m_Colors:

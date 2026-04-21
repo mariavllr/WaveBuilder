@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -23,12 +23,12 @@ public class ScoreManager : MonoBehaviour
     [Header("Tile Highlight Settings")]
     [ColorUsage(true, true)]
     public Color highlightColor = Color.yellow;
-    // Lista para recordar qué fichas están brillando y poder apagarlas luego
+    // Lista para recordar quÃ© fichas estÃ¡n brillando y poder apagarlas luego
     private List<Tile> currentlyHighlightedTiles = new List<Tile>();
     private MaterialPropertyBlock mpb;
     private int highlightColorID;
 
-    // OPTIMIZACIÓN O(1): Diccionario anidado [FichaOrigen][FichaVecina] = Puntos
+    // OPTIMIZACIÃ“N O(1): Diccionario anidado [FichaOrigen][FichaVecina] = Puntos
     // Evita tener que iterar listas para buscar si hay sinergias cada vez que pones una ficha.
 
     private Dictionary<string, Dictionary<string, int>> synergyMap = new Dictionary<string, Dictionary<string, int>>();
@@ -48,7 +48,7 @@ public class ScoreManager : MonoBehaviour
     private void Start()
     {
         floatTween = scorePreviewText.rectTransform.DOLocalMoveY(floatHeight, floatDuration)
-            .SetRelative(true)              // Se mueve X píxeles desde su posición actual
+            .SetRelative(true)              // Se mueve X pÃ­xeles desde su posiciÃ³n actual
             .SetLoops(-1, LoopType.Yoyo)    // Loop infinito que va y vuelve (arriba/abajo)
             .SetEase(Ease.InOutSine);       // Suavizado perfecto para que parezca que respira o flota
 
@@ -57,13 +57,16 @@ public class ScoreManager : MonoBehaviour
 
     private void OnEnable()
     {
-        // Usamos el mismo evento que usas en tu MissionManager y OnTileRemoved
         GameEvents.OnTileReleased += EvaluateTilePlacement;
+        GameEvents.OnTileRotated += OnTileRotatedHandler;
+        GameEvents.OnDeleteTile += OnTileDeletedHandler;
     }
 
     private void OnDisable()
     {
         GameEvents.OnTileReleased -= EvaluateTilePlacement;
+        GameEvents.OnTileRotated -= OnTileRotatedHandler;
+        GameEvents.OnDeleteTile -= OnTileDeletedHandler;
     }
 
 
@@ -78,7 +81,7 @@ public class ScoreManager : MonoBehaviour
             // 2. Recorremos cada nombre de tile ("pine", "pineAutumn"...)
             foreach (string typeName in data.tileTypes)
             {
-                // Asignamos los puntos base a este nombre específico
+                // Asignamos los puntos base a este nombre especÃ­fico
                 basePointsMap[typeName] = data.basePoints;
 
                 // Nos aseguramos de que existe el diccionario de sinergias para esta ficha
@@ -93,7 +96,7 @@ public class ScoreManager : MonoBehaviour
                     // 4. Recorremos los targets de cada bonus
                     foreach (string targetName in bonus.targetTileTypes)
                     {
-                        // Guardamos la relación. Ej: synergyMap["pine"]["aserradero"] = 2;
+                        // Guardamos la relaciÃ³n. Ej: synergyMap["pine"]["aserradero"] = 2;
                         synergyMap[typeName][targetName] = bonus.bonusPoints;
                     }
                 }
@@ -105,12 +108,12 @@ public class ScoreManager : MonoBehaviour
     {
         if(placedTile == null || placedCell == null) return;
 
-        // 1. Si la ficha no tiene datos de puntuación, ignoramos
+        // 1. Si la ficha no tiene datos de puntuaciÃ³n, ignoramos
         if (!basePointsMap.ContainsKey(placedTile.tileType)) return;
 
         int pointsEarnedThisTurn = basePointsMap[placedTile.tileType];
 
-        // 2. Obtener vecinos reales usando la lógica matemática optimizada de tu WFC
+        // 2. Obtener vecinos reales usando la lÃ³gica matemÃ¡tica optimizada de tu WFC
         List<Tile> neighbors = GetActualNeighbors(placedCell);
 
         // 3. Evaluar Sinergias Bidireccionales (Lectura directa O(1))
@@ -120,13 +123,13 @@ public class ScoreManager : MonoBehaviour
         {
             string nType = neighbor.tileType;
 
-            // A. ¿La ficha colocada gana puntos por el vecino?
+            // A. Â¿La ficha colocada gana puntos por el vecino?
             if (synergyMap[pType].TryGetValue(nType, out int bonusForPlaced))
             {
                 pointsEarnedThisTurn += bonusForPlaced;
             }
 
-            // B. ¿El vecino gana puntos por la ficha recién colocada?
+            // B. Â¿El vecino gana puntos por la ficha reciÃ©n colocada?
             if (synergyMap.ContainsKey(nType) && synergyMap[nType].TryGetValue(pType, out int bonusForNeighbor))
             {
                 pointsEarnedThisTurn += bonusForNeighbor;
@@ -138,10 +141,14 @@ public class ScoreManager : MonoBehaviour
         pointsText.text = "PUNTOS: " + currentScore;
 
         GameEvents.ScoreUpdated(pointsEarnedThisTurn);
+
+        // Limpieza visual del estado de drag
+        HidePreview();
+        ClearHighlights();
     }
 
     /// <summary>
-    /// Utiliza las matemáticas ya existentes en WaveFunctionGame para leer los vecinos directos 
+    /// Utiliza las matemÃ¡ticas ya existentes en WaveFunctionGame para leer los vecinos directos 
     /// </summary>
     private List<Tile> GetActualNeighbors(Cell centerCell)
     {
@@ -161,13 +168,13 @@ public class ScoreManager : MonoBehaviour
         if ((index + 1) % dimX != 0)
             TryAddNeighbor(grid[index + 1], validNeighbors);
 
-        // Eje Z (Abajo / Arriba en isométrico)
+        // Eje Z (Abajo / Arriba en isomÃ©trico)
         if ((index / dimX) % dimZ != 0)
             TryAddNeighbor(grid[index - dimX], validNeighbors);
         if ((index / dimX) % dimZ != dimZ - 1)
             TryAddNeighbor(grid[index + dimX], validNeighbors);
 
-        // Eje Y (Altura: Debajo / Encima) - Actívalo si quieres sinergias por apilar (ej: cascadas)
+        // Eje Y (Altura: Debajo / Encima) - ActÃ­valo si quieres sinergias por apilar (ej: cascadas)
         if ((index / area) != 0)
             TryAddNeighbor(grid[index - area], validNeighbors);
         if ((index / area) != dimY - 1)
@@ -178,11 +185,11 @@ public class ScoreManager : MonoBehaviour
 
     private void TryAddNeighbor(Cell neighborCell, List<Tile> list)
     {
-        //Si la celda no está colapsada, pasamos
+        //Si la celda no estÃ¡ colapsada, pasamos
         if (!neighborCell.collapsed) return;
         Tile realTileInstance = neighborCell.GetComponentInChildren<Tile>();
 
-        // Si por algún motivo está vacía, pasamos
+        // Si por algÃºn motivo estÃ¡ vacÃ­a, pasamos
         if (realTileInstance == null) return;
 
         string type = realTileInstance.tileType;
@@ -190,13 +197,29 @@ public class ScoreManager : MonoBehaviour
         // Filtramos los bordes del mapa y el aire
         if (type != "empty" && type != "solid" && type != "limit" && type != "air")
         {
-            list.Add(realTileInstance); // Añadimos la ficha REAL a la lista
+            list.Add(realTileInstance); // AÃ±adimos la ficha REAL a la lista
         }
+    }
+
+    private void OnTileRotatedHandler(Vector3 rotation, Tile tile)
+    {
+        // Al rotar, las celdas vÃ¡lidas cambian: ocultamos la preview hasta que
+        // el jugador vuelva a pasar por encima de una celda vÃ¡lida con la nueva rotaciÃ³n.
+        HidePreview();
+        ClearHighlights();
+    }
+
+    private void OnTileDeletedHandler()
+    {
+        // El drag se cancelÃ³
+        HidePreview();
+        ClearHighlights();
     }
 
     //--------------
     //------UI------
     //--------------
+
 
     public int CalculatePotentialScore(Tile tileToPlace, Cell targetCell, out List<Tile> contributingTiles)
     {
@@ -226,7 +249,7 @@ public class ScoreManager : MonoBehaviour
                 contributed = true;
             }
 
-            // Si este vecino nos dio puntos, lo añadimos a la lista
+            // Si este vecino nos dio puntos, lo aÃ±adimos a la lista
             if (contributed)
             {
                 contributingTiles.Add(neighbor);
@@ -243,7 +266,7 @@ public class ScoreManager : MonoBehaviour
         scorePreviewContainer.gameObject.SetActive(true);
         scorePreviewText.text = "+" + points.ToString();
 
-        // Nos aseguramos de que la animación esté reproduciéndose
+        // Nos aseguramos de que la animaciÃ³n estÃ© reproduciÃ©ndose
         floatTween.Play();
     }
 
@@ -259,13 +282,10 @@ public class ScoreManager : MonoBehaviour
 
     public void HidePreview()
     {
-        // Apagamos el padre directamente (cero animaciones de salida)
         scorePreviewContainer.gameObject.SetActive(false);
-
-        // Pausamos la animación para no gastar recursos a lo tonto
         floatTween.Pause();
 
-        // Reseteamos el hijo a su posición original (para que la próxima vez empiece desde el centro)
+        // Reseteamos el hijo a su posiciÃ³n original
         scorePreviewText.rectTransform.localPosition = new Vector3(
             scorePreviewText.rectTransform.localPosition.x,
             0f,
@@ -316,7 +336,7 @@ public class ScoreManager : MonoBehaviour
         {
             rend.GetPropertyBlock(mpb);
             mpb.SetColor(highlightColorID, color);
-            rend.SetPropertyBlock(mpb); // ¡Aplica el color sin romper el material compartido!
+            rend.SetPropertyBlock(mpb); // Â¡Aplica el color sin romper el material compartido!
         }
     }
 }

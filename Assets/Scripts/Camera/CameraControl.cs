@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 public class CameraControl : MonoBehaviour
@@ -11,14 +11,16 @@ public class CameraControl : MonoBehaviour
     public Vector3 cameraLocalPosition; // posición local de la cámara respecto al pivot
     public float sizePerCell = 0.8f;    // cuánto size ortográfico por celda
 
+    // Evento: +1 si cámara gira 90° antihorario (RotateLeft), -1 si horario (RotateRight)
+    public delegate void OnCameraRotated(int steps);
+    public static event OnCameraRotated onCameraRotated;
+
     public void SetupCamera(int dimensionsX, int dimensionsZ, int dimensionsY, int cellSize)
     {
-        // Centrar el pivot en el mapa
         float centerX = (dimensionsX - 1) * cellSize / 2f;
         float centerZ = (dimensionsZ - 1) * cellSize / 2f;
         transform.position = new Vector3(centerX, 0, centerZ);
 
-        // Ajustar el tamaño ortográfico según la dimensión más grande en X y Z
         float maxDimension = Mathf.Max(dimensionsX, dimensionsZ);
         if (cam != null)
             cam.orthographicSize = maxDimension * cellSize * sizePerCell;
@@ -27,13 +29,19 @@ public class CameraControl : MonoBehaviour
     public void RotateLeft()
     {
         if (!isRotating)
+        {
+            onCameraRotated?.Invoke(+1);
             StartCoroutine(RotateToAngle(90));
+        }
     }
 
     public void RotateRight()
     {
         if (!isRotating)
+        {
+            onCameraRotated?.Invoke(-1);
             StartCoroutine(RotateToAngle(-90));
+        }
     }
 
     private IEnumerator RotateToAngle(float angle)

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 public class MergeManager : MonoBehaviour
@@ -8,9 +8,9 @@ public class MergeManager : MonoBehaviour
     [Header("Referencias")]
     public WaveFunctionGame wfcGame;
 
-    [Header("Configuración de Fusión")]
+    [Header("ConfiguraciÃ³n de FusiÃ³n")]
     public string targetTileType = "campfire";
-    public int requiredAmount = 4;
+    public int requiredAmount = 3;
     public Tile villageTilePrefab; 
 
     private void Awake()
@@ -33,13 +33,13 @@ public class MergeManager : MonoBehaviour
 
         if (cluster.Count >= requiredAmount)
         {
-            Debug.Log($"¡Fusión activada! Has juntado {cluster.Count} tiendas.");
+            Debug.Log($"Â¡FusiÃ³n activada! Has juntado {cluster.Count} tiendas.");
             wfcGame.skipEntireTileRemoved = true; // evita UpdateGeneration de OnTileRemoved
             ExecuteMerge(cluster, placedCell); 
         }
     }
 
-    // --- MÉTODO DE FUSIÓN ---
+    // --- MÃ‰TODO DE FUSIÃ“N ---
     private void ExecuteMerge(List<Cell> cluster, Cell placedCell)
     {
         foreach (Cell cell in cluster)
@@ -89,7 +89,7 @@ public class MergeManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Reutiliza las matemáticas rápidas de tu grid para sacar los vecinos directos (sin diagonales)
+    /// Reutiliza las matemÃ¡ticas rÃ¡pidas de tu grid para sacar los vecinos directos (sin diagonales)
     /// </summary>
     private List<Cell> GetAdjacentCells(Cell centerCell)
     {

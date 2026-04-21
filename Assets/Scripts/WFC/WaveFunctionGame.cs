@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -95,7 +95,6 @@ public class WaveFunctionGame : MonoBehaviour
     public bool STOPWATCH;
     public StopwatchTest testType;
     
-
 
     //Events
     public delegate void OnRegenerate();
@@ -240,7 +239,7 @@ public class WaveFunctionGame : MonoBehaviour
     public void PauseTimer() => isRunning = false;
     public void ResumeTimer() => isRunning = true;
 
-    public void StartGame() { UpdateGenerationCube(); tutorial = false; }
+    public void StartGame() { cubeStep = true; tutorial = false; ResumeTimer(); UpdateGenerationCube(); }
     public void ExitGame() => Application.Quit();
 
     /// <summary>
@@ -863,12 +862,12 @@ public class WaveFunctionGame : MonoBehaviour
         GetNeighboursCloseToCollapsedCell(cellToCollapse);
 
         // Choose a tile for that cell
-        List<(Tile tile, int weight)> weightedTiles = cellToCollapse.tileOptions.Select(tile => (tile, tile.probability)).ToList();
+        //List<(Tile tile, int weight)> weightedTiles = cellToCollapse.tileOptions.Select(tile => (tile, tile.probability)).ToList();
 
         Tile selectedTile;
         if (probabilityConstraint)
         {
-            selectedTile = ChooseTile(weightedTiles);
+            selectedTile = ChooseTile(cellToCollapse.tileOptions);
         }
 
         else
@@ -1055,26 +1054,49 @@ public class WaveFunctionGame : MonoBehaviour
     }
 
 
+
     /// <summary>
-    /// Chooses a tile based on the weights of the tiles
+    /// Elige una tile de forma ponderada por probability, repartiendo el peso
+    /// de cada tipo equitativamente entre sus variantes rotadas.
     /// </summary>
-    /// <param name="weightedTiles"></param> List of tiles with their corresponding weights
-    /// <returns></returns> The chosen tile
-    Tile ChooseTile(List<(Tile tile, int weight)> weightedTiles)
+    /// <param name="candidates">Tiles candidatas (array, lista o cualquier IEnumerable)</param>
+    public Tile ChooseTile(IEnumerable<Tile> candidates)
     {
-        // Calculate the total weight
-        int totalWeight = weightedTiles.Sum(item => item.weight);
+        if (candidates == null) return null;
 
-        // Generate a random number between 0 and totalWeight - 1
+        var candidateList = candidates.ToList();
+        if (candidateList.Count == 0) return null;
+
+        // Agrupamos por tipo para repartir la probability entre variantes
+        var groupedByType = candidateList.GroupBy(t => t.tileType);
+
+        const int scale = 1000;
+        List<(Tile tile, int weight)> weightedTiles = new List<(Tile, int)>();
+        int totalWeight = 0;
+
+        foreach (var group in groupedByType)
+        {
+            int variantCount = group.Count();
+            int typeProbability = group.First().probability;
+            int weightPerVariant = (typeProbability * scale) / variantCount;
+
+            foreach (Tile variant in group)
+            {
+                weightedTiles.Add((variant, weightPerVariant));
+                totalWeight += weightPerVariant;
+            }
+        }
+
+        if (totalWeight <= 0) return null;
+
         int randomNumber = _rng.Next(0, totalWeight);
-
-        // Iterate through the tiles and find the one corresponding to the random number
         foreach (var (tile, weight) in weightedTiles)
         {
             if (randomNumber < weight) return tile;
             randomNumber -= weight;
         }
-        return null; // This should not happen if the list is not empty
+
+        return null; // No debería ocurrir si totalWeight > 0
     }
 
     Tile ChooseRandomTile(List<Tile> tiles)

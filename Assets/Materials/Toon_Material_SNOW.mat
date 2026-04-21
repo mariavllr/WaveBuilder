@@ -24,7 +24,8 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: db6c0fa612b94ea459e53cf5cc2626a3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _SELECTABLE
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -94,12 +95,16 @@ Material:
     - _Edge: 0.099
     - _Float: 0
     - _Hue: 1.1
+    - _NotSelectableHue: 1
+    - _NotSelectableSaturation: 1
+    - _NotSelectableValue: 1
     - _Opacity: 10
     - _Outline: 0.002
     - _OutlineZ: 0
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RimPower: 4.93
+    - _SELECTABLE: 1
     - _Saturation: 0.99
     - _Scale: 0.01
     - _SpeedX: 0
@@ -111,5 +116,6 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color2: {r: 0, g: 0, b: 1, a: 1}
     - _ColorR: {r: 0, g: 1, b: 1, a: 1}
+    - _HighlightColor: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

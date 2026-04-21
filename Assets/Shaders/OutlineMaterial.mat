@@ -91,7 +91,7 @@ Material:
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorThresold: 0.77
+    - _ColorThresold: 1.6
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -103,7 +103,7 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Metallic: 0
-    - _NormalThresold: 3.54
+    - _NormalThresold: 2.84
     - _OVERLAY: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005

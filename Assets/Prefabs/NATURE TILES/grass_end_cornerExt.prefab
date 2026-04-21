@@ -101,13 +101,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: grass_end_ExtCorner
-  probability: 10
+  probability: 20
+  fixedTile: 0
   rotateRight: 1
   rotate180: 1
   rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
+  useSkirts: 0
+  skirtNorth: {fileID: 0}
+  skirtSouth: {fileID: 0}
+  skirtEast: {fileID: 0}
+  skirtWest: {fileID: 0}
+  skirtCornerNE: {fileID: 0}
+  skirtCornerNW: {fileID: 0}
+  skirtCornerSE: {fileID: 0}
+  skirtCornerSW: {fileID: 0}
   upNeighbours:
   - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
   rightNeighbours:
@@ -140,9 +150,9 @@ MonoBehaviour:
   - beach_cornerExt
   - beach_grassEnd_L
   - beach_grassEnd_R
-  excludeInTopLayer: 0
   upSocket:
     socket_name: 18
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -151,6 +161,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   rightSocket:
     socket_name: 19
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 0
@@ -159,6 +170,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   leftSocket:
     socket_name: 18
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -167,6 +179,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   downSocket:
     socket_name: 19
+    socketDefinition: {fileID: 0}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 1
@@ -175,6 +188,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   aboveSocket:
     socket_name: 3
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
@@ -183,6 +197,7 @@ MonoBehaviour:
     rotationallyInvariant: 1
   belowSocket:
     socket_name: 10
+    socketDefinition: {fileID: 0}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
