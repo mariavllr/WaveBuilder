@@ -124,9 +124,9 @@ MonoBehaviour:
   tileType: pueblo
   probability: 1
   fixedTile: 0
-  rotateRight: 0
-  rotate180: 0
-  rotateLeft: 0
+  rotateRight: 1
+  rotate180: 1
+  rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}

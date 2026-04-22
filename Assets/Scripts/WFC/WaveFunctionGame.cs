@@ -82,7 +82,9 @@ public class WaveFunctionGame : MonoBehaviour
 
     [Header("Debug")]
     public int placedTiles = 0;
+    public int mapsGenerated = 1;
     [SerializeField] private TextMeshProUGUI placedTilesText;
+    [SerializeField] private TextMeshProUGUI mapsGeneratedText;
 
     public TextMeshProUGUI timerText;
     private float elapsedTime;
@@ -1729,6 +1731,9 @@ public class WaveFunctionGame : MonoBehaviour
             Destroy(gameObject.transform.GetChild(i).gameObject);
         }
         gridComponents.Clear();
+
+        mapsGenerated++;
+        mapsGeneratedText.text = $"Nº mapas: {mapsGenerated}";
 
         Init();
     }

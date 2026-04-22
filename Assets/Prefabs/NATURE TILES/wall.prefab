@@ -539,7 +539,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: wall
-  probability: 30
+  probability: 40
   fixedTile: 0
   rotateRight: 1
   rotate180: 1

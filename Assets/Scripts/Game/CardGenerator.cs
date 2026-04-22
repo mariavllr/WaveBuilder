@@ -145,8 +145,15 @@ public class CardGenerator : MonoBehaviour
 
             foreach (Material mat in materials)
             {
-                LocalKeyword keyword = new LocalKeyword(mat.shader, "_SELECTABLE");
-                mat.SetKeyword(keyword, selectable);
+                try
+                {
+                    LocalKeyword keyword = new LocalKeyword(mat.shader, "_SELECTABLE");
+                    mat.SetKeyword(keyword, selectable);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }               
             }
         }
     }
