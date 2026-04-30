@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -24,11 +24,9 @@ public class Cell : MonoBehaviour
     public bool collapsed;
     public Tile[] tileOptions;
 
-    public bool haSidoVisitado; //debug
     public bool visitable = false; //optimization
     public int index; //debug
     public Vector3Int coords; 
-    public bool showDebugVisitableCells;
     public bool centerCubeCell;
     public int previousEntropy;
 
@@ -36,23 +34,17 @@ public class Cell : MonoBehaviour
 
     [SerializeField] private MeshRenderer gridCubeMeshRenderer;
 
-    // public Tile lastTriedTile;
-
-    // public Dictionary<Direction, Cell> neighbors = new Dictionary<Direction, Cell>();
-
     public void CreateCell(bool collapseState, Tile[] tiles, int cellIndex, Vector3Int cellCoords)
     {
         collapsed = collapseState;
         tileOptions = tiles;
-        haSidoVisitado = false;
         index = cellIndex;
         coords = cellCoords;
-        centerCubeCell = false;
         meshRenderer = GetComponentInChildren<MeshRenderer>();
-
+        centerCubeCell = false;
         previousEntropy = -1;
 
-        if (!showDebugVisitableCells) Destroy(transform.GetChild(0).gameObject);
+        //if (!showDebugVisitableCells) Destroy(transform.GetChild(0).gameObject);
     }
 
     //Devuelve true si se ha cambiado el dominio

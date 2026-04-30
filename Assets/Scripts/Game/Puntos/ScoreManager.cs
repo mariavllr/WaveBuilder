@@ -8,7 +8,7 @@ public class ScoreManager : MonoBehaviour
     public static ScoreManager Instance;
 
     [Header("Referencias")]
-    public WaveFunctionGame wfcGame; 
+    public WaveFunctionGame_REFACTOR wfcGame; 
     public List<TileScoreData> allScoreDataObjects;
 
     [Header("UI")]

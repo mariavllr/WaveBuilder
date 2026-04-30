@@ -126,14 +126,22 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
+  - {fileID: 481162187089817775, guid: a760c8b32d531fa448df00761039e969, type: 3}
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
-  - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
-  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
-  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
+  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
   - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
   - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
-  - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
+  - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
+  - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
+  - {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
+  - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -157,7 +165,6 @@ MonoBehaviour:
   leftNeighbours:
   - {fileID: 4940294244935102317, guid: 30b08933642fdef48ac8138fdfd3a0b5, type: 3}
   - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
-  - {fileID: 4187426750720118590, guid: 927ea8e8a18ae7a4a8e83ab9be84b20d, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   aboveNeighbours:
@@ -295,6 +302,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_borderGrass
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: a09f9d4eb482a3949aab4be6d760ce85, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -362,6 +373,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: S_borderGrass_corner
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 75fa7117d6628104ea332a7a2030acc0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -428,6 +443,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 91428c30907ded441b906a4bfd6924f8, type: 3}
       propertyPath: m_Name
       value: S_borderGrass_corner_flipped
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 91428c30907ded441b906a4bfd6924f8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

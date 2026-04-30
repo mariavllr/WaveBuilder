@@ -6,7 +6,7 @@ public class MergeManager : MonoBehaviour
     public static MergeManager Instance;
 
     [Header("Referencias")]
-    public WaveFunctionGame wfcGame;
+    public WaveFunctionGame_REFACTOR wfcGame;
 
     [Header("Configuración de Fusión")]
     public string targetTileType = "campfire";

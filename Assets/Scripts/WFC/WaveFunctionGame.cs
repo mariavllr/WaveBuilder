@@ -11,12 +11,12 @@ using System;
 using Random = UnityEngine.Random;
 
 
-public enum StopwatchTest
+/*public enum StopwatchTest
 {
     ALL_GENERATION,
     CUBE_GENERATION,
     TILE_PROPAGATION
-}
+}*/
 
 public class WaveFunctionGame : MonoBehaviour
 {
@@ -91,6 +91,7 @@ public class WaveFunctionGame : MonoBehaviour
     public bool isRunning = true;
 
     public bool tutorial = false; //Si hay tutorial, no se generara el mapa hasta que el tutorial acabe
+    [SerializeField] GameObject tutorialObject;
     public bool stopOnIncompatibility = false;
 
     //para testear el rendimiento
@@ -180,7 +181,7 @@ public class WaveFunctionGame : MonoBehaviour
 
         if (!GENERATE_ALL) GetCenterCube();
 
-        //A�ADIR TODAS LAS FICHAS AL CARD GENERATOR
+        //ANADIR TODAS LAS FICHAS AL CARD GENERATOR
         cardGenerator.tilesList = tileObjects.ToList();
 
         for (int i = cardGenerator.tilesList.Count - 1; i >= 0; i--)
@@ -202,8 +203,15 @@ public class WaveFunctionGame : MonoBehaviour
             }
         }
 
+        if (tutorial)
+        {
+            //ocultar cola de tiles y activar tutorial
+            FindFirstObjectByType<CardGenerator>().gameObject.SetActive(false);
+            tutorialObject.SetActive(true);
+        }
 
-        if (!tutorial)
+
+        else
         {
             ResumeTimer();
 
@@ -636,7 +644,7 @@ public class WaveFunctionGame : MonoBehaviour
                 {
                     int index = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
                     if (index < 0 || index >= gridComponents.Count) continue;
-                    gridComponents[index].centerCubeCell = true;
+                    //gridComponents[index].centerCubeCell = true;
                     centerCubeCells++;
                 }
     }
@@ -1146,8 +1154,8 @@ public class WaveFunctionGame : MonoBehaviour
 
     public void UpdateGeneration()
     {
-        foreach (Cell cell in gridComponents)
-            cell.haSidoVisitado = false;
+        //foreach (Cell cell in gridComponents)
+            //cell.haSidoVisitado = false;
 
 
         //---------MODO GENERAR TODO EL MAPA---------
@@ -1358,7 +1366,7 @@ public class WaveFunctionGame : MonoBehaviour
 
 
             //Check neighbors
-            gridComponents[index].haSidoVisitado = true;
+           // gridComponents[index].haSidoVisitado = true;
             List<Tile> options = new List<Tile>(tileObjects);
 
 

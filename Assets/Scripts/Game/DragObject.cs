@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
@@ -16,7 +16,7 @@ public class DragObject : MonoBehaviour
 
     private Cell currentPreviewCell = null;
     private GameObject currentPreviewInstance = null;
-    private WaveFunctionGame wfc;
+    private WaveFunctionGame_REFACTOR wfc;
     private CardGenerator cardGenerator;
     private Cell closest;
 
@@ -25,7 +25,7 @@ public class DragObject : MonoBehaviour
     {
         GameEvents.OnDeleteTile += OnTileDeleted;
         GameEvents.OnTileRotated += OnTileRotated;
-        wfc = FindAnyObjectByType<WaveFunctionGame>();
+        wfc = FindAnyObjectByType<WaveFunctionGame_REFACTOR>();
         cardGenerator = FindAnyObjectByType<CardGenerator>();
     }
     private void OnDestroy()

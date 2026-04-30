@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ public class CalculateExecutionTime : MonoBehaviour
     public string nombreArchivo = "Nombre_Archivo";
     public int numberOfGenerations;
 
-    WaveFunctionGame wfc;
+    WaveFunctionGame_REFACTOR wfc;
     Stopwatch stopwatch;
 
     private bool incompatibility = false;
@@ -32,12 +32,12 @@ public class CalculateExecutionTime : MonoBehaviour
 
     void Awake()
     {
-        wfc = GetComponent<WaveFunctionGame>();
+        wfc = GetComponent<WaveFunctionGame_REFACTOR>();
         stopwatch = new Stopwatch();
 
-        WaveFunctionGame.onIncompatibility += OnIncompatibility;
-        WaveFunctionGame.onStartGeneration += StartStopwatch;
-        WaveFunctionGame.onEndGeneration += StopStopwatch;
+        WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompatibility;
+        WaveFunctionGame_REFACTOR.onStartGeneration += StartStopwatch;
+        WaveFunctionGame_REFACTOR.onEndGeneration += StopStopwatch;
 
         if (wfc.STOPWATCH) active = true;
         else active = false;
@@ -60,17 +60,17 @@ public class CalculateExecutionTime : MonoBehaviour
                 tabla = LeerCSV();
                 if (ObtenerColumnaMapa(tabla, mapSize) != -1)
                 {
-                    Debug.LogError($"Ya existe una generación para el mapa {mapSize}. No se sobreescribirá.");
+                    Debug.LogError($"Ya existe una generaciÃ³n para el mapa {mapSize}. No se sobreescribirÃ¡.");
                     return;
                 }
             }
 
-            AñadirColumna(tabla, mapSize);
+            AÃ±adirColumna(tabla, mapSize);
             GuardarCSV(tabla);
         } 
     }
 
-    // ------------------- CRONÓMETRO -------------------
+    // ------------------- CRONÃ“METRO -------------------
 
     public void StartStopwatch()
     {
@@ -177,7 +177,7 @@ public class CalculateExecutionTime : MonoBehaviour
             }
             else
             {
-                // wfc.Regenerate();
+                 wfc.Regenerate();
             }
         }
         
@@ -195,7 +195,7 @@ public class CalculateExecutionTime : MonoBehaviour
     {
         using (StreamWriter sw = new StreamWriter(FilePath))
         {
-            sw.WriteLine("");       // esquina superior izquierda vacía
+            sw.WriteLine("");       // esquina superior izquierda vacÃ­a
             sw.WriteLine("Gen 1");
         }
     }
@@ -236,7 +236,7 @@ public class CalculateExecutionTime : MonoBehaviour
         return t.Count;
     }
 
-    void AñadirColumna(List<string[]> t, string mapSize)
+    void AÃ±adirColumna(List<string[]> t, string mapSize)
     {
         for (int i = 0; i < t.Count; i++)
         {

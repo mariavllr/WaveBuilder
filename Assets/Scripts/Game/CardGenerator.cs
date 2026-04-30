@@ -10,12 +10,11 @@ using Random = UnityEngine.Random;
 
 public class CardGenerator : MonoBehaviour
 {
-    private WaveFunctionGame wfc;
+    private WaveFunctionGame_REFACTOR wfc;
     [SerializeField] public List<Tile> tilesList;
     public Queue<Tile> tileQueue;
     public int queueSize;
     public float distance;
-    private float offset = 0;
     private bool isDragging = false;
     public float dragCooldown = 0.3f;
     public float timerCooldown = 0;
@@ -38,7 +37,7 @@ public class CardGenerator : MonoBehaviour
         UpdateScreenPosition();
 
         tileQueue = new Queue<Tile>();
-        wfc = FindAnyObjectByType<WaveFunctionGame>();
+        wfc = FindAnyObjectByType<WaveFunctionGame_REFACTOR>();
         InicializeTileQueue();
     }
 
@@ -47,7 +46,7 @@ public class CardGenerator : MonoBehaviour
         GameEvents.OnTileDragged += OnTileDragged;
         GameEvents.OnTileReleased += OnTileRemoved;
         GameEvents.OnDeleteTile += OnDeleteTile;
-        WaveFunctionGame.onRegenerate += OnMapRegenerated;
+        WaveFunctionGame_REFACTOR.onRegenerate += OnMapRegenerated;
         CameraControl.onCameraRotated += OnCameraRotated;
     }
 
@@ -56,7 +55,7 @@ public class CardGenerator : MonoBehaviour
         GameEvents.OnTileDragged -= OnTileDragged;
         GameEvents.OnTileReleased -= OnTileRemoved;
         GameEvents.OnDeleteTile -= OnDeleteTile;
-        WaveFunctionGame.onRegenerate -= OnMapRegenerated;
+        WaveFunctionGame_REFACTOR.onRegenerate -= OnMapRegenerated;
         CameraControl.onCameraRotated -= OnCameraRotated;
     }
 
@@ -65,7 +64,7 @@ public class CardGenerator : MonoBehaviour
         GameEvents.OnTileReleased -= OnTileRemoved; 
         GameEvents.OnTileDragged -= OnTileDragged;
         GameEvents.OnDeleteTile -= OnDeleteTile;
-        WaveFunctionGame.onRegenerate -= OnMapRegenerated;
+        WaveFunctionGame_REFACTOR.onRegenerate -= OnMapRegenerated;
         CameraControl.onCameraRotated -= OnCameraRotated;
     }
 

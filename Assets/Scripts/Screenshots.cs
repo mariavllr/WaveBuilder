@@ -1,7 +1,6 @@
-using UnityEngine;
-
+﻿using UnityEngine;
 using System.IO;
-using UnityEngine;
+
 
 public class Screenshots : MonoBehaviour
 {

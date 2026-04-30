@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems; // Necesario para eventos de UI
 
 public class DeleteTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    private WaveFunctionGame wfc;
+    private WaveFunctionGame_REFACTOR wfc;
 
     RectTransform rectTransform;
     private Vector3 originalScale;
@@ -17,7 +17,7 @@ public class DeleteTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     private void Start()
     {
-        wfc = FindFirstObjectByType<WaveFunctionGame>();
+        wfc = FindFirstObjectByType<WaveFunctionGame_REFACTOR>();
         rectTransform = GetComponent<RectTransform>();
         originalScale = rectTransform.localScale;
         originalPosition = rectTransform.anchoredPosition;
