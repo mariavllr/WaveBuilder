@@ -876,8 +876,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private bool CollapseCell(Cell cell)
     {
-        GetNeighboursCloseToCollapsedCell(cell);
-
         Tile selectedTile = probabilityConstraint
             ? ChooseTile(cell.tileOptions)
             : ChooseRandomTile(cell.tileOptions.ToList());
@@ -889,6 +887,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
 
         ApplyCollapse(cell, selectedTile);
+        GetNeighboursCloseToCollapsedCell(cell);
         return true;
     }
 
@@ -1341,18 +1340,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             options.RemoveAll(o => !validSet.Contains(o) || o.tileType == "limit");
         }
 
-        if (z > 0 && (!cubeStep || IsInsideCube(x, y, z - 1)))
-            FilterBy(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.upNeighbours);
-        if (z < dimensionsZ - 1 && (!cubeStep || IsInsideCube(x, y, z + 1)))
-            FilterBy(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.downNeighbours);
-        if (x > 0 && (!cubeStep || IsInsideCube(x - 1, y, z)))
-            FilterBy((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.rightNeighbours);
-        if (x < dimensionsX - 1 && (!cubeStep || IsInsideCube(x + 1, y, z)))
-            FilterBy((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.leftNeighbours);
-        if (y > 0 && (!cubeStep || IsInsideCube(x, y - 1, z)))
-            FilterBy(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ), o => o.aboveNeighbours);
-        if (y < dimensionsY - 1 && (!cubeStep || IsInsideCube(x, y + 1, z)))
-            FilterBy(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ), o => o.belowNeighbours);
+        if (z > 0) FilterBy(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.upNeighbours);
+        if (z < dimensionsZ - 1) FilterBy(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.downNeighbours);
+        if (x > 0) FilterBy((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.rightNeighbours);
+        if (x < dimensionsX - 1) FilterBy((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.leftNeighbours);
+        if (y > 0) FilterBy(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ), o => o.aboveNeighbours);
+        if (y < dimensionsY - 1) FilterBy(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ), o => o.belowNeighbours);
 
         return options;
     }
@@ -1367,15 +1360,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             && z >= cubeStartZ && z < cubeEndZ;
     }
 
-   
-    private void EnqueueNeighbors(int idx, int x, int y, int z,
-                                   Queue<int> queue, HashSet<int> inQueue)
-    {
-        void TryEnqueue(int ni, int nx, int ny, int nz)
-        {
-            // Durante cubeStep, no propagamos fuera del cubo
-            if (cubeStep && !IsInsideCube(nx, ny, nz)) return;
 
+    private void EnqueueNeighbors(int idx, int x, int y, int z,
+                               Queue<int> queue, HashSet<int> inQueue)
+    {
+        void TryEnqueue(int ni)
+        {
             if (ni >= 0 && ni < gridComponents.Count &&
                 !gridComponents[ni].collapsed && !inQueue.Contains(ni))
             {
@@ -1384,12 +1374,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             }
         }
 
-        if (z > 0) TryEnqueue(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), x, y, z - 1);
-        if (z < dimensionsZ - 1) TryEnqueue(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), x, y, z + 1);
-        if (x > 0) TryEnqueue((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), x - 1, y, z);
-        if (x < dimensionsX - 1) TryEnqueue((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), x + 1, y, z);
-        if (y > 0) TryEnqueue(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ), x, y - 1, z);
-        if (y < dimensionsY - 1) TryEnqueue(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ), x, y + 1, z);
+        if (z > 0) TryEnqueue(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (z < dimensionsZ - 1) TryEnqueue(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (x > 0) TryEnqueue((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (x < dimensionsX - 1) TryEnqueue((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
+        if (y > 0) TryEnqueue(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ));
+        if (y < dimensionsY - 1) TryEnqueue(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ));
     }
 
 

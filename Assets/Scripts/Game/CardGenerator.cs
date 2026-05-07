@@ -144,7 +144,7 @@ public class CardGenerator : MonoBehaviour
 
             foreach (Material mat in materials)
             {
-                try
+                /*try
                 {
                     LocalKeyword keyword = new LocalKeyword(mat.shader, "_SELECTABLE");
                     mat.SetKeyword(keyword, selectable);
@@ -152,7 +152,7 @@ public class CardGenerator : MonoBehaviour
                 catch (Exception)
                 {
                     throw;
-                }               
+                }               */
             }
         }
     }

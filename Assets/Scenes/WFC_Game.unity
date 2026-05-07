@@ -1629,9 +1629,9 @@ MonoBehaviour:
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 40
+  dimensionsX: 12
   dimensionsY: 5
-  dimensionsZ: 40
+  dimensionsZ: 12
   cellSize: 2
   initialCubeSize: 3
   tileObjects:
@@ -1671,7 +1671,7 @@ MonoBehaviour:
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
   borderConstraint: 1
-  animations: 0
+  animations: 1
   animationDuration: 0.1
   animationDelay: 0.05
   renderEachFrame: 1
@@ -1684,7 +1684,7 @@ MonoBehaviour:
   placedTilesText: {fileID: 2089379976}
   mapsGeneratedText: {fileID: 1893497887}
   timerText: {fileID: 563761360}
-  STOPWATCH: 1
+  STOPWATCH: 0
   testType: 1
   gridComponents: []
   actualTileDragged: {fileID: 0}
@@ -1931,7 +1931,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839935899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6c0b287f25cd43340a1406de972110fc, type: 3}
   m_Name: 
@@ -1944,7 +1944,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839935899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 720898c86eb1abd48b9cabc766ccd39d, type: 3}
   m_Name: 
@@ -1958,12 +1958,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839935899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d8eb6652cac6914f99146affdf73a9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wfcGame: {fileID: 1653789838}
+  wfcGame: {fileID: 0}
   allScoreDataObjects:
   - {fileID: 11400000, guid: a2ec9f2bd81042147b62e43c93540002, type: 2}
   - {fileID: 11400000, guid: c6cb6060d1687644f91695cddada8f69, type: 2}
@@ -1984,7 +1984,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839935899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2368199e02901614487e6434315bf7fb, type: 3}
   m_Name: 
@@ -2093,12 +2093,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839935899}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3ce970c50b85c14d8361bae179e7430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wfcGame: {fileID: 1653789838}
+  wfcGame: {fileID: 0}
   targetTileType: campfire
   requiredAmount: 3
   villageTilePrefab: {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
@@ -2440,7 +2440,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1993922141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2654,7 +2654,7 @@ PrefabInstance:
     - target: {fileID: 2165594028172464585, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1154171695}
+      objectReference: {fileID: 0}
     - target: {fileID: 2302502917488814828, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -2884,11 +2884,11 @@ PrefabInstance:
     - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1154171695}
+      objectReference: {fileID: 0}
     - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Target
       value: 
-      objectReference: {fileID: 1154171695}
+      objectReference: {fileID: 0}
     - target: {fileID: 4753277271039433574, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive
       value: 0
