@@ -100,12 +100,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileType: roofTop_ext
+  tileType: roofTop_int
   probability: 1
   fixedTile: 0
-  rotateRight: 0
+  rotateRight: 1
   rotate180: 1
-  rotateLeft: 0
+  rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
@@ -118,12 +118,44 @@ MonoBehaviour:
   skirtCornerNW: {fileID: 0}
   skirtCornerSE: {fileID: 0}
   skirtCornerSW: {fileID: 0}
-  upNeighbours: []
-  rightNeighbours: []
-  downNeighbours: []
-  leftNeighbours: []
-  aboveNeighbours: []
-  belowNeighbours: []
+  upNeighbours:
+  - {fileID: 2950445822957633683, guid: 30d801fce5c8d084d82012489683a22a, type: 3}
+  - {fileID: 5997231753017720869}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  - {fileID: 8676159259423586486, guid: a05fcb7119f49e74e8a25d786efad5c4, type: 3}
+  - {fileID: 2950445822957633683, guid: 30d801fce5c8d084d82012489683a22a, type: 3}
+  - {fileID: 5997231753017720869}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 5997231753017720869}
+  - {fileID: 0}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  - {fileID: 1574588149748930649, guid: 1e83430af10b3b44eabaaac8838e4f45, type: 3}
+  - {fileID: 4384451260943345334, guid: 30483727b44ccc34aa95e60777c74f9e, type: 3}
+  - {fileID: 2950445822957633683, guid: 30d801fce5c8d084d82012489683a22a, type: 3}
+  - {fileID: 5997231753017720869}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  belowNeighbours:
+  - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   excludedNeighboursUp: []
   excludedNeighboursRight: []
   excludedNeighboursDown: []

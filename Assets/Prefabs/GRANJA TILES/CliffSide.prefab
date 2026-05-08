@@ -145,7 +145,8 @@ MonoBehaviour:
   leftNeighbours: []
   aboveNeighbours: []
   belowNeighbours: []
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - cliff
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []

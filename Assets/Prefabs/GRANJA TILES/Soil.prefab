@@ -139,12 +139,27 @@ MonoBehaviour:
   skirtCornerNW: {fileID: 0}
   skirtCornerSE: {fileID: 0}
   skirtCornerSW: {fileID: 0}
-  upNeighbours: []
-  rightNeighbours: []
-  downNeighbours: []
-  leftNeighbours: []
-  aboveNeighbours: []
-  belowNeighbours: []
+  upNeighbours:
+  - {fileID: 3049258220243450948}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 3049258220243450948}
+  - {fileID: 3596953822346326320, guid: b6df01bf277cbd34da2487865bfcee3d, type: 3}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 3049258220243450948}
+  - {fileID: 3596953822346326320, guid: b6df01bf277cbd34da2487865bfcee3d, type: 3}
+  - {fileID: 5651625776548470228, guid: cee4da48422c7464491e8713564e1e0b, type: 3}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 3049258220243450948}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  belowNeighbours:
+  - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   excludedNeighboursUp: []
   excludedNeighboursRight: []
   excludedNeighboursDown: []

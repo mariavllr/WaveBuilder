@@ -2425,26 +2425,28 @@ MonoBehaviour:
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 12
-  dimensionsY: 5
-  dimensionsZ: 12
+  dimensionsX: 20
+  dimensionsY: 6
+  dimensionsZ: 20
   cellSize: 2
   initialCubeSize: 3
   tileObjects:
-  - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
-  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
-  - {fileID: 5161399217323514139, guid: 2f9e7adc158223f42ac8d811a4b84283, type: 3}
-  - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
-  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
-  - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
   - {fileID: 9111484696667179856, guid: 7e1be88155bc0aa49a995a98ce6f6712, type: 3}
-  - {fileID: 8676159259423586486, guid: a05fcb7119f49e74e8a25d786efad5c4, type: 3}
+  - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
+  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
+  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
+  - {fileID: 5161399217323514139, guid: 2f9e7adc158223f42ac8d811a4b84283, type: 3}
+  - {fileID: 1574588149748930649, guid: 1e83430af10b3b44eabaaac8838e4f45, type: 3}
   - {fileID: 4384451260943345334, guid: 30483727b44ccc34aa95e60777c74f9e, type: 3}
+  - {fileID: 8676159259423586486, guid: a05fcb7119f49e74e8a25d786efad5c4, type: 3}
   - {fileID: 2950445822957633683, guid: 30d801fce5c8d084d82012489683a22a, type: 3}
+  - {fileID: 5997231753017720869, guid: 5df745f8c14774c4cae4990d6367fa63, type: 3}
+  - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   - {fileID: 3437802588696912362, guid: b61b23d59b15ce446a6b7f0bece4bd6d, type: 3}
   floorTile: {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   emptyTile: {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
-  limitTile: {fileID: 5161399217323514139, guid: 2f9e7adc158223f42ac8d811a4b84283, type: 3}
+  limitTile: {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
   cellObj: {fileID: -4312026199669856736, guid: 9469c2b24035b984b8ee9081628e4604, type: 3}
   newTilesContainer: {fileID: 2111692170}
   previewMaterial: {fileID: 2100000, guid: a73241f484e4587449d4a4626a539797, type: 2}
@@ -2452,7 +2454,7 @@ MonoBehaviour:
   excludedNeighborConstraint: 1
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
-  borderConstraint: 0
+  borderConstraint: 1
   animations: 1
   animationDuration: 0.1
   animationDelay: 0.05

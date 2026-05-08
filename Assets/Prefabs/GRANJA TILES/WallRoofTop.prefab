@@ -103,9 +103,9 @@ MonoBehaviour:
   tileType: WallRoof
   probability: 1
   fixedTile: 0
-  rotateRight: 0
+  rotateRight: 1
   rotate180: 1
-  rotateLeft: 0
+  rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
@@ -140,9 +140,11 @@ MonoBehaviour:
   - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 9111484696667179856, guid: 7e1be88155bc0aa49a995a98ce6f6712, type: 3}
   excludedNeighboursUp: []
-  excludedNeighboursRight: []
+  excludedNeighboursRight:
+  - WallRoof
   excludedNeighboursDown: []
-  excludedNeighboursLeft: []
+  excludedNeighboursLeft:
+  - WallRoof
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 1dfc46ed17165a245b3eafd0b1009141, type: 2}

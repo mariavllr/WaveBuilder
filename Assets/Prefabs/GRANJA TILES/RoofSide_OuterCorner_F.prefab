@@ -103,9 +103,9 @@ MonoBehaviour:
   tileType: roofSide_OuterCorner_F
   probability: 1
   fixedTile: 0
-  rotateRight: 0
-  rotate180: 0
-  rotateLeft: 0
+  rotateRight: 1
+  rotate180: 1
+  rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
@@ -123,24 +123,40 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   rightNeighbours:
   - {fileID: 4384451260943345334, guid: 30483727b44ccc34aa95e60777c74f9e, type: 3}
   - {fileID: 3437802588696912362, guid: b61b23d59b15ce446a6b7f0bece4bd6d, type: 3}
   downNeighbours:
   - {fileID: 0}
+  - {fileID: 0}
   leftNeighbours:
   - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
-  - {fileID: 4384451260943345334, guid: 30483727b44ccc34aa95e60777c74f9e, type: 3}
   - {fileID: 2950445822957633683, guid: 30d801fce5c8d084d82012489683a22a, type: 3}
+  - {fileID: 5997231753017720869, guid: 5df745f8c14774c4cae4990d6367fa63, type: 3}
+  - {fileID: 1574588149748930649, guid: 1e83430af10b3b44eabaaac8838e4f45, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   aboveNeighbours:
   - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
   belowNeighbours:
   - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - roofSide_OuterCorner
+  - roofSide_OuterCorner_F
+  - WallRoof
   excludedNeighboursRight: []
   excludedNeighboursDown: []
-  excludedNeighboursLeft: []
+  excludedNeighboursLeft:
+  - roofSide_OuterCorner
+  - roofSide_OuterCorner_F
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 1dfc46ed17165a245b3eafd0b1009141, type: 2}

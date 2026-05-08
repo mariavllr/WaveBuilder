@@ -141,13 +141,13 @@ MonoBehaviour:
   skirtCornerSW: {fileID: 0}
   upNeighbours:
   - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
+  - {fileID: 5651625776548470228, guid: cee4da48422c7464491e8713564e1e0b, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
-  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 9111484696667179856, guid: 7e1be88155bc0aa49a995a98ce6f6712, type: 3}
+  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 0}
   downNeighbours:
   - {fileID: 0}
@@ -155,18 +155,22 @@ MonoBehaviour:
   - {fileID: 0}
   leftNeighbours:
   - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   aboveNeighbours:
-  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  - {fileID: 8676159259423586486, guid: a05fcb7119f49e74e8a25d786efad5c4, type: 3}
+  - {fileID: 0}
   belowNeighbours:
   - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - wall_outerCorner
+  - wall
   excludedNeighboursRight: []
   excludedNeighboursDown: []
-  excludedNeighboursLeft: []
+  excludedNeighboursLeft:
+  - wall_outerCorner
+  - wall
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 1dc0478e7fcd1f14cadbd420db27b358, type: 2}
@@ -211,7 +215,7 @@ MonoBehaviour:
     isFlipped: 0
     verticalFace: 1
     rotationIndex: 0
-    rotationallyInvariant: 1
+    rotationallyInvariant: 0
   belowSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 7f08f02934244dd4384a917ad1470878, type: 2}

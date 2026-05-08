@@ -493,9 +493,9 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         // Sockets verticales: solo se reetiqueta la rotación
         rotated.aboveSocket = original.aboveSocket;
-        rotated.aboveSocket.rotationIndex = steps * 90;
+        rotated.aboveSocket.rotationIndex = (original.aboveSocket.rotationIndex + steps * 90) % 360;
         rotated.belowSocket = original.belowSocket;
-        rotated.belowSocket.rotationIndex = steps * 90;
+        rotated.belowSocket.rotationIndex = (original.belowSocket.rotationIndex + steps * 90) % 360;
 
         // Exclusiones horizontales
         var srcExcl = new[] { original.excludedNeighboursUp,    original.excludedNeighboursRight,

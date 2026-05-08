@@ -145,10 +145,12 @@ MonoBehaviour:
   leftNeighbours: []
   aboveNeighbours: []
   belowNeighbours: []
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - cliff_corner
   excludedNeighboursRight: []
   excludedNeighboursDown: []
-  excludedNeighboursLeft: []
+  excludedNeighboursLeft:
+  - cliff_corner
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 544be72ddd3840f46b932447530d897a, type: 2}
