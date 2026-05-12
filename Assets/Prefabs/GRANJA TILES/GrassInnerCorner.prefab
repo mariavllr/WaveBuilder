@@ -122,7 +122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: grass_innerCorner
-  probability: 1
+  probability: 50
   fixedTile: 0
   rotateRight: 1
   rotate180: 1
@@ -142,19 +142,40 @@ MonoBehaviour:
   upNeighbours:
   - {fileID: 3596953822346326320, guid: b6df01bf277cbd34da2487865bfcee3d, type: 3}
   - {fileID: 0}
+  - {fileID: 0}
   rightNeighbours:
   - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
   - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
+  - {fileID: 5095738051829565818, guid: d15767b0e915d254c9bafa269c779f46, type: 3}
+  - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   downNeighbours:
-  - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
   - {fileID: 9111484696667179856, guid: 7e1be88155bc0aa49a995a98ce6f6712, type: 3}
+  - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
   - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
+  - {fileID: 2224100139795180203, guid: bda3d79d1f4de4e47baae47f2c7837ff, type: 3}
+  - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
+  - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

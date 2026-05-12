@@ -1963,7 +1963,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d8eb6652cac6914f99146affdf73a9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wfcGame: {fileID: 0}
+  wfcGame: {fileID: 1653789838}
   allScoreDataObjects:
   - {fileID: 11400000, guid: a2ec9f2bd81042147b62e43c93540002, type: 2}
   - {fileID: 11400000, guid: c6cb6060d1687644f91695cddada8f69, type: 2}
@@ -2098,7 +2098,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3ce970c50b85c14d8361bae179e7430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wfcGame: {fileID: 0}
+  wfcGame: {fileID: 1653789838}
   targetTileType: campfire
   requiredAmount: 3
   villageTilePrefab: {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
@@ -2333,7 +2333,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &1928777818
 MeshCollider:
   m_ObjectHideFlags: 0

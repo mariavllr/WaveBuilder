@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4952515760821126408
+--- !u!1 &4464544657391873737
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,48 +8,47 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 336309653570338291}
-  - component: {fileID: 704369441374471283}
-  - component: {fileID: 3873899789480304571}
-  - component: {fileID: 6192988575056894749}
-  - component: {fileID: 3596953822346326320}
+  - component: {fileID: 1357819711638990854}
+  - component: {fileID: 8745843794177429715}
+  - component: {fileID: 5256840955382007335}
+  - component: {fileID: 4056696779862659432}
   m_Layer: 0
-  m_Name: GrassOuterCorner
+  m_Name: DoorSingle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &336309653570338291
+--- !u!4 &1357819711638990854
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4952515760821126408}
+  m_GameObject: {fileID: 4464544657391873737}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 1, y: 0.2, z: 1}
+  m_LocalPosition: {x: 2.3396158, y: -4.2842245, z: 3.5084565}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &704369441374471283
+--- !u!33 &8745843794177429715
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4952515760821126408}
-  m_Mesh: {fileID: 7347932300231052364, guid: 33b85ba1af2b26c4bbf6e18d4fe66921, type: 3}
---- !u!23 &3873899789480304571
+  m_GameObject: {fileID: 4464544657391873737}
+  m_Mesh: {fileID: 4592111417035952193, guid: 8c4c59d02afcc23479fd3891c2120c64, type: 3}
+--- !u!23 &5256840955382007335
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4952515760821126408}
+  m_GameObject: {fileID: 4464544657391873737}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -66,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -876546973899608171, guid: 33b85ba1af2b26c4bbf6e18d4fe66921, type: 3}
+  - {fileID: -876546973899608171, guid: 8c4c59d02afcc23479fd3891c2120c64, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -88,41 +87,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &6192988575056894749
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4952515760821126408}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2, y: 2, z: 2}
-  m_Center: {x: 0, y: 1, z: 0}
---- !u!114 &3596953822346326320
+--- !u!114 &4056696779862659432
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4952515760821126408}
+  m_GameObject: {fileID: 4464544657391873737}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileType: grass_outerCorner
-  probability: 50
+  tileType: wallDoor
+  probability: 1
   fixedTile: 0
   rotateRight: 1
   rotate180: 1
@@ -140,34 +118,49 @@ MonoBehaviour:
   skirtCornerSE: {fileID: 0}
   skirtCornerSW: {fileID: 0}
   upNeighbours:
-  - {fileID: 3049258220243450948, guid: f872fa0b60957a4469b251c17390d55a, type: 3}
+  - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
+  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
+  - {fileID: 5651625776548470228, guid: cee4da48422c7464491e8713564e1e0b, type: 3}
+  - {fileID: 7068585195579798858, guid: 8554f67844b39724e81da7ef2b0cdc82, type: 3}
+  - {fileID: 3273283186665508094, guid: 5145dbc9ef6dfd04fbef481a97ce17e1, type: 3}
+  - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
+  - {fileID: 5095738051829565818, guid: d15767b0e915d254c9bafa269c779f46, type: 3}
+  - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
-  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
-  - {fileID: 5651625776548470228, guid: cee4da48422c7464491e8713564e1e0b, type: 3}
+  - {fileID: 4056696779862659432}
+  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 0}
   downNeighbours:
-  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
+  - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
+  - {fileID: 3273283186665508094, guid: 5145dbc9ef6dfd04fbef481a97ce17e1, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
-  - {fileID: 3049258220243450948, guid: f872fa0b60957a4469b251c17390d55a, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 4056696779862659432}
+  - {fileID: 97931016942075570, guid: 2519d304ce9761744a1034db60aea6d3, type: 3}
+  - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   aboveNeighbours:
-  - {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
+  - {fileID: 3437802588696912362, guid: b61b23d59b15ce446a6b7f0bece4bd6d, type: 3}
+  - {fileID: 0}
   belowNeighbours:
   - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
-  excludedNeighboursUp: []
+  excludedNeighboursUp:
+  - wall_outerCorner
+  - wall
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
   upSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: f8d120573fc5e7242a3119fed2098850, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 1dc0478e7fcd1f14cadbd420db27b358, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -176,7 +169,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   rightSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: 367ff5798416df74ab4d7829fe0bded6, type: 2}
+    socketDefinition: {fileID: 11400000, guid: a149145ad9b812b4c96f74f3650233e0, type: 2}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 0
@@ -185,31 +178,31 @@ MonoBehaviour:
     rotationallyInvariant: 0
   leftSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: f8d120573fc5e7242a3119fed2098850, type: 2}
-    horizontalFace: 1
-    isSymmetric: 1
-    isFlipped: 0
-    verticalFace: 0
-    rotationIndex: 0
-    rotationallyInvariant: 0
-  downSocket:
-    socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: 367ff5798416df74ab4d7829fe0bded6, type: 2}
+    socketDefinition: {fileID: 11400000, guid: a149145ad9b812b4c96f74f3650233e0, type: 2}
     horizontalFace: 1
     isSymmetric: 0
     isFlipped: 1
     verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0
+  downSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 7f08f02934244dd4384a917ad1470878, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
   aboveSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: 1dfc46ed17165a245b3eafd0b1009141, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 16563dcf50debf64e8fab5d18e0c3a62, type: 2}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
     verticalFace: 1
     rotationIndex: 0
-    rotationallyInvariant: 1
+    rotationallyInvariant: 0
   belowSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: 7f08f02934244dd4384a917ad1470878, type: 2}

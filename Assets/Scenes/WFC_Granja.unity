@@ -2425,9 +2425,9 @@ MonoBehaviour:
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 20
+  dimensionsX: 15
   dimensionsY: 6
-  dimensionsZ: 20
+  dimensionsZ: 15
   cellSize: 2
   initialCubeSize: 3
   tileObjects:
@@ -2444,6 +2444,21 @@ MonoBehaviour:
   - {fileID: 5997231753017720869, guid: 5df745f8c14774c4cae4990d6367fa63, type: 3}
   - {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   - {fileID: 3437802588696912362, guid: b61b23d59b15ce446a6b7f0bece4bd6d, type: 3}
+  - {fileID: 8801451018271579044, guid: 04e92dbaef7b3cd4fa0158d034dedd77, type: 3}
+  - {fileID: 3596953822346326320, guid: b6df01bf277cbd34da2487865bfcee3d, type: 3}
+  - {fileID: 5651625776548470228, guid: cee4da48422c7464491e8713564e1e0b, type: 3}
+  - {fileID: 3049258220243450948, guid: f872fa0b60957a4469b251c17390d55a, type: 3}
+  - {fileID: 7068585195579798858, guid: 8554f67844b39724e81da7ef2b0cdc82, type: 3}
+  - {fileID: 3273283186665508094, guid: 5145dbc9ef6dfd04fbef481a97ce17e1, type: 3}
+  - {fileID: 5270935117155251960, guid: 966269581c56aaa4fb8d1925d2829a59, type: 3}
+  - {fileID: 2224100139795180203, guid: bda3d79d1f4de4e47baae47f2c7837ff, type: 3}
+  - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
+  - {fileID: 5095738051829565818, guid: d15767b0e915d254c9bafa269c779f46, type: 3}
+  - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 8692539937138069245, guid: a7564774739b7684ba8b64e3595c07aa, type: 3}
+  - {fileID: 2485514754969466636, guid: 6f2aa3ed64d71d345a496b744691972b, type: 3}
+  - {fileID: 4818336225402115446, guid: 535a352a59f8b8b4a8274bd1cc1cc802, type: 3}
+  - {fileID: 4056696779862659432, guid: f49bf031cd0b8e44d90dd2a00257a182, type: 3}
   floorTile: {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}
   emptyTile: {fileID: 5161399217323514139, guid: 5d6905d0a016385429ef9efa5b0ed28a, type: 3}
   limitTile: {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
