@@ -1,0 +1,185 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1492007590499740374
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5235601270098479604}
+  - component: {fileID: 8904933399352538738}
+  m_Layer: 0
+  m_Name: EMPTY
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5235601270098479604
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1492007590499740374}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8904933399352538738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1492007590499740374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tileType: empty
+  probability: 1
+  fixedTile: 0
+  rotateRight: 0
+  rotate180: 0
+  rotateLeft: 0
+  rotation: {x: 0, y: 0, z: 0}
+  scale: {x: 0, y: 0, z: 0}
+  positionOffset: {x: 0, y: 0, z: 0}
+  useSkirts: 0
+  skirtNorth: {fileID: 0}
+  skirtSouth: {fileID: 0}
+  skirtEast: {fileID: 0}
+  skirtWest: {fileID: 0}
+  skirtCornerNE: {fileID: 0}
+  skirtCornerNW: {fileID: 0}
+  skirtCornerSE: {fileID: 0}
+  skirtCornerSW: {fileID: 0}
+  upNeighbours:
+  - {fileID: 6247771990147117141, guid: 896ffc542f7559e4d9a9eb7f3151032d, type: 3}
+  - {fileID: 2942090208649452566, guid: 598315d40be7d4849ad652bfbe1183d3, type: 3}
+  - {fileID: 8421222444704714888, guid: 22a24febd1d543a49a0a692b2093232e, type: 3}
+  - {fileID: 6741548719254470733, guid: 8a5a993371d74174d94b6536cbe14e23, type: 3}
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 2942090208649452566, guid: 598315d40be7d4849ad652bfbe1183d3, type: 3}
+  - {fileID: 6741548719254470733, guid: 8a5a993371d74174d94b6536cbe14e23, type: 3}
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 8904933399352538738}
+  belowNeighbours:
+  - {fileID: 2959774239270641923, guid: bb9ee00025964f3408be352a0ebd864e, type: 3}
+  - {fileID: -8427017333605641927, guid: e27d8a60bc49043468bd45c4649fe149, type: 3}
+  - {fileID: 4822609049087869241, guid: fd05163cede66d24dbbe5c95cd14aff7, type: 3}
+  - {fileID: 6247771990147117141, guid: 896ffc542f7559e4d9a9eb7f3151032d, type: 3}
+  - {fileID: 2942090208649452566, guid: 598315d40be7d4849ad652bfbe1183d3, type: 3}
+  - {fileID: 8421222444704714888, guid: 22a24febd1d543a49a0a692b2093232e, type: 3}
+  - {fileID: 6741548719254470733, guid: 8a5a993371d74174d94b6536cbe14e23, type: 3}
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  excludedNeighboursUp: []
+  excludedNeighboursRight: []
+  excludedNeighboursDown: []
+  excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
+  upSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  rightSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  leftSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  downSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  aboveSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1
+  belowSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: dc72868969e5cee4eb8cc7df20d2c2ca, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1

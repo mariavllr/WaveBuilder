@@ -1,0 +1,157 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1492007590499740374
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5235601270098479604}
+  - component: {fileID: 8904933399352538738}
+  m_Layer: 0
+  m_Name: SOLID
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5235601270098479604
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1492007590499740374}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8904933399352538738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1492007590499740374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tileType: solid
+  probability: 100
+  fixedTile: 0
+  rotateRight: 0
+  rotate180: 0
+  rotateLeft: 0
+  rotation: {x: 0, y: 0, z: 0}
+  scale: {x: 0, y: 0, z: 0}
+  positionOffset: {x: 0, y: 0, z: 0}
+  useSkirts: 0
+  skirtNorth: {fileID: 0}
+  skirtSouth: {fileID: 0}
+  skirtEast: {fileID: 0}
+  skirtWest: {fileID: 0}
+  skirtCornerNE: {fileID: 0}
+  skirtCornerNW: {fileID: 0}
+  skirtCornerSE: {fileID: 0}
+  skirtCornerSW: {fileID: 0}
+  upNeighbours:
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 5590950285404103390, guid: a86a97ee14abd9f4e8d78f93fc085a5b, type: 3}
+  - {fileID: 8904933399352538738}
+  - {fileID: 4673665249558083449, guid: cdb21314164218443898e076ced7810f, type: 3}
+  - {fileID: 2594583530287662267, guid: 4239551d236918d43a18208af12cbb43, type: 3}
+  leftNeighbours:
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 8904933399352538738, guid: 9e9724b11fa61da41aeea0a83dde34a4, type: 3}
+  - {fileID: 5590950285404103390, guid: a86a97ee14abd9f4e8d78f93fc085a5b, type: 3}
+  - {fileID: 2122523246819511578, guid: 7cae1083c52e74b488f910a030ad9329, type: 3}
+  - {fileID: 8904933399352538738}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  belowNeighbours:
+  - {fileID: 8904933399352538738}
+  excludedNeighboursUp: []
+  excludedNeighboursRight: []
+  excludedNeighboursDown: []
+  excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
+  upSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  rightSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  leftSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  downSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 1
+    isSymmetric: 1
+    isFlipped: 0
+    verticalFace: 0
+    rotationIndex: 0
+    rotationallyInvariant: 0
+  aboveSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1
+  belowSocket:
+    socket_name: 0
+    socketDefinition: {fileID: 11400000, guid: 338ec2ed5a7cb5b4092aa4f99fbb8e27, type: 2}
+    horizontalFace: 0
+    isSymmetric: 0
+    isFlipped: 0
+    verticalFace: 1
+    rotationIndex: 0
+    rotationallyInvariant: 1

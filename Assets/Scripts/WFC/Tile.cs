@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -94,6 +94,8 @@ public class Tile : MonoBehaviour
     public List<string> excludedNeighboursRight = new();
     public List<string> excludedNeighboursDown = new();
     public List<string> excludedNeighboursLeft = new();
+    public List<string> excludedNeighboursAbove = new();
+    public List<string> excludedNeighboursBelow = new();
 
     [Tooltip("Para definir la direccion la derecha siempre sera el eje X (rojo) y arriba sera el eje Z (azul)")]
     [Header("Sockets")]

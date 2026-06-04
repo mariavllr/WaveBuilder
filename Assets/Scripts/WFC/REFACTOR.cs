@@ -505,6 +505,11 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         rotated.excludedNeighboursDown = srcExcl[Wrap(2 - steps)];
         rotated.excludedNeighboursLeft = srcExcl[Wrap(3 - steps)];
 
+        // Exclusiones verticales
+        rotated.excludedNeighboursAbove = original.excludedNeighboursAbove;
+        rotated.excludedNeighboursBelow = original.excludedNeighboursBelow;
+
+
         if (rotated.useSkirts) RotateSkirts(original, rotated, steps);
     }
 
@@ -593,10 +598,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
                     a.leftNeighbours.Add(b);
 
                 // Caras verticales: regla de rotación invariante
-                if (CanConnectVertical(a.aboveSocket, b.belowSocket))
+                if (CanConnectVertical(a.aboveSocket, b.belowSocket,
+                    a.excludedNeighboursAbove, b.excludedNeighboursBelow, a.tileType, b.tileType))
                     a.aboveNeighbours.Add(b);
 
-                if (CanConnectVertical(a.belowSocket, b.aboveSocket))
+                if (CanConnectVertical(a.belowSocket, b.aboveSocket,
+                    a.excludedNeighboursBelow, b.excludedNeighboursAbove, a.tileType, b.tileType))
                     a.belowNeighbours.Add(b);
             }
     }
@@ -627,9 +634,13 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// Las caras superior e inferior no aplican simetría ni flip: o ambas
     /// son rotacionalmente invariantes, o sus rotationIndex coinciden.
     /// </summary>
-    private bool CanConnectVertical(Tile.Socket socketA, Tile.Socket socketB)
+    private bool CanConnectVertical(Tile.Socket socketA, Tile.Socket socketB, List<string> excludedA, List<string> excludedB, string typeA, string typeB)
     {
         if (!SocketsMatch(socketA, socketB)) return false;
+
+        if (excludedNeighborConstraint
+            && (excludedA.Contains(typeB) || excludedB.Contains(typeA)))
+            return false;
 
         return (socketA.rotationallyInvariant && socketB.rotationallyInvariant)
             || (socketA.rotationIndex == socketB.rotationIndex);
@@ -860,7 +871,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     Tile ChooseRandomTile(List<Tile> tiles)
     {
-        int randomNumber = _rng.Next(0, tiles.Count);
+        int randomNumber = _rng.Next(0, tiles.Count-1);
 
         Tile t = tiles[randomNumber];
 
@@ -882,6 +893,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         if (selectedTile == null)
         {
+            cell.GetComponent<SpriteRenderer>().color = Color.red;
             HandleIncompatibility();
             return false;
         }
