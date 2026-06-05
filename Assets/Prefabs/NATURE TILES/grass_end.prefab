@@ -178,6 +178,8 @@ MonoBehaviour:
   - beach_cornerExt
   - beach_grassEnd_L
   - beach_grassEnd_R
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 19
     socketDefinition: {fileID: 0}

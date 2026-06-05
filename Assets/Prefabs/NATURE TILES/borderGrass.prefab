@@ -112,7 +112,7 @@ MonoBehaviour:
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
-  useSkirts: 1
+  useSkirts: 0
   skirtNorth: {fileID: 5920452522069674724}
   skirtSouth: {fileID: 93795349235893061}
   skirtEast: {fileID: 747586806466902087}
@@ -175,6 +175,8 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 8
     socketDefinition: {fileID: 0}

@@ -10,6 +10,7 @@ using TMPro;
 using System;
 using Random = UnityEngine.Random;
 using Unity.VisualScripting.Antlr3.Runtime.Tree;
+using UnityEngine.UI;
 
 
 public enum StopwatchTest
@@ -35,6 +36,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     [Header("Map dimensions")]
     [SerializeField] public int dimensionsX, dimensionsY, dimensionsZ;
+    [SerializeField] private int totalCells;
     [SerializeField] private int cellSize;
     [SerializeField] private int initialCubeSize;
 
@@ -73,6 +75,9 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField] private TextMeshProUGUI placedTilesText;
     [SerializeField] private TextMeshProUGUI mapsGeneratedText;
     public TextMeshProUGUI timerText;
+    public GameObject finishPanel;
+    public Button pauseBtn;
+    public Button resumeBtn;
 
     [Header("Performance testing")]
     public bool STOPWATCH;
@@ -102,8 +107,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     // Contadores
     [SerializeField] private int iterations = 0;
+    [SerializeField] private int collapsedCells = 0;
     public int placedTiles = 0;
     public int mapsGenerated = 1;
+
 
     // Cronómetro
     private float elapsedTime;
@@ -131,6 +138,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         GameEvents.OnTileReleased += OnTileRemoved;
         GameEvents.OnTileRotated += OnTileRotation;
         GameEvents.OnDeleteTile += OnTileDeleted;
+        GameEvents.OnGameFinished += FinishGame;
     }
 
     private void OnDestroy()
@@ -139,6 +147,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         GameEvents.OnTileReleased -= OnTileRemoved;
         GameEvents.OnTileRotated -= OnTileRotation;
         GameEvents.OnDeleteTile -= OnTileDeleted;
+        GameEvents.OnGameFinished -= FinishGame;
     }
 
 
@@ -190,6 +199,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void Init()
     {
+        totalCells = dimensionsX * dimensionsY * dimensionsZ;
         ResetState();
         SetupCamera();
 
@@ -364,7 +374,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
     }
 
-  
+
 
     //------------------------------------------------BUCLE UPDATE-------------------------------------------
 
@@ -381,13 +391,26 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
             timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
         }
+
+        if (collapsedCells >= totalCells)
+        {
+            GameEvents.GameFinished();
+        }
     }
 
-    public void PauseTimer() => isRunning = false;
-    public void ResumeTimer() => isRunning = true;
+    public void PauseTimer() { isRunning = false; pauseBtn.interactable = false; }
+    public void ResumeTimer() { isRunning = true; pauseBtn.interactable = true; }
 
     public void StartGame() { cubeStep = true; tutorial = false; ResumeTimer(); UpdateGenerationCube(); }
     public void ExitGame() => Application.Quit();
+
+    private void FinishGame()
+    {
+        finishPanel.SetActive(true);
+        pauseBtn.interactable = false;
+        resumeBtn.interactable = false;
+        PauseTimer();
+    }
 
 
     //-------------------------------------------PREPROCESADO CON SOCKETS-------------------------------------
@@ -933,6 +956,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         instance.gameObject.transform.position += tile.positionOffset;
         instance.gameObject.SetActive(true);
+        collapsedCells++;
     }
 
     /// <summary>
@@ -1222,7 +1246,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     private Cell FindNextUnitaryCell()
     {
         foreach (Cell c in gridComponents)
-            if (!c.collapsed && c.visitable && c.tileOptions.Length == 1)
+            if (!c.collapsed && c.tileOptions.Length == 1)
                 return c;
         return null;
     }
@@ -1592,6 +1616,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             onEndGeneration();
 
         TriggerCascadeIfEnabled();
+
+        
     }
     /// <summary>
     /// Aborta una colocación en curso por petición externa (skipEntireTileRemoved).
@@ -1759,6 +1785,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
 
         StopAllCoroutines();
+
+        if (!isRunning) ResumeTimer();
+        finishPanel.SetActive(false);
+        collapsedCells = 0;
+        pauseBtn.interactable = true;
+        resumeBtn.interactable = true;
 
         // Clear the grid
         for (int i = gameObject.transform.childCount - 1; i >= 0; i--)

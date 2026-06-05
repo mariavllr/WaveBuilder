@@ -608,6 +608,8 @@ MonoBehaviour:
   - wall
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 4
     socketDefinition: {fileID: 0}

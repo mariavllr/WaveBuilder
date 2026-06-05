@@ -9,6 +9,7 @@ public static class GameEvents
     public static event Action<Vector3, Tile> OnTileRotated;
     public static event Action<MissionData> OnMissionCompleted;
     public static event Action<int> OnScoreUpdated;
+    public static event Action OnGameFinished;
 
     public static void TileDragged(Tile tile)
     {
@@ -37,6 +38,11 @@ public static class GameEvents
     public static void ScoreUpdated(int scoreGained)
     {
         OnScoreUpdated?.Invoke(scoreGained);
+    }
+
+    public static void GameFinished()
+    {
+        OnGameFinished?.Invoke();
     }
 
 }

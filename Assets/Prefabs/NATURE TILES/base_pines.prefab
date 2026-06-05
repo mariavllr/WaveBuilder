@@ -696,6 +696,8 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 0}

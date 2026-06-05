@@ -145,6 +145,8 @@ MonoBehaviour:
   - wall
   excludedNeighboursLeft:
   - cornerInterior
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 4
     socketDefinition: {fileID: 0}
@@ -345,7 +347,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6b0318bdbb57e4c41b997096fbd474bd, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
