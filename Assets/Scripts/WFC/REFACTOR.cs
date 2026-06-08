@@ -61,7 +61,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField] private bool animations = true;
     [SerializeField] private float animationDuration = 0.1f;
     [SerializeField] private float animationDelay = 0.01f;
-    [SerializeField] private bool renderEachFrame;
+
     public float alphaCube = 0.1f;
 
     [Header("Audio")]
@@ -82,6 +82,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [Header("Performance testing")]
     public bool STOPWATCH;
     public StopwatchTest testType;
+    public bool executeGuminAlgorithm = false;
+    public GuminWFC guminAlgorithm;
 
     // ============================================================
     // ESTADO INTERNO
@@ -159,7 +161,13 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         PreprocessTileSet();
 
         gridComponents = new List<Cell>();
-        Init();
+
+        if (executeGuminAlgorithm)
+        {
+            guminAlgorithm.tileObjects = tileObjects;
+            guminAlgorithm.Generate();
+        }
+        else Init();
     }
 
     /// <summary>
@@ -365,12 +373,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         if (GENERATE_ALL)
         {
             cubeStep = false;
-            UpdateGeneration();
+            RunGenerationSync();
         }
         else
         {
             cubeStep = true;
-            UpdateGenerationCube();
+            RunCubeGenerationSync();
         }
     }
 
@@ -401,7 +409,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     public void PauseTimer() { isRunning = false; pauseBtn.interactable = false; }
     public void ResumeTimer() { isRunning = true; pauseBtn.interactable = true; }
 
-    public void StartGame() { cubeStep = true; tutorial = false; ResumeTimer(); UpdateGenerationCube(); }
+    public void StartGame() { cubeStep = true; tutorial = false; ResumeTimer(); RunCubeGenerationSync(); }
     public void ExitGame() => Application.Quit();
 
     private void FinishGame()
@@ -674,15 +682,13 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     //FUNCIONES AUXILIARES
     /// <summary>
-    /// Coloca una tile de infraestructura sobre una celda durante la fase de inicialización del mapa. 
+    /// Coloca una tile de infraestructura sobre una celda durante la fase de inicialización del mapa.
+    /// Solo actualiza el estado lógico; la instanciación la realiza BatchInstantiateTiles().
     /// </summary>
     private void PlaceInfrastructureTile(Cell cell, Tile tile, bool expandFrontier = false)
     {
         cell.tileOptions = new Tile[] { tile };
         cell.collapsed = true;
-
-        DestroyTileChildren(cell);
-        InstantiateTileInCell(tile, cell);
 
         if (expandFrontier) GetNeighboursCloseToCollapsedCell(cell);
 
@@ -894,7 +900,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     Tile ChooseRandomTile(List<Tile> tiles)
     {
-        int randomNumber = _rng.Next(0, tiles.Count-1);
+        int randomNumber = _rng.Next(0, tiles.Count - 1);
 
         Tile t = tiles[randomNumber];
 
@@ -916,7 +922,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         if (selectedTile == null)
         {
-            cell.GetComponent<SpriteRenderer>().color = Color.red;
             HandleIncompatibility();
             return false;
         }
@@ -927,7 +932,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     }
 
     /// <summary>
-    /// Aplica el colapso sobre la celda
+    /// Aplica el colapso sobre la celda. Solo actualiza el estado lógico:
+    /// la instanciación visual siempre se difiere a BatchInstantiateTiles().
+    /// PlaceTileOnCell y ForcePlaceTile se encargan de instanciar cuando
+    /// la acción la inicia el jugador (feedback inmediato necesario).
     /// </summary>
     private void ApplyCollapse(Cell cell, Tile selectedTile)
     {
@@ -936,10 +944,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         cell.collapsed = true;
 
         if (cell.centerCubeCell) cubeCellsRemaining--;
-
-        DestroyTileChildren(cell);
-        InstantiateTileInCell(selectedTile, cell);
-        RefreshSkirtsAround(cell);
     }
 
     /// <summary>
@@ -970,38 +974,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         onIncompatibility?.Invoke();
 
         if (!stopOnIncompatibility) Regenerate();
-    }
-
-    /// <summary>
-    /// Ejecuta una iteración completa del bucle WFC: selecciona una celda
-    /// con MRV, la colapsa, propaga las restricciones con AC-3 y delega
-    /// en el orquestador correspondiente (UpdateGenerationCube en la fase
-    /// de cubo, UpdateGeneration en GENERATE_ALL) para encadenar la
-    /// siguiente iteración.
-    /// 
-    /// Se implementa como corutina para ceder un frame entre iteraciones,
-    /// distribuyendo la generación a lo largo del tiempo y evitando
-    /// bloqueos perceptibles en grids grandes.
-    /// </summary>
-    private IEnumerator CheckEntropy()
-    {
-        Cell cell = SelectCellWithMinimumEntropy();
-        if (cell == null)
-        {
-            Debug.Log("[WFC] No quedan celdas seleccionables.");
-            yield break;
-        }
-
-        if(renderEachFrame) yield return null; // ceder un frame para que Unity renderice
-
-        if (!CollapseCell(cell)) yield break; // incompatibilidad ya gestionada
-
-        PropagateFromCell(cell);
-
-        if (cubeStep)
-            UpdateGenerationCube();
-        else if (GENERATE_ALL)
-            UpdateGeneration();
     }
 
     /// <summary>
@@ -1129,112 +1101,97 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     }
 
 
-    //------------------------------------------------------BUCLES PRINCIPALES (UPDATE GENERATION)-----------------------------------------------
+    //------------------------------------------------------BUCLES PRINCIPALES (GENERACIÓN)-----------------------------------------------
 
     /// <summary>
-    /// Orquestador del bucle principal de WFC en modo generación automática
-    /// (GENERATE_ALL). Decide si seguir iterando o terminar.
-    /// 
-    /// La propagación de restricciones se delega a PropagateFromCell (AC-3),
-    /// que se llama desde CollapseCell tras cada colapso. Esta función NO
-    /// hace barridos completos del grid: solo se encarga del control de flujo.
-    /// 
-    /// En modo juego (GENERATE_ALL = false) esta función no debe llamarse.
-    /// La secuencia tras una acción del jugador es:
-    ///     PropagateFromCell(cell) -> UpdateGlobalValidTiles() -> CollapseEntropyOneCells()
-    /// y se ejecuta directamente en OnTileRemoved / ForcePlaceTile.
+    /// Bucle principal del algoritmo WFC en modo GENERATE_ALL.
+    /// Sustituye la cadena UpdateGeneration → StartCoroutine(CheckEntropy) → UpdateGeneration
+    /// por un while plano que no crece en pila. Sin corrutinas, sin yield.
+    /// La instanciación visual se difiere al final mediante BatchInstantiateTiles().
     /// </summary>
-    public void UpdateGeneration()
+    private void RunGenerationSync()
     {
-        if (!GENERATE_ALL)
+        int total = dimensionsX * dimensionsY * dimensionsZ;
+
+        while (true)
         {
-            Debug.LogWarning("[WFC] UpdateGeneration solo debe llamarse en modo GENERATE_ALL.");
-            return;
+            iterations++;
+
+            if (iterations > total)
+            {
+                if (STOPWATCH && testType == StopwatchTest.ALL_GENERATION)
+                    onEndGeneration?.Invoke();
+
+                BatchInstantiateTiles();
+                return;
+            }
+
+            Cell cell = SelectCellWithMinimumEntropy();
+            if (cell == null) break; // todas las celdas colapsadas antes del límite
+
+            if (!CollapseCell(cell)) return; // incompatibilidad: Regenerate() ya fue llamado
+
+            PropagateFromCell(cell);
         }
 
-        // Refrescar el conjunto global de tiles válidas tras la última propagación
-        UpdateGlobalValidTiles();
+        // Salida por cell == null: generación completa
+        if (STOPWATCH && testType == StopwatchTest.ALL_GENERATION)
+            onEndGeneration?.Invoke();
 
-        iterations++;
-
-        // Criterio de parada: hemos colapsado todas las celdas posibles
-        int totalCells = dimensionsX * dimensionsY * dimensionsZ;
-        if (iterations > totalCells)
-        {
-            if (STOPWATCH && testType == StopwatchTest.ALL_GENERATION && onEndGeneration != null)
-                onEndGeneration();
-            return;
-        }
-
-        // Siguiente iteración: seleccionar y colapsar la celda con menor entropía.
-        // CheckEntropy llama a CollapseCell, que a su vez propaga con AC-3
-        // y vuelve a llamar aquí para la siguiente iteración.
-        StartCoroutine(CheckEntropy());
+        BatchInstantiateTiles();
     }
 
     /// <summary>
-    /// Orquestador del bucle de generación del cubo inicial en modo juego.
-    /// Cuando se han colapsado todas las celdas del cubo central, marca el
-    /// fin de la fase y entrega el control al modo juego propiamente dicho.
+    /// Bucle síncrono para la fase de generación del cubo central (modo juego).
+    /// Sustituye UpdateGenerationCube + StartCoroutine(CheckEntropy).
+    /// Cuando el cubo termina, BatchInstantiateTiles instancia todos sus tiles de golpe.
     /// </summary>
-    void UpdateGenerationCube()
+    private void RunCubeGenerationSync()
     {
-        if (cubeCellsRemaining > 0)
+        while (cubeCellsRemaining > 0)
         {
-            StartCoroutine(CheckEntropy());
-            return;
+            Cell cell = SelectCellWithMinimumEntropy();
+            if (cell == null) break;
+
+            if (!CollapseCell(cell)) return; // incompatibilidad
+
+            PropagateFromCell(cell);
         }
 
-        // Fin de la fase de cubo
-        Debug.Log("[WFC] Fin de la generación del cubo inicial.");
         cubeStep = false;
 
-        // Test de rendimiento del cubo
-        if (STOPWATCH && testType == StopwatchTest.CUBE_GENERATION
-            && !GENERATE_ALL && onEndGeneration != null)
+        if (STOPWATCH && testType == StopwatchTest.CUBE_GENERATION && !GENERATE_ALL)
         {
-            onEndGeneration();
+            onEndGeneration?.Invoke();
+            BatchInstantiateTiles();
             return;
         }
 
-        // Transición al modo juego: la primera ronda de colapsos en cascada
-        // no se ejecuta para que el jugador empiece con un estado limpio.
         collapseOneOptionThisIteration = false;
         UpdateGlobalValidTiles();
+        BatchInstantiateTiles();
     }
 
 
-    //----------------------------------------------------------COLAPSOS EN CASCADA------------------------------------------------
+    //----------------------------------------------------------COLAPSOS EN CASCADA (MODO JUEGO)------------------------------------------------
 
     /// <summary>
-    /// Cascada de colapsos forzados sobre celdas con entropía unitaria.
-    /// 
-    /// Tras cada colocación del jugador, la propagación AC-3 puede dejar
-    /// celdas con una única tile válida en su dominio. Esta corutina las
-    /// colapsa de forma encadenada con un retardo entre colapsos, lo que
-    /// produce el efecto visual característico del modo juego.
-    /// 
-    /// Cada iteración localiza una celda unitaria, la colapsa y propaga
-    /// las restricciones desde ella antes de buscar la siguiente. De este
-    /// modo, las celdas que pasen a entropía 1 como consecuencia del
-    /// colapso anterior se incorporan automáticamente a la cascada, sin
-    /// necesidad de recolectar ni recurrir.
-    /// 
-    /// Termina cuando ya no quedan celdas unitarias visitables.
+    /// Colapsa síncronamente todas las celdas con dominio unitario que hayan
+    /// quedado tras una propagación. Sustituye la corrutina CollapseUnitaryCellsInCascade.
+    /// Sin delay entre colapsos: todos los collapses ocurren en el mismo frame.
+    /// La instanciación visual se hace en lote desde TriggerCascadeIfEnabled
+    /// con BatchInstantiateTiles() al terminar.
     /// </summary>
-    private IEnumerator CollapseUnitaryCellsInCascade()
+    private void CollapseUnitaryCellsSync()
     {
         while (true)
         {
             Cell next = FindNextUnitaryCell();
-            if (next == null) yield break;
+            if (next == null) break;
 
             ApplyForcedCollapse(next);
             PropagateFromCell(next);
             UpdateGlobalValidTiles();
-
-            if (animations)
-                yield return new WaitForSeconds(animationDelay);
         }
     }
 
@@ -1268,8 +1225,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         ApplyCollapse(cell, onlyOption);
 
         iterations++;
-
-        if (animations) PlayCollapseBounce(cell, jumpPower: 0.3f, duration: animationDuration);
     }
 
     /// <summary>
@@ -1617,7 +1572,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         TriggerCascadeIfEnabled();
 
-        
+
     }
     /// <summary>
     /// Aborta una colocación en curso por petición externa (skipEntireTileRemoved).
@@ -1651,21 +1606,17 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     /// <summary>
     /// Aplica el colapso de una celda con una tile elegida por el jugador.
-    /// Reutiliza la rutina canónica ApplyCollapse para mantener un único
-    /// punto de implementación, y añade el efecto visual de rebote propio
-    /// de la colocación manual (más pronunciado que el de la cascada).
-    /// 
-    /// El orden importa: ApplyCollapse reduce el dominio antes de instanciar,
-    /// lo que garantiza que GetNeighboursCloseToCollapsedCell lea el tipo
-    /// correcto al expandir la frontera.
+    /// ApplyCollapse solo actualiza el estado; aquí se instancia visualmente
+    /// de forma inmediata porque es una acción del jugador que requiere feedback.
     /// </summary>
     private void PlaceTileOnCell(Tile persistentTile, Cell cell)
     {
         ApplyCollapse(cell, persistentTile);
         GetNeighboursCloseToCollapsedCell(cell);
 
-        if (animations)
-            PlayCollapseBounce(cell, jumpPower: 0.5f, duration: 0.3f);
+        DestroyTileChildren(cell);
+        InstantiateTileInCell(persistentTile, cell);
+        RefreshSkirtsAround(cell);
     }
 
     /// <summary>
@@ -1705,9 +1656,15 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     private void TriggerCascadeIfEnabled()
     {
         if (OneTileCollapseOptimization && collapseOneOptionThisIteration)
-            StartCoroutine(CollapseUnitaryCellsInCascade());
+        {
+            CollapseUnitaryCellsSync();
+            // Instanciar visualmente las tiles colapsadas en cascada
+            BatchInstantiateTiles();
+        }
         else
+        {
             collapseOneOptionThisIteration = true;
+        }
     }
 
     //------------------------------------------------ROTAR TILE------------------------------------------
@@ -1735,17 +1692,14 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     public void ForcePlaceTile(Cell targetCell, Tile persistentTile)
     {
-        // Red de seguridad: el sistema de fusión activa skipEntireTileRemoved
-        // para abortar el OnTileRemoved que precede a la llamada. Lo reseteamos
-        // aquí para evitar que un fallo del sistema de fusión deje la flag
-        // colgada e ignore la siguiente colocación legítima del jugador.
         skipEntireTileRemoved = false;
 
         ApplyCollapse(targetCell, persistentTile);
         GetNeighboursCloseToCollapsedCell(targetCell);
 
-        if (animations)
-            PlayCollapseBounce(targetCell, jumpPower: 0.8f, duration: 0.5f);
+        DestroyTileChildren(targetCell);
+        InstantiateTileInCell(persistentTile, targetCell);
+        RefreshSkirtsAround(targetCell);
 
         PropagateFromCell(targetCell);
         UpdateGlobalValidTiles();
@@ -1803,6 +1757,28 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         mapsGeneratedText.text = $"Nº mapas: {mapsGenerated}";
 
         Init();
+    }
+
+    /// <summary>
+    /// Instancia visualmente todos los tiles colapsados que aún no tienen
+    /// representación en escena. Se llama siempre al final de cualquier bucle
+    /// de generación (RunGenerationSync, RunCubeGenerationSync) y tras la
+    /// cascada de colapsos forzados (TriggerCascadeIfEnabled).
+    ///
+    /// Idempotente: la comprobación GetComponentInChildren garantiza que nunca
+    /// duplica tiles ya instanciados (el jugador puede haber instanciado su tile
+    /// antes de que la cascada llegue a esa celda).
+    /// </summary>
+    private void BatchInstantiateTiles()
+    {
+        foreach (Cell cell in gridComponents)
+        {
+            if (!cell.collapsed || cell.tileOptions.Length == 0) continue;
+            if (cell.GetComponentInChildren<Tile>() != null) continue;
+
+            InstantiateTileInCell(cell.tileOptions[0], cell);
+            RefreshSkirtsAround(cell);
+        }
     }
 
 }

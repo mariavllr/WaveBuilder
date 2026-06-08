@@ -562,12 +562,14 @@ MonoBehaviour:
   - {fileID: 0}
   rightNeighbours:
   - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   downNeighbours:
   - {fileID: -4314144731049386129, guid: 77d1cb5b50e11c143930d7508949ed1e, type: 3}
   - {fileID: 5376119154660965731}
   - {fileID: 0}
   leftNeighbours:
-  - {fileID: 481162187089817775, guid: a760c8b32d531fa448df00761039e969, type: 3}
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
   - {fileID: 1998954779518839673, guid: df6e603df0bfe3245ac5d898a00913ab, type: 3}
@@ -583,10 +585,6 @@ MonoBehaviour:
   - {fileID: -4010797267157076088, guid: 0d172e17d3386834d89c8e774511fa84, type: 3}
   - {fileID: 8831606223975869083, guid: dc7f162292b5d6648b0f4395082a211a, type: 3}
   - {fileID: 1999385850999562556, guid: 0fd35885c92eccb4a8ccebb913ce9e8d, type: 3}
-  - {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
