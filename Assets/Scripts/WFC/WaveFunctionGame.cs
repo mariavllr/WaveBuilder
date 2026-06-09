@@ -96,7 +96,7 @@ public class WaveFunctionGame : MonoBehaviour
 
     //para testear el rendimiento
     public bool STOPWATCH;
-    public StopwatchTest testType;
+   // public StopwatchTest testType;
     
 
     //Events
@@ -195,13 +195,13 @@ public class WaveFunctionGame : MonoBehaviour
         }
 
         //COMIENZA EL TEST DE RENDIMIENTO
-        if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION || testType == StopwatchTest.CUBE_GENERATION)
+      /*  if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION || testType == StopwatchTest.CUBE_GENERATION)
         {
             if(onStartGeneration != null)
             {
                 onStartGeneration();
             }
-        }
+        }*/
 
         if (tutorial)
         {
@@ -1139,14 +1139,14 @@ public class WaveFunctionGame : MonoBehaviour
             print("END GENERATION CUBE");
             cubeStep = false;
             //ACABA TEST RENDIMIENTO GENERAR CUBO INICIAL
-            if (testType == StopwatchTest.CUBE_GENERATION && STOPWATCH && !GENERATE_ALL && onEndGeneration != null)
-                onEndGeneration();
-            else
-            {
+                /*if (testType == StopwatchTest.CUBE_GENERATION && STOPWATCH && !GENERATE_ALL && onEndGeneration != null)
+                    onEndGeneration();*/
+           // else
+            //{
                 collapseOneOptionThisIteration = false;
                 UpdateGeneration();
-            }
-
+            //}
+            
             collapseOneOptionThisIteration = false;
             UpdateGeneration();
         }
@@ -1203,13 +1203,13 @@ public class WaveFunctionGame : MonoBehaviour
             }
 
             //ACABA TEST RENDIMIENTO GENERAR TODO EL MAPA
-            else if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION)
+            /*else if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION)
             {
                 if (onEndGeneration != null)
                 {
                     onEndGeneration();
                 }
-            }
+            }*/
         }
 
         //----------MODO JUEGO------------
@@ -1217,10 +1217,10 @@ public class WaveFunctionGame : MonoBehaviour
         else
         {
             //TEST COLOCAR UNA FICHA
-            if (onStartGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
+           /* if (onStartGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
             {
                 onStartGeneration();
-            }
+            }*/
 
             // Flujo juego: bucle hasta convergencia
             bool anyChanged = true;
@@ -1251,10 +1251,10 @@ public class WaveFunctionGame : MonoBehaviour
             UpdateGlobalValidTiles();
 
             //FINALIZA TEST COLOCAR UNA FICHA
-            if (onEndGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
+            /*if (onEndGeneration != null && STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION)
             {
                 onEndGeneration();
-            }
+            }*/
             // Colapsos forzados con animacion, solo en modo juego
             if (OneTileCollapseOptimization && collapseOneOptionThisIteration)
                 StartCoroutine(CollapseEntropyOneCells());

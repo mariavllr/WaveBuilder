@@ -1159,7 +1159,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &832575518
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1328,7 +1328,6 @@ MonoBehaviour:
   tutorialObject: {fileID: 7175021332059761574}
   stopOnIncompatibility: 0
   STOPWATCH: 0
-  testType: 0
 --- !u!82 &1154171696
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1438,8 +1437,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nombreArchivo: Nombre_Archivo
+  testMyWFC: 0
+  testTypeMyWFC: 0
+  testGumin: 0
   numberOfGenerations: 0
+  nombreArchivo: Nombre_Archivo
+  guminWFC: {fileID: 0}
 --- !u!1 &1232482346
 GameObject:
   m_ObjectHideFlags: 0
@@ -1470,15 +1473,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileObjects: []
-  dimensionsX: 12
+  dimensionsX: 30
   dimensionsY: 5
-  dimensionsZ: 12
+  dimensionsZ: 30
   gridSize: 2
   seed: 0
   maxRetries: 100
   outputParent: {fileID: 1232482348}
   generateOnStart: 0
-  STOPWATCH: 0
 --- !u!4 &1232482348
 Transform:
   m_ObjectHideFlags: 0
@@ -1913,9 +1915,9 @@ MonoBehaviour:
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 12
+  dimensionsX: 30
   dimensionsY: 5
-  dimensionsZ: 12
+  dimensionsZ: 30
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
@@ -1923,10 +1925,6 @@ MonoBehaviour:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
   - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
-  - {fileID: 1998954779518839673, guid: df6e603df0bfe3245ac5d898a00913ab, type: 3}
-  - {fileID: 2831762930634728093, guid: 99a19fb507761844e9dbc3b538cf9baf, type: 3}
-  - {fileID: 7442139215768019311, guid: b10132c2edab8fd498605350d4856bb3, type: 3}
-  - {fileID: 2710682045578985575, guid: f261e5f2d7cf8f44f81776fb946a234a, type: 3}
   - {fileID: -2698591520516281, guid: 606ad932bd882ca4a9b4c1647cbf9338, type: 3}
   - {fileID: 5732100880684727847, guid: f191b8a530ab39342a6d1fbe66e934ca, type: 3}
   - {fileID: 5135411757924644250, guid: f68b5d8e1657c49468acf3e756135836, type: 3}
@@ -1941,8 +1939,6 @@ MonoBehaviour:
   - {fileID: 5711855720254036686, guid: 6c643727c8918384a89daa84b85684ed, type: 3}
   - {fileID: -4314144731049386129, guid: 77d1cb5b50e11c143930d7508949ed1e, type: 3}
   - {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
-  - {fileID: 2530941585740922925, guid: e4c626b4e24c9ff4fb746b7eb686f563, type: 3}
-  - {fileID: 1844171690833133885, guid: a071b336862f83c4c96d996124b9539d, type: 3}
   - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
   - {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
   - {fileID: -1767916875816933646, guid: cc2e34034b4b4514094d2295941dc731, type: 3}
@@ -1963,7 +1959,7 @@ MonoBehaviour:
   excludedNeighborConstraint: 1
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
-  borderConstraint: 1
+  borderConstraint: 0
   animations: 0
   animationDuration: 0.1
   animationDelay: 0.05
@@ -1979,10 +1975,6 @@ MonoBehaviour:
   finishPanel: {fileID: 355747688}
   pauseBtn: {fileID: 1889411441}
   resumeBtn: {fileID: 198675870}
-  STOPWATCH: 1
-  testType: 0
-  executeGuminAlgorithm: 0
-  guminAlgorithm: {fileID: 1232482347}
   gridComponents: []
   actualTileDragged: {fileID: 0}
   skipEntireTileRemoved: 0
@@ -2116,8 +2108,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nombreArchivo: prueba_todo
+  testMyWFC: 0
+  testTypeMyWFC: 0
+  testGumin: 1
   numberOfGenerations: 50
+  nombreArchivo: prueba_todo
+  guminWFC: {fileID: 1232482347}
 --- !u!224 &1730239620 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9042685547334628167, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -2194,7 +2190,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1839935900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2749,7 +2745,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1993922141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3062,7 +3058,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2318829606973221188, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2570053094148602224, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive

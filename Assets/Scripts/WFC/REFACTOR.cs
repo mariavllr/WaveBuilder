@@ -13,12 +13,6 @@ using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine.UI;
 
 
-public enum StopwatchTest
-{
-    ALL_GENERATION,
-    CUBE_GENERATION,
-    TILE_PROPAGATION
-}
 
 public class WaveFunctionGame_REFACTOR : MonoBehaviour
 {
@@ -42,7 +36,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
 
     [Header("Tile set")]
-    [SerializeField] private Tile[] tileObjects;
+    [SerializeField] public Tile[] tileObjects;
     [SerializeField] private Tile floorTile;
     [SerializeField] private Tile emptyTile;
     [SerializeField] private Tile limitTile;
@@ -78,12 +72,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     public GameObject finishPanel;
     public Button pauseBtn;
     public Button resumeBtn;
-
-    [Header("Performance testing")]
-    public bool STOPWATCH;
-    public StopwatchTest testType;
-    public bool executeGuminAlgorithm = false;
-    public GuminWFC guminAlgorithm;
 
     // ============================================================
     // ESTADO INTERNO
@@ -129,8 +117,18 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     public static event OnRegenerate onRegenerate;
     public static event OnIncompatibility onIncompatibility;
+
+    // Test: generación completa (GENERATE_ALL)
     public static event OnStartGeneration onStartGeneration;
     public static event OnEndGeneration onEndGeneration;
+
+    // Test: cubo inicial (modo juego)
+    public static event OnStartGeneration onStartCubeGeneration;
+    public static event OnEndGeneration onEndCubeGeneration;
+
+    // Test: tiempo de respuesta al colocar una ficha (modo juego)
+    public static event OnStartGeneration onStartTilePropagation;
+    public static event OnEndGeneration onEndTilePropagation;
 
 
 
@@ -155,19 +153,15 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     void Awake()
     {
-        //Aquí solo va lo que no debe rehacerse en cada regeneración del mapa:
         ValidateConfiguration();
         audioSource = GetComponent<AudioSource>();
         PreprocessTileSet();
-
         gridComponents = new List<Cell>();
+    }
 
-        if (executeGuminAlgorithm)
-        {
-            guminAlgorithm.tileObjects = tileObjects;
-            guminAlgorithm.Generate();
-        }
-        else Init();
+    void Start()
+    {
+        Init();
     }
 
     /// <summary>
@@ -217,7 +211,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         if (!GENERATE_ALL) GetCenterCube();
 
         ConfigureCardGenerator();
-        SignalGenerationStartIfStopwatch();
+        onStartGeneration?.Invoke();
         StartGeneration();
     }
 
@@ -332,25 +326,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             || tileType == "cornerExt_border_sand" || tileType == "cornerInt_border_sand";
     }
 
-    //------------STOPWATCH----------------
-
-    /// <summary>
-    /// Dispara el evento onStartGeneration si el cronómetro está activo y
-    /// el tipo de test corresponde a una fase que se está iniciando ahora.
-    /// </summary>
-    private void SignalGenerationStartIfStopwatch()
-    {
-
-        //COMIENZA EL TEST DE RENDIMIENTO
-        if (STOPWATCH && GENERATE_ALL && testType == StopwatchTest.ALL_GENERATION || testType == StopwatchTest.CUBE_GENERATION)
-        {
-            if (onStartGeneration != null)
-            {
-                onStartGeneration();
-            }
-        }
-    }
-
     /// <summary>
     /// Arranque del bucle WFC según el modo:
     ///   - tutorial: oculta la cola de tiles y muestra el panel de tutorial.
@@ -388,7 +363,6 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     private void Update()
     {
-        //TIMER
         if (isRunning)
         {
             elapsedTime += Time.deltaTime;
@@ -1119,25 +1093,29 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
             if (iterations > total)
             {
-                if (STOPWATCH && testType == StopwatchTest.ALL_GENERATION)
-                    onEndGeneration?.Invoke();
-
-                BatchInstantiateTiles();
+                OnGenerationComplete();
                 return;
             }
 
             Cell cell = SelectCellWithMinimumEntropy();
-            if (cell == null) break; // todas las celdas colapsadas antes del límite
+            if (cell == null) break;
 
-            if (!CollapseCell(cell)) return; // incompatibilidad: Regenerate() ya fue llamado
+            if (!CollapseCell(cell)) return;
 
             PropagateFromCell(cell);
         }
 
-        // Salida por cell == null: generación completa
-        if (STOPWATCH && testType == StopwatchTest.ALL_GENERATION)
-            onEndGeneration?.Invoke();
+        OnGenerationComplete();
+    }
 
+    /// <summary>
+    /// Llamado cuando RunGenerationSync completa un mapa con éxito.
+    /// Dispara el evento onEndGeneration (para CalculateExecutionTime si está
+    /// en la escena) y activa el loop de benchmark para el siguiente mapa.
+    /// </summary>
+    private void OnGenerationComplete()
+    {
+        onEndGeneration?.Invoke();
         BatchInstantiateTiles();
     }
 
@@ -1148,6 +1126,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void RunCubeGenerationSync()
     {
+        onStartCubeGeneration?.Invoke();
+
         while (cubeCellsRemaining > 0)
         {
             Cell cell = SelectCellWithMinimumEntropy();
@@ -1159,16 +1139,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
 
         cubeStep = false;
-
-        if (STOPWATCH && testType == StopwatchTest.CUBE_GENERATION && !GENERATE_ALL)
-        {
-            onEndGeneration?.Invoke();
-            BatchInstantiateTiles();
-            return;
-        }
-
         collapseOneOptionThisIteration = false;
         UpdateGlobalValidTiles();
+
+        onEndCubeGeneration?.Invoke();
         BatchInstantiateTiles();
     }
 
@@ -1559,16 +1533,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         RegisterPlacedTile();
 
-        // INICIO TEST COLOCAR UNA FICHA
-        if (STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION && onStartGeneration != null)
-            onStartGeneration();
-
+        onStartTilePropagation?.Invoke();
         PropagateFromCell(targetCell);
         UpdateGlobalValidTiles();
-
-        // FIN TEST COLOCAR UNA FICHA
-        if (STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION && onEndGeneration != null)
-            onEndGeneration();
+        onEndTilePropagation?.Invoke();
 
         TriggerCascadeIfEnabled();
 

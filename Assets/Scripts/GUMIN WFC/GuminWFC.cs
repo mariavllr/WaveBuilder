@@ -66,13 +66,8 @@ public class GuminWFC : MonoBehaviour
     public Transform outputParent;
     public bool generateOnStart = false;
 
-    [Header("Stopwatch (comparativa de rendimiento)")]
-    public bool STOPWATCH = false;
-
     // =========================================================================
-    // EVENTOS  (misma firma que WaveFunctionGame_REFACTOR para que
-    //           CalculateExecutionTime pueda suscribirse a ambos con los
-    //           mismos handlers StartStopwatch / StopStopwatch / OnIncompatibility)
+    // EVENTOS
     // =========================================================================
 
     public delegate void OnStartGeneration();
@@ -205,16 +200,11 @@ public class GuminWFC : MonoBehaviour
         // Init calcula pesos y reserva arrays (no cambia entre intentos).
         InitWave();
 
-        // Inicia el cronómetro ANTES del bucle de reintentos.
-        // El timer incluirá el tiempo de todos los intentos fallidos,
-        // igual que en REFACTOR (donde onStartGeneration se dispara en Init()
-        // y StartStopwatch() salta los reinicios marcados con incompatibility=true).
-        if (STOPWATCH) onStartGeneration?.Invoke();
+        onStartGeneration?.Invoke();
 
         bool success = false;
         while (!success && FailCount < maxRetries)
         {
-            // Clear() restablece el wave a superposición total para cada intento.
             Clear();
             success = RunAlgorithm();
 
@@ -222,26 +212,18 @@ public class GuminWFC : MonoBehaviour
             {
                 FailCount++;
                 Debug.Log($"[GuminWFC] Incompatibilidad #{FailCount}. Reiniciando...");
-
-                // Notifica la incompatibilidad para que CalculateExecutionTime
-                // incremente su contador interno (inc_counter), igual que REFACTOR.
-                if (STOPWATCH) onIncompatibility?.Invoke();
-
-                yield return null; // ceder un frame entre reinicios
+                onIncompatibility?.Invoke();
+                yield return null;
             }
         }
 
         if (!success)
         {
             Debug.LogError($"[GuminWFC] Generación fallida tras {maxRetries} intentos.");
-            // No disparamos onEndGeneration: la generación no fue válida.
             yield break;
         }
 
-        // Generación exitosa: detener el cronómetro ANTES de instanciar
-        // (InstantiateTiles no forma parte del algoritmo WFC medible).
-        if (STOPWATCH) onEndGeneration?.Invoke();
-
+        onEndGeneration?.Invoke();
         InstantiateTiles();
         Debug.Log($"[GuminWFC] Generación completada. Reinicios: {FailCount}");
     }

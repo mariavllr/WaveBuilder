@@ -1,352 +1,317 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 /// <summary>
-/// Mide el tiempo de generación de mapas WFC y lo guarda en un CSV.
-/// Funciona con WaveFunctionGame_REFACTOR (modo normal) y con GuminWFC
-/// (cuando executeGuminAlgorithm = true en REFACTOR).
+/// Script central de los tests de rendimiento WFC.
+/// Centraliza toda la lógica de test: qué medir, cuándo, cuántas veces y qué guardar.
 ///
-/// Suscripciones:
-///   WaveFunctionGame_REFACTOR.onStartGeneration  → StartStopwatch
-///   WaveFunctionGame_REFACTOR.onEndGeneration    → StopStopwatch
-///   WaveFunctionGame_REFACTOR.onIncompatibility  → OnIncompatibility
-///   GuminWFC.onStartGeneration                   → StartStopwatch
-///   GuminWFC.onEndGeneration                     → StopStopwatch
-///   GuminWFC.onIncompatibility                   → OnIncompatibility
+/// REFACTOR y GuminWFC solo disparan eventos; este script decide qué escuchar.
 ///
-/// En modo GuminWFC, StopStopwatch() llama a guminAlgorithm.Generate()
-/// en lugar de wfc.Regenerate() para lanzar la siguiente generación.
+/// Tests disponibles para MyWFC (REFACTOR):
+///   ALL_GENERATION    – tiempo de generar el mapa completo (GENERATE_ALL)
+///   CUBE_GENERATION   – tiempo de generar el cubo inicial (modo juego)
+///   TILE_PROPAGATION  – tiempo de respuesta al colocar una ficha (modo juego)
+///
+/// Tests disponibles para Gumin:
+///   ALL_GENERATION    – único test aplicable
 /// </summary>
 public class CalculateExecutionTime : MonoBehaviour
 {
-    private bool active;
+    public enum StopwatchTest { ALL_GENERATION, CUBE_GENERATION, TILE_PROPAGATION }
 
-    [Header("Archivo")]
-    public string nombreArchivo = "Nombre_Archivo";
-    public int numberOfGenerations;
+    [Header("¿Qué algoritmo testear? (máximo uno activo)")]
+    public bool testMyWFC = false;
+    public StopwatchTest testTypeMyWFC = StopwatchTest.ALL_GENERATION;
+    public bool testGumin = false;
 
-    WaveFunctionGame_REFACTOR wfc;
-    Stopwatch stopwatch;
+    [Header("Configuración del test")]
+    public int numberOfGenerations = 50;
+    public string nombreArchivo = "WFC_Benchmark";
 
+    [Header("Referencias")]
+    [SerializeField] private GuminWFC guminWFC;
+
+    // ── estado interno ──────────────────────────────────────────────
+    private WaveFunctionGame_REFACTOR wfc;
+    private Stopwatch stopwatch;
+
+    private bool active = false;
+    private bool writeToCSV = true;
     private bool incompatibility = false;
-    int inc_counter = 0;
-    int totalIncompatibilities = 0;
-    int regenerations_counter = 0;
 
-    double stopwatchSum = 0f;
-    double maxTime = 0f;
-    double minTime = 0f;
+    private int incCounter = 0;
+    private int totalIncompat = 0;
+    private int generationsDone = 0;
 
-    // Diferir el arranque de la siguiente generación al próximo Update() para
-    // evitar que StopStopwatch → Regenerate → RunGenerationSync → StopStopwatch
-    // se encadenen síncronamente y acumulen pila con cada mapa generado.
-    private bool pendingNextGeneration = false;
+    private double timeSum = 0, maxTime = 0, minTime = 0;
 
+    // Dispara la siguiente generación en Update() para evitar recursión síncrona.
+    // No se usa para TILE_PROPAGATION (la siguiente medición la activa el jugador).
+    private bool pendingNext = false;
+
+    private string mapSize;
+    private List<string[]> tabla = new List<string[]>();
     private string FilePath => Path.Combine(Application.persistentDataPath, nombreArchivo + ".csv");
 
-    List<string[]> tabla = new List<string[]>();
-    string mapSize;
+    // ════════════════════════════════════════════════════════════════
+    // INICIALIZACIÓN
+    // ════════════════════════════════════════════════════════════════
 
     void Awake()
     {
         wfc = GetComponent<WaveFunctionGame_REFACTOR>();
         stopwatch = new Stopwatch();
 
-        if (wfc.executeGuminAlgorithm)
+        if (testMyWFC && testGumin)
         {
-            // Modo Gumin: solo escuchar los eventos de GuminWFC.
-            // El flag active lo decide GuminWFC.STOPWATCH, no REFACTOR.STOPWATCH.
-            GuminWFC.onIncompatibility += OnIncompatibility;
-            GuminWFC.onStartGeneration += StartStopwatch;
-            GuminWFC.onEndGeneration += StopStopwatch;
-            active = wfc.guminAlgorithm != null && wfc.guminAlgorithm.STOPWATCH;
+            Debug.LogError("[Benchmark] Solo puede ejecutarse un test a la vez. Desactiva uno de los dos.");
+            return;
         }
-        else
+
+        active = testMyWFC || testGumin;
+        if (!active) return;
+
+        // Suscribirse solo al par de eventos que corresponde al test activo
+        if (testMyWFC)
         {
-            // Modo REFACTOR: solo escuchar los eventos de REFACTOR.
-            // El flag active lo decide REFACTOR.STOPWATCH.
-            WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompatibility;
-            WaveFunctionGame_REFACTOR.onStartGeneration += StartStopwatch;
-            WaveFunctionGame_REFACTOR.onEndGeneration += StopStopwatch;
-            active = wfc.STOPWATCH;
+            switch (testTypeMyWFC)
+            {
+                case StopwatchTest.ALL_GENERATION:
+                    WaveFunctionGame_REFACTOR.onStartGeneration += OnStart;
+                    WaveFunctionGame_REFACTOR.onEndGeneration += OnEnd;
+                    WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompat;
+                    break;
+                case StopwatchTest.CUBE_GENERATION:
+                    WaveFunctionGame_REFACTOR.onStartCubeGeneration += OnStart;
+                    WaveFunctionGame_REFACTOR.onEndCubeGeneration += OnEnd;
+                    WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompat;
+                    break;
+                case StopwatchTest.TILE_PROPAGATION:
+                    WaveFunctionGame_REFACTOR.onStartTilePropagation += OnStart;
+                    WaveFunctionGame_REFACTOR.onEndTilePropagation += OnEnd;
+                    // Sin incompatibilidad: la colocación de fichas no genera contradicciones
+                    break;
+            }
         }
-    }
+        else // testGumin — solo ALL_GENERATION
+        {
+            GuminWFC.onStartGeneration += OnStart;
+            GuminWFC.onEndGeneration += OnEnd;
+            GuminWFC.onIncompatibility += OnIncompat;
+        }
 
-    void OnDestroy()
-    {
-        // Desuscribirse de ambos conjuntos por seguridad (no hay coste si no estaban suscritos).
-        WaveFunctionGame_REFACTOR.onIncompatibility -= OnIncompatibility;
-        WaveFunctionGame_REFACTOR.onStartGeneration -= StartStopwatch;
-        WaveFunctionGame_REFACTOR.onEndGeneration -= StopStopwatch;
-
-        GuminWFC.onIncompatibility -= OnIncompatibility;
-        GuminWFC.onStartGeneration -= StartStopwatch;
-        GuminWFC.onEndGeneration -= StopStopwatch;
-    }
-
-    /// <summary>
-    /// Lanza la siguiente generación en el frame siguiente al que StopStopwatch
-    /// la programó. Esto rompe la cadena síncrona:
-    ///   StopStopwatch → Regenerate → RunGenerationSync → StopStopwatch → …
-    /// que de otro modo acumularía un nivel de pila por cada mapa generado.
-    /// El cronómetro ya está parado en este punto, así que el frame de espera
-    /// no contamina ninguna medición.
-    /// </summary>
-    void Update()
-    {
-        if (!pendingNextGeneration) return;
-        pendingNextGeneration = false;
-
-        if (wfc.executeGuminAlgorithm)
-            wfc.guminAlgorithm.Generate();
-        else
-            wfc.Regenerate();
+        mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
+        PrepararCSV();
     }
 
     void Start()
     {
-        if (active)
-        {
-            Debug.Log("PATH: " + FilePath);
-            mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
+        if (!active || !testGumin) return;
 
-            if (!File.Exists(FilePath))
-            {
-                CreateNewFile();
-                tabla = LeerCSV();
-            }
-            else
-            {
-                tabla = LeerCSV();
-                if (ObtenerColumnaMapa(tabla, mapSize) != -1)
-                {
-                    Debug.LogError($"Ya existe una generación para el mapa {mapSize}. No se sobreescribirá.");
-                    return;
-                }
-            }
-
-            AñadirColumna(tabla, mapSize);
-            GuardarCSV(tabla);
-        }
+        if (guminWFC == null) { Debug.LogError("[Benchmark] guminWFC no asignado en el Inspector."); return; }
+        guminWFC.tileObjects = wfc.tileObjects;
+        guminWFC.Generate();
     }
 
-    // ------------------- CRONÓMETRO -------------------
-
-    /// <summary>
-    /// Arranca el cronómetro al inicio de cada generación.
-    /// Se llama con onStartGeneration tanto de REFACTOR como de GuminWFC.
-    ///
-    /// COMPORTAMIENTO EN REINTENTOS:
-    ///   REFACTOR: cada reintento dispara onStartGeneration de nuevo, pero
-    ///   incompatibility=true impide el reset → el timer acumula tiempo total.
-    ///   GuminWFC: onStartGeneration solo se dispara UNA VEZ (antes del bucle
-    ///   interno de reintentos), por lo que el timer ya acumula naturalmente.
-    /// </summary>
-    public void StartStopwatch()
+    void OnDestroy()
     {
-        if (!incompatibility && active)
-        {
-            stopwatch.Reset();
-            stopwatch.Start();
-        }
+        WaveFunctionGame_REFACTOR.onStartGeneration -= OnStart;
+        WaveFunctionGame_REFACTOR.onEndGeneration -= OnEnd;
+        WaveFunctionGame_REFACTOR.onStartCubeGeneration -= OnStart;
+        WaveFunctionGame_REFACTOR.onEndCubeGeneration -= OnEnd;
+        WaveFunctionGame_REFACTOR.onStartTilePropagation -= OnStart;
+        WaveFunctionGame_REFACTOR.onEndTilePropagation -= OnEnd;
+        WaveFunctionGame_REFACTOR.onIncompatibility -= OnIncompat;
+        GuminWFC.onStartGeneration -= OnStart;
+        GuminWFC.onEndGeneration -= OnEnd;
+        GuminWFC.onIncompatibility -= OnIncompat;
     }
 
-    /// <summary>
-    /// Para el cronómetro, registra el tiempo y lanza la siguiente generación.
-    /// Se llama con onEndGeneration tanto de REFACTOR como de GuminWFC.
-    /// </summary>
-    public void StopStopwatch()
-    {
-        if (!active) return;
+    // ════════════════════════════════════════════════════════════════
+    // LOOP DE GENERACIONES (solo ALL_GENERATION y CUBE_GENERATION)
+    // ════════════════════════════════════════════════════════════════
 
+    void Update()
+    {
+        if (!pendingNext) return;
+        pendingNext = false;
+
+        if (testGumin) guminWFC.Generate();
+        else if (testMyWFC) wfc.Regenerate();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // HANDLERS DE EVENTOS
+    // ════════════════════════════════════════════════════════════════
+
+    private void OnStart()
+    {
+        if (!incompatibility) stopwatch.Restart();
+    }
+
+    private void OnEnd()
+    {
         stopwatch.Stop();
         incompatibility = false;
 
-        double tiempo = stopwatch.Elapsed.TotalSeconds;
+        double t = stopwatch.Elapsed.TotalSeconds;
+        timeSum += t;
+        if (t > maxTime) maxTime = t;
+        if (minTime == 0 || t < minTime) minTime = t;
 
-        print($"Generation time: {tiempo} seconds. Number of incompatibilities: {inc_counter}");
+        generationsDone++;
+        totalIncompat += incCounter;
+        incCounter = 0;
 
-        stopwatchSum += tiempo;
-        if (tiempo > maxTime) maxTime = tiempo;
-        if (tiempo < minTime || minTime == 0) minTime = tiempo;
+        Debug.Log($"[Benchmark] Medición {generationsDone}/{numberOfGenerations}: {t:F4}s");
 
-        regenerations_counter++;
-        totalIncompatibilities += inc_counter;
-        inc_counter = 0;
-
-        Debug.Log("GENERATION NUMBER " + regenerations_counter + " completed!");
-
-        if (tabla == null || tabla.Count == 0)
-            tabla = LeerCSV();
-
-        int columna = ObtenerColumnaMapa(tabla, mapSize);
-        int filaGen = regenerations_counter;
-        AsegurarFilaGeneracion(tabla, filaGen);
-
-        tabla[filaGen][columna] = tiempo.ToString("F4");
-        GuardarCSV(tabla);
-
-        if (regenerations_counter == numberOfGenerations)
+        if (writeToCSV)
         {
-            float avgIncompatibilities = (float)totalIncompatibilities / regenerations_counter;
-            int totalAttempts = totalIncompatibilities + regenerations_counter;
-            float failRate = (float)totalIncompatibilities / totalAttempts * 100f;
-
-            Debug.Log($"END {regenerations_counter} GENERATIONS");
-            Debug.Log($"FAIL RATE: {failRate}%");
-            Debug.Log($"AVG FAILS / GEN: {avgIncompatibilities}");
-            Debug.Log($"AVG TIME: {stopwatchSum / regenerations_counter} s | MAX: {maxTime} | MIN: {minTime}");
-
-            // --- Total Incompatibilities ---
-            int filaInc = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Total Incompatibilities") filaInc = i;
-            if (filaInc == -1)
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Total Incompatibilities";
-                tabla.Add(fila);
-                filaInc = tabla.Count - 1;
-            }
-            tabla[filaInc][columna] = totalIncompatibilities.ToString();
-
-            // --- Total Attempts ---
-            int filaAttempts = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Total Attempts") filaAttempts = i;
-            if (filaAttempts == -1)
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Total Attempts";
-                tabla.Add(fila);
-                filaAttempts = tabla.Count - 1;
-            }
-            tabla[filaAttempts][columna] = totalAttempts.ToString();
-
-            // --- Fail Rate ---
-            int filaRate = -1;
-            for (int i = 0; i < tabla.Count; i++)
-                if (tabla[i][0] == "Fail Rate") filaRate = i;
-            if (filaRate == -1)
-            {
-                string[] fila = new string[tabla[0].Length];
-                fila[0] = "Fail Rate";
-                tabla.Add(fila);
-                filaRate = tabla.Count - 1;
-            }
-            tabla[filaRate][columna] = failRate.ToString("F2") + " %";
-
+            int col = ObtenerColumna(tabla, mapSize);
+            AsegurarFila(tabla, generationsDone);
+            if (col >= 0 && col < tabla[generationsDone].Length)
+                tabla[generationsDone][col] = t.ToString("F4");
             GuardarCSV(tabla);
+        }
 
-            stopwatchSum = 0;
-            regenerations_counter = 0;
-            totalIncompatibilities = 0;
+        if (generationsDone >= numberOfGenerations)
+            FinalizarBenchmark();
+        else if (testTypeMyWFC != StopwatchTest.TILE_PROPAGATION || testGumin)
+            pendingNext = true;
+        // TILE_PROPAGATION: no se dispara pendingNext; la siguiente medición
+        // ocurre cuando el jugador coloca la siguiente ficha.
+    }
+
+    private void OnIncompat()
+    {
+        incompatibility = true;
+        incCounter++;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FINAL DEL BENCHMARK
+    // ════════════════════════════════════════════════════════════════
+
+    private void FinalizarBenchmark()
+    {
+        active = false;
+
+        double avg = timeSum / generationsDone;
+        int attempts = totalIncompat + generationsDone;
+        float failRate = attempts > 0 ? (float)totalIncompat / attempts * 100f : 0f;
+
+        Debug.Log($"[Benchmark] ── COMPLETADO ({numberOfGenerations} mediciones) ──");
+        Debug.Log($"[Benchmark] Avg: {avg:F4}s | Max: {maxTime:F4}s | Min: {minTime:F4}s");
+        Debug.Log($"[Benchmark] Fail rate: {failRate:F1}% | Incompatibilidades: {totalIncompat}");
+
+        if (!writeToCSV) return;
+
+        int col = ObtenerColumna(tabla, mapSize);
+        if (col < 0) { GuardarCSV(tabla); return; }
+
+        EscribirStat("Avg Time", col, avg.ToString("F4"));
+        EscribirStat("Min Time", col, minTime.ToString("F4"));
+        EscribirStat("Max Time", col, maxTime.ToString("F4"));
+        EscribirStat("Incompat.", col, totalIncompat.ToString());
+        EscribirStat("Fail Rate", col, failRate.ToString("F2") + " %");
+        GuardarCSV(tabla);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // CSV
+    // ════════════════════════════════════════════════════════════════
+
+    private void PrepararCSV()
+    {
+        if (!File.Exists(FilePath))
+        {
+            File.WriteAllText(FilePath, "");
+            tabla = LeerCSV();
+            AñadirColumna(tabla, mapSize);
+            GuardarCSV(tabla);
+            writeToCSV = true;
+            Debug.Log($"[Benchmark] CSV creado: {FilePath}");
         }
         else
         {
-            // Programar la siguiente generación para el próximo Update().
-            // Llamar a Regenerate()/Generate() aquí de forma síncrona causaría
-            // que toda la cadena de generación ocurriera dentro de esta llamada,
-            // apilando un frame de pila por cada mapa generado.
-            pendingNextGeneration = true;
+            tabla = LeerCSV();
+            if (ObtenerColumna(tabla, mapSize) == -1)
+            {
+                AñadirColumna(tabla, mapSize);
+                GuardarCSV(tabla);
+                writeToCSV = true;
+            }
+            else
+            {
+                writeToCSV = false;
+                Debug.Log($"[Benchmark] '{mapSize}' ya existe en el CSV. Solo se mostrará por consola.");
+            }
         }
     }
 
-    /// <summary>
-    /// Recibe notificaciones de incompatibilidad de ambos algoritmos.
-    /// Incrementa el contador y bloquea el reset del timer hasta que
-    /// StopStopwatch() lo limpie.
-    /// </summary>
-    public void OnIncompatibility()
+    private List<string[]> LeerCSV()
     {
-        incompatibility = true;
-        inc_counter++;
-    }
-
-    // ------------------- CSV -------------------
-
-    void CreateNewFile()
-    {
-        using (StreamWriter sw = new StreamWriter(FilePath))
-        {
-            sw.WriteLine("");
-            sw.WriteLine("Gen 1");
-        }
-    }
-
-    List<string[]> LeerCSV()
-    {
-        List<string[]> t = new List<string[]>();
-        foreach (string linea in File.ReadAllLines(FilePath))
-            t.Add(linea.Split(';'));
+        var t = new List<string[]>();
+        foreach (var l in File.ReadAllLines(FilePath))
+            t.Add(l.Split(';'));
         return t;
     }
 
-    int ObtenerColumnaMapa(List<string[]> t, string mapSize)
+    private int ObtenerColumna(List<string[]> t, string size)
     {
-        for (int i = 1; i < t[0].Length; i++)
-            if (t[0][i] == mapSize) return i;
+        if (t.Count == 0) return -1;
+        for (int i = 0; i < t[0].Length; i++)
+            if (t[0][i] == size) return i;
         return -1;
     }
 
-    int ObtenerSiguienteFila(List<string[]> t)
+    private void AñadirColumna(List<string[]> t, string size)
     {
-        for (int i = 1; i < t.Count; i++)
-        {
-            bool vacia = true;
-            for (int j = 1; j < t[i].Length; j++)
-                if (!string.IsNullOrEmpty(t[i][j])) { vacia = false; break; }
-            if (vacia) return i;
-        }
-        return t.Count;
-    }
-
-    void AñadirColumna(List<string[]> t, string mapSize)
-    {
+        if (t.Count == 0) t.Add(new string[0]);
         for (int i = 0; i < t.Count; i++)
         {
-            string[] oldRow = t[i];
-            string[] newRow = new string[oldRow.Length + 1];
-            for (int j = 0; j < oldRow.Length; j++) newRow[j] = oldRow[j];
-            newRow[newRow.Length - 1] = (i == 0) ? mapSize : "";
-            t[i] = newRow;
+            var old = t[i];
+            var nueva = new string[old.Length + 1];
+            for (int j = 0; j < old.Length; j++) nueva[j] = old[j];
+            nueva[old.Length] = (i == 0) ? size : "";
+            t[i] = nueva;
         }
     }
 
-    void AsegurarFilaGeneracion(List<string[]> tabla, int gen)
+    private void AsegurarFila(List<string[]> t, int idx)
     {
-        while (tabla.Count <= gen)
+        int cols = t.Count > 0 ? t[0].Length : 2;
+        while (t.Count <= idx)
         {
-            string[] fila = new string[tabla[0].Length];
-            fila[0] = $"Gen {tabla.Count}";
-            tabla.Add(fila);
+            var f = new string[cols];
+            f[0] = $"Med. {t.Count}";
+            t.Add(f);
         }
     }
 
-    int ObtenerFilaIncompatibilidades(List<string[]> tabla)
+    private void EscribirStat(string etiqueta, int col, string valor)
     {
+        int fila = -1;
         for (int i = 0; i < tabla.Count; i++)
-            if (tabla[i][0] == "Incompatibilities") return i;
-        return -1;
+            if (tabla[i][0] == etiqueta) { fila = i; break; }
+        if (fila == -1)
+        {
+            var f = new string[tabla[0].Length];
+            f[0] = etiqueta;
+            tabla.Add(f);
+            fila = tabla.Count - 1;
+        }
+        if (col < tabla[fila].Length)
+            tabla[fila][col] = valor;
     }
 
-    int AsegurarFilaIncompatibilidades(List<string[]> tabla)
+    private void GuardarCSV(List<string[]> t)
     {
-        int fila = ObtenerFilaIncompatibilidades(tabla);
-        if (fila != -1) return fila;
-        string[] nuevaFila = new string[tabla[0].Length];
-        nuevaFila[0] = "Incompatibilities";
-        tabla.Add(nuevaFila);
-        return tabla.Count - 1;
-    }
-
-    void GuardarCSV(List<string[]> t)
-    {
-        using (StreamWriter sw = new StreamWriter(FilePath))
-            foreach (var fila in t) sw.WriteLine(string.Join(";", fila));
+        using var sw = new StreamWriter(FilePath);
+        foreach (var fila in t)
+            sw.WriteLine(string.Join(";", fila));
     }
 }
