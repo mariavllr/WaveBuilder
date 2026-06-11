@@ -101,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: sand_wall
-  probability: 70
+  probability: 5
   fixedTile: 0
   rotateRight: 1
   rotate180: 1
@@ -109,23 +109,39 @@ MonoBehaviour:
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
+  useSkirts: 0
+  skirtNorth: {fileID: 0}
+  skirtSouth: {fileID: 0}
+  skirtEast: {fileID: 0}
+  skirtWest: {fileID: 0}
+  skirtCornerNE: {fileID: 0}
+  skirtCornerNW: {fileID: 0}
+  skirtCornerSE: {fileID: 0}
+  skirtCornerSW: {fileID: 0}
   upNeighbours:
   - {fileID: 6917541155803654142}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
   - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   downNeighbours:
-  - {fileID: 6917541155803654142}
   - {fileID: 5711855720254036686, guid: 6c643727c8918384a89daa84b85684ed, type: 3}
+  - {fileID: 6917541155803654142}
   - {fileID: 0}
   leftNeighbours:
   - {fileID: 1196809893583817041, guid: 05efb5b251b5b754fb701cda8e1b08b0, type: 3}
   - {fileID: 5732100880684727847, guid: f191b8a530ab39342a6d1fbe66e934ca, type: 3}
   - {fileID: 9088737001066412842, guid: 1d0809ff38743cd46a0c5f2cc70193fd, type: 3}
   - {fileID: 9051043890488073, guid: 818e650b967b74143acb2c3dbb066971, type: 3}
-  - {fileID: 6081083945302291784, guid: 4620ae304e4de9a47b7d4c6aa19cf683, type: 3}
-  - {fileID: 3344181416162378270, guid: 9e6998abaeaf2464e89fcf3775301291, type: 3}
+  - {fileID: 6050265361964801049, guid: d075341a29914ea41a8718d6cf62cc7b, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -138,6 +154,8 @@ MonoBehaviour:
   - sand_wall
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 13
     socketDefinition: {fileID: 0}

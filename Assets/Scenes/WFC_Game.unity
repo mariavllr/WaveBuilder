@@ -1890,6 +1890,7 @@ GameObject:
   - component: {fileID: 1653789839}
   - component: {fileID: 1653789838}
   - component: {fileID: 1653789841}
+  - component: {fileID: 1653789842}
   m_Layer: 0
   m_Name: MapGenerator_Refactor
   m_TagString: Untagged
@@ -1915,9 +1916,9 @@ MonoBehaviour:
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 30
+  dimensionsX: 15
   dimensionsY: 5
-  dimensionsZ: 30
+  dimensionsZ: 15
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
@@ -1949,16 +1950,22 @@ MonoBehaviour:
   - {fileID: 6917541155803654142, guid: 4d73e4b1781aded4b82be6caa755adc6, type: 3}
   - {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
+  - {fileID: 1844171690833133885, guid: a071b336862f83c4c96d996124b9539d, type: 3}
+  - {fileID: 2530941585740922925, guid: e4c626b4e24c9ff4fb746b7eb686f563, type: 3}
+  - {fileID: 1998954779518839673, guid: df6e603df0bfe3245ac5d898a00913ab, type: 3}
+  - {fileID: 2831762930634728093, guid: 99a19fb507761844e9dbc3b538cf9baf, type: 3}
+  - {fileID: 7442139215768019311, guid: b10132c2edab8fd498605350d4856bb3, type: 3}
+  - {fileID: 2710682045578985575, guid: f261e5f2d7cf8f44f81776fb946a234a, type: 3}
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   limitTile: {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
   cellObj: {fileID: -4312026199669856736, guid: 9469c2b24035b984b8ee9081628e4604, type: 3}
   newTilesContainer: {fileID: 2111692170}
   previewMaterial: {fileID: 2100000, guid: a73241f484e4587449d4a4626a539797, type: 2}
-  probabilityConstraint: 1
-  excludedNeighborConstraint: 1
-  floorCeilingConstraint: 1
-  fixedTilesConstraint: 1
+  probabilityConstraint: 0
+  excludedNeighborConstraint: 0
+  floorCeilingConstraint: 0
+  fixedTilesConstraint: 0
   borderConstraint: 0
   animations: 0
   animationDuration: 0.1
@@ -2110,10 +2117,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testMyWFC: 0
   testTypeMyWFC: 0
-  testGumin: 1
+  testGumin: 0
   numberOfGenerations: 50
-  nombreArchivo: prueba_todo
+  nombreArchivo: times_nature_full
   guminWFC: {fileID: 1232482347}
+--- !u!114 &1653789842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1653789837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 666b1abcd2b642949b9703a1ad400568, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  active: 0
+  tilesetName: nature
+  configLabel: full
+  generationsPerBatch: 50
+  perRunFileName: quality_nature_full_15x15x5
+  summaryFileName: quality_summary
 --- !u!224 &1730239620 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9042685547334628167, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -3058,7 +3083,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2318829606973221188, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2570053094148602224, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive

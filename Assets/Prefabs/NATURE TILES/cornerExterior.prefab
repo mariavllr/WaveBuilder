@@ -214,6 +214,7 @@ MonoBehaviour:
   upNeighbours:
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
   rightNeighbours:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
@@ -271,6 +272,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   aboveNeighbours:
@@ -807,7 +809,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8784442690299975609
 Transform:
   m_ObjectHideFlags: 0
