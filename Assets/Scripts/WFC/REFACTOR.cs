@@ -22,6 +22,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     // ============================================================
 
     [Header("Mode")]
+    public bool generateOnStart = true;
     [SerializeField] private bool GENERATE_ALL = false;
     [SerializeField] private bool randomGeneration;
     [SerializeField] private bool stopOnIncompatibility = false;
@@ -37,6 +38,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
 
     [Header("Tile set")]
+    public bool tilesetPreprocessed = false;
     [SerializeField] public Tile[] tileObjects;
     [SerializeField] private Tile floorTile;
     [SerializeField] private Tile emptyTile;
@@ -182,16 +184,20 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     void Awake()
     {
-        ValidateConfiguration();
-        audioSource = GetComponent<AudioSource>();
-        PreprocessTileSet();
-        gridComponents = new List<Cell>();
-        BuildAC4Propagator(); // precalcular propagador una sola vez tras el preprocesado
+        if (generateOnStart)
+        {
+            ValidateConfiguration();
+            audioSource = GetComponent<AudioSource>();
+            PreprocessTileSet();
+            AdjacencySymmetryVerifier.VerifySymmetry(tileObjects, true); // ← verificación
+            gridComponents = new List<Cell>();
+            BuildAC4Propagator(); // precalcular propagador una sola vez tras el preprocesado
+        }
     }
 
     void Start()
     {
-        Init();
+        if(generateOnStart) Init();
     }
 
     /// <summary>
@@ -210,7 +216,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// <summary>
     /// Preprocesamiento del conjunto de tiles.
     /// </summary>
-    private void PreprocessTileSet()
+    public void PreprocessTileSet()
     {
         ClearNeighbours(ref tileObjects);
         CreateRemainingCells(ref tileObjects);
@@ -219,6 +225,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         tileObjects = tileObjects.Where(t => t.tileType != "limit").ToArray();
 
         newTilesContainer.SetActive(false);
+        tilesetPreprocessed = true;
     }
 
     //---------------------------------INICIALIZACION------------------------------------------------------------------

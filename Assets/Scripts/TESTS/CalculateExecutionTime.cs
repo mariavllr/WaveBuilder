@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,6 +17,21 @@ using Debug = UnityEngine.Debug;
 ///
 /// Tests disponibles para Gumin:
 ///   ALL_GENERATION    – único test aplicable
+///
+/// Estructura del CSV resultante (una tabla por archivo, una columna por algoritmo):
+///   n de generacion ; gumin_prob ; mi_wfc_prob ; mi_wfc_full
+///   1               ; 2.3412     ; 2.1034      ; 2.4512
+///   ...
+///   Media           ; 2.20       ; 1.95        ; 2.30
+///   Max             ; 2.34       ; 2.21        ; 2.51
+///   Min             ; 1.98       ; 1.78        ; 2.10
+///   Incompatibilidades ; 3       ; 2           ; 4
+///   Fail rate       ; 5.00 %     ; 4.00 %      ; 6.00 %
+///
+/// Flujo de uso:
+///   1. Configura testGumin=true y columnLabel="gumin_prob" → Play → se genera la primera columna
+///   2. Configura testMyWFC=true y columnLabel="mi_wfc_prob" → Play → se añade la segunda columna
+///   3. Configura testMyWFC=true y columnLabel="mi_wfc_full" → Play → se añade la tercera columna
 /// </summary>
 public class CalculateExecutionTime : MonoBehaviour
 {
@@ -29,7 +44,12 @@ public class CalculateExecutionTime : MonoBehaviour
 
     [Header("Configuración del test")]
     public int numberOfGenerations = 50;
+
+    [Tooltip("Nombre del archivo CSV sin extensión. Debe incluir tileset y tamaño: p.ej. times_nature_10x10x5")]
     public string nombreArchivo = "WFC_Benchmark";
+
+    [Tooltip("Etiqueta de la columna que se va a medir en esta sesión: gumin_prob | mi_wfc_prob | mi_wfc_full")]
+    public string columnLabel = "gumin_prob";
 
     [Header("Referencias")]
     [SerializeField] private GuminWFC guminWFC;
@@ -52,7 +72,6 @@ public class CalculateExecutionTime : MonoBehaviour
     // No se usa para TILE_PROPAGATION (la siguiente medición la activa el jugador).
     private bool pendingNext = false;
 
-    private string mapSize;
     private List<string[]> tabla = new List<string[]>();
     private string FilePath => Path.Combine(Application.persistentDataPath, nombreArchivo + ".csv");
 
@@ -74,7 +93,6 @@ public class CalculateExecutionTime : MonoBehaviour
         active = testMyWFC || testGumin;
         if (!active) return;
 
-        // Suscribirse solo al par de eventos que corresponde al test activo
         if (testMyWFC)
         {
             switch (testTypeMyWFC)
@@ -92,18 +110,16 @@ public class CalculateExecutionTime : MonoBehaviour
                 case StopwatchTest.TILE_PROPAGATION:
                     WaveFunctionGame_REFACTOR.onStartTilePropagation += OnStart;
                     WaveFunctionGame_REFACTOR.onEndTilePropagation += OnEnd;
-                    // Sin incompatibilidad: la colocación de fichas no genera contradicciones
                     break;
             }
         }
-        else // testGumin — solo ALL_GENERATION
+        else // testGumin
         {
             GuminWFC.onStartGeneration += OnStart;
             GuminWFC.onEndGeneration += OnEnd;
             GuminWFC.onIncompatibility += OnIncompat;
         }
 
-        mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
         PrepararCSV();
     }
 
@@ -112,7 +128,7 @@ public class CalculateExecutionTime : MonoBehaviour
         if (!active || !testGumin) return;
 
         if (guminWFC == null) { Debug.LogError("[Benchmark] guminWFC no asignado en el Inspector."); return; }
-        guminWFC.tileObjects = wfc.tileObjects;
+        //guminWFC.tileObjects = wfc.tileObjects;
         guminWFC.Generate();
     }
 
@@ -131,7 +147,7 @@ public class CalculateExecutionTime : MonoBehaviour
     }
 
     // ════════════════════════════════════════════════════════════════
-    // LOOP DE GENERACIONES (solo ALL_GENERATION y CUBE_GENERATION)
+    // LOOP DE GENERACIONES
     // ════════════════════════════════════════════════════════════════
 
     void Update()
@@ -170,9 +186,9 @@ public class CalculateExecutionTime : MonoBehaviour
 
         if (writeToCSV)
         {
-            int col = ObtenerColumna(tabla, mapSize);
+            int col = ObtenerColumna(tabla, columnLabel);
             AsegurarFila(tabla, generationsDone);
-            if (col >= 0 && col < tabla[generationsDone].Length)
+            if (col >= 0 && generationsDone < tabla.Count && col < tabla[generationsDone].Length)
                 tabla[generationsDone][col] = t.ToString("F4");
             GuardarCSV(tabla);
         }
@@ -181,8 +197,6 @@ public class CalculateExecutionTime : MonoBehaviour
             FinalizarBenchmark();
         else if (testTypeMyWFC != StopwatchTest.TILE_PROPAGATION || testGumin)
             pendingNext = true;
-        // TILE_PROPAGATION: no se dispara pendingNext; la siguiente medición
-        // ocurre cuando el jugador coloca la siguiente ficha.
     }
 
     private void OnIncompat()
@@ -209,14 +223,14 @@ public class CalculateExecutionTime : MonoBehaviour
 
         if (!writeToCSV) return;
 
-        int col = ObtenerColumna(tabla, mapSize);
+        int col = ObtenerColumna(tabla, columnLabel);
         if (col < 0) { GuardarCSV(tabla); return; }
 
-        EscribirStat("Avg Time", col, avg.ToString("F4"));
-        EscribirStat("Min Time", col, minTime.ToString("F4"));
-        EscribirStat("Max Time", col, maxTime.ToString("F4"));
-        EscribirStat("Incompat.", col, totalIncompat.ToString());
-        EscribirStat("Fail Rate", col, failRate.ToString("F2") + " %");
+        EscribirStat("Media", col, avg.ToString("F4"));
+        EscribirStat("Max", col, maxTime.ToString("F4"));
+        EscribirStat("Min", col, minTime.ToString("F4"));
+        EscribirStat("Incompatibilidades", col, totalIncompat.ToString());
+        EscribirStat("Fail rate", col, failRate.ToString("F2") + " %");
         GuardarCSV(tabla);
     }
 
@@ -228,9 +242,10 @@ public class CalculateExecutionTime : MonoBehaviour
     {
         if (!File.Exists(FilePath))
         {
-            File.WriteAllText(FilePath, "");
+            // Archivo nuevo: crear cabecera con columna de etiquetas
+            File.WriteAllText(FilePath, "n de generacion\n");
             tabla = LeerCSV();
-            AñadirColumna(tabla, mapSize);
+            AñadirColumna(tabla, columnLabel);
             GuardarCSV(tabla);
             writeToCSV = true;
             Debug.Log($"[Benchmark] CSV creado: {FilePath}");
@@ -238,16 +253,42 @@ public class CalculateExecutionTime : MonoBehaviour
         else
         {
             tabla = LeerCSV();
-            if (ObtenerColumna(tabla, mapSize) == -1)
+            int col = ObtenerColumna(tabla, columnLabel);
+
+            if (col == -1)
             {
-                AñadirColumna(tabla, mapSize);
+                // Columna nueva en archivo existente: añadirla al final
+                AñadirColumna(tabla, columnLabel);
                 GuardarCSV(tabla);
                 writeToCSV = true;
+                Debug.Log($"[Benchmark] Columna '{columnLabel}' añadida a {FilePath}");
             }
             else
             {
-                writeToCSV = false;
-                Debug.Log($"[Benchmark] '{mapSize}' ya existe en el CSV. Solo se mostrará por consola.");
+                // Columna ya existe: comprobar si está completa (tiene "Media" rellena)
+                bool completa = false;
+                foreach (var row in tabla)
+                    if (row[0] == "Media" && col < row.Length && !string.IsNullOrEmpty(row[col]))
+                    { completa = true; break; }
+
+                if (completa)
+                {
+                    writeToCSV = false;
+                    Debug.LogWarning($"[Benchmark] Columna '{columnLabel}' ya está completa. Solo consola.");
+                }
+                else
+                {
+                    // Columna incompleta: reanudar desde la última generación registrada
+                    writeToCSV = true;
+                    for (int i = 1; i < tabla.Count; i++)
+                    {
+                        if (!int.TryParse(tabla[i][0], out _)) break;
+                        if (col < tabla[i].Length && !string.IsNullOrEmpty(tabla[i][col]))
+                            generationsDone++;
+                    }
+                    if (generationsDone > 0)
+                        Debug.LogWarning($"[Benchmark] Reanudando '{columnLabel}' desde gen {generationsDone + 1}.");
+                }
             }
         }
     }
@@ -256,19 +297,20 @@ public class CalculateExecutionTime : MonoBehaviour
     {
         var t = new List<string[]>();
         foreach (var l in File.ReadAllLines(FilePath))
-            t.Add(l.Split(';'));
+            if (!string.IsNullOrWhiteSpace(l))
+                t.Add(l.Split(';'));
         return t;
     }
 
-    private int ObtenerColumna(List<string[]> t, string size)
+    private int ObtenerColumna(List<string[]> t, string label)
     {
         if (t.Count == 0) return -1;
         for (int i = 0; i < t[0].Length; i++)
-            if (t[0][i] == size) return i;
+            if (t[0][i] == label) return i;
         return -1;
     }
 
-    private void AñadirColumna(List<string[]> t, string size)
+    private void AñadirColumna(List<string[]> t, string label)
     {
         if (t.Count == 0) t.Add(new string[0]);
         for (int i = 0; i < t.Count; i++)
@@ -276,20 +318,34 @@ public class CalculateExecutionTime : MonoBehaviour
             var old = t[i];
             var nueva = new string[old.Length + 1];
             for (int j = 0; j < old.Length; j++) nueva[j] = old[j];
-            nueva[old.Length] = (i == 0) ? size : "";
+            nueva[old.Length] = (i == 0) ? label : "";
             t[i] = nueva;
         }
     }
 
+    /// <summary>
+    /// Garantiza que exista una fila para la generación idx (etiquetada con
+    /// su número), insertándola antes de las filas de resumen si es necesario.
+    /// </summary>
     private void AsegurarFila(List<string[]> t, int idx)
     {
+        // Si la fila ya existe en la posición esperada, no hacer nada
+        if (t.Count > idx && int.TryParse(t[idx][0], out int n) && n == idx) return;
+
+        // Buscar si existe en otra posición
+        for (int i = 1; i < t.Count; i++)
+            if (int.TryParse(t[i][0], out int m) && m == idx) return;
+
+        // Crear e insertar antes de la primera fila de resumen (etiqueta no numérica)
+        int insertAt = t.Count;
+        for (int i = 1; i < t.Count; i++)
+            if (!int.TryParse(t[i][0], out _)) { insertAt = i; break; }
+
         int cols = t.Count > 0 ? t[0].Length : 2;
-        while (t.Count <= idx)
-        {
-            var f = new string[cols];
-            f[0] = $"Med. {t.Count}";
-            t.Add(f);
-        }
+        var f = new string[cols];
+        f[0] = idx.ToString();
+        for (int k = 1; k < f.Length; k++) f[k] = "";
+        t.Insert(insertAt, f);
     }
 
     private void EscribirStat(string etiqueta, int col, string valor)
@@ -297,15 +353,25 @@ public class CalculateExecutionTime : MonoBehaviour
         int fila = -1;
         for (int i = 0; i < tabla.Count; i++)
             if (tabla[i][0] == etiqueta) { fila = i; break; }
+
         if (fila == -1)
         {
             var f = new string[tabla[0].Length];
             f[0] = etiqueta;
+            for (int k = 1; k < f.Length; k++) f[k] = "";
             tabla.Add(f);
             fila = tabla.Count - 1;
         }
-        if (col < tabla[fila].Length)
-            tabla[fila][col] = valor;
+
+        // Asegurar anchura en caso de que la tabla se haya ensanchado
+        if (col >= tabla[fila].Length)
+        {
+            var ext = new string[tabla[0].Length];
+            System.Array.Copy(tabla[fila], ext, tabla[fila].Length);
+            tabla[fila] = ext;
+        }
+
+        tabla[fila][col] = valor;
     }
 
     private void GuardarCSV(List<string[]> t)

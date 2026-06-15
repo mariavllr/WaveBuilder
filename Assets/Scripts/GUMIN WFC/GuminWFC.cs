@@ -47,6 +47,7 @@ public class GuminWFC : MonoBehaviour
 
     [Header("Input – tiles con vecinos ya calculados")]
     [Tooltip("Misma lista tileObjects que usa REFACTOR, preprocesada con vecinos y rotaciones.")]
+    private WaveFunctionGame_REFACTOR wfc;
     public Tile[] tileObjects;
 
     [Header("Dimensiones del grid 3D")]
@@ -166,6 +167,7 @@ public class GuminWFC : MonoBehaviour
 
     void Start()
     {
+        wfc = FindFirstObjectByType<WaveFunctionGame_REFACTOR>();
         if (generateOnStart) Generate();
     }
 
@@ -180,6 +182,8 @@ public class GuminWFC : MonoBehaviour
     /// </summary>
     public void Generate()
     {
+        if (!wfc.tilesetPreprocessed) wfc.PreprocessTileSet();
+        tileObjects = wfc.tileObjects;
         StartCoroutine(GenerateCoroutine());
     }
 

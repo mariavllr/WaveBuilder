@@ -1440,8 +1440,9 @@ MonoBehaviour:
   testMyWFC: 0
   testTypeMyWFC: 0
   testGumin: 0
-  numberOfGenerations: 0
-  nombreArchivo: Nombre_Archivo
+  numberOfGenerations: 50
+  nombreArchivo: WFC_Benchmark
+  columnLabel: gumin_prob
   guminWFC: {fileID: 0}
 --- !u!1 &1232482346
 GameObject:
@@ -1910,6 +1911,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cda9842fed2a57948ad49612bc522074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  generateOnStart: 1
   GENERATE_ALL: 1
   randomGeneration: 0
   stopOnIncompatibility: 0
@@ -1922,6 +1924,7 @@ MonoBehaviour:
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
+  tilesetPreprocessed: 0
   tileObjects:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
   - {fileID: 2082116450420902282, guid: 6bb6b2e705117f945b2c29c9890c2c38, type: 3}
@@ -1962,11 +1965,11 @@ MonoBehaviour:
   cellObj: {fileID: -4312026199669856736, guid: 9469c2b24035b984b8ee9081628e4604, type: 3}
   newTilesContainer: {fileID: 2111692170}
   previewMaterial: {fileID: 2100000, guid: a73241f484e4587449d4a4626a539797, type: 2}
-  probabilityConstraint: 0
-  excludedNeighborConstraint: 0
-  floorCeilingConstraint: 0
-  fixedTilesConstraint: 0
-  borderConstraint: 0
+  probabilityConstraint: 1
+  excludedNeighborConstraint: 1
+  floorCeilingConstraint: 1
+  fixedTilesConstraint: 1
+  borderConstraint: 1
   animations: 0
   animationDuration: 0.1
   animationDelay: 0.05
@@ -2119,7 +2122,8 @@ MonoBehaviour:
   testTypeMyWFC: 0
   testGumin: 0
   numberOfGenerations: 50
-  nombreArchivo: times_nature_full
+  nombreArchivo: WFC_Benchmark
+  columnLabel: 3DWFC_prob
   guminWFC: {fileID: 1232482347}
 --- !u!114 &1653789842
 MonoBehaviour:
