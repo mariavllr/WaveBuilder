@@ -1856,12 +1856,12 @@ MonoBehaviour:
   GENERATE_ALL: 0
   randomGeneration: 0
   stopOnIncompatibility: 0
-  tutorial: 0
+  tutorial: 1
   useOptimization: 0
   OneTileCollapseOptimization: 1
-  dimensionsX: 12
-  dimensionsY: 6
-  dimensionsZ: 12
+  dimensionsX: 16
+  dimensionsY: 5
+  dimensionsZ: 16
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
@@ -1919,7 +1919,7 @@ MonoBehaviour:
   pauseBtn: {fileID: 1889411441}
   resumeBtn: {fileID: 198675870}
   STOPWATCH: 0
-  testType: 1
+  testType: 0
   gridComponents: []
   actualTileDragged: {fileID: 0}
   skipEntireTileRemoved: 0
@@ -2053,8 +2053,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nombreArchivo: prueba_todo
-  numberOfGenerations: 50
+  nombreArchivo: Nombre_Archivo
+  numberOfGenerations: 0
 --- !u!224 &1730239620 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9042685547334628167, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -3142,10 +3142,18 @@ PrefabInstance:
     - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1653789838}
     - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[3].m_Target
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: StartGame
+      objectReference: {fileID: 0}
+    - target: {fileID: 4733151702485806817, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: WaveFunctionGame_REFACTOR, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 4753277271039433574, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
       propertyPath: m_IsActive
