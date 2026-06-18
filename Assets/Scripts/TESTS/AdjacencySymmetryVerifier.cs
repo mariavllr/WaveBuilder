@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -6,28 +7,27 @@ using UnityEngine;
 /// Verificador de simetría de la tabla de adyacencia generada por
 /// PreprocessTileSet() / DefineNeighbourTiles().
 ///
-/// Propósito: garantizar que la relación de vecindad es bidireccional antes de
-/// volcarla en el AdjacentModel de DeBroglie. DeBroglie infiere la adyacencia
-/// opuesta automáticamente al llamar AddAdjacency(a, b, dir); si la tabla propia
-/// no es simétrica, la comparación dejaría de ser apples-to-apples.
+/// Soporta filtrado de tiles "virtuales" (p. ej., LIMIT) que se emplean
+/// durante el preprocesado para definir restricciones de borde pero que se
+/// descartan al ejecutar el algoritmo de colapso. La simetría relevante para
+/// la comparación con DeBroglie es la de la tabla EFECTIVA (sin tiles
+/// virtuales), porque es la que el solver utiliza durante la generación.
 ///
-/// Condición verificada, para cada par ordenado de pares de caras opuestas:
+/// Condición verificada, sobre el subconjunto de tiles no filtradas:
 ///     b ∈ a.rightNeighbours  ⟺  a ∈ b.leftNeighbours
 ///     b ∈ a.upNeighbours     ⟺  a ∈ b.downNeighbours
 ///     b ∈ a.aboveNeighbours  ⟺  a ∈ b.belowNeighbours
 ///
-/// Uso: llamar a VerifySymmetry(tileObjects) UNA vez, justo después de
-/// PreprocessTileSet(). Devuelve true si la tabla es simétrica; en caso
-/// contrario imprime cada violación con el par de tiles y la dirección.
+/// Recomendación de uso: ejecutar dos veces tras PreprocessTileSet():
+///   1) sin filtrar (auditoría completa del preprocesado)
+///   2) filtrando las tiles virtuales (la simetría que importa para DeBroglie)
 /// </summary>
 public static class AdjacencySymmetryVerifier
 {
-    // Cada entrada empareja una cara con su opuesta y nombra la dirección,
-    // de modo que el informe sea legible: (selector cara A, selector cara opuesta B, etiqueta).
     private struct OppositePair
     {
-        public System.Func<Tile, List<Tile>> Forward;   // lista de vecinos en dirección d para A
-        public System.Func<Tile, List<Tile>> Backward;  // lista de vecinos en dirección opuesta para B
+        public System.Func<Tile, List<Tile>> Forward;
+        public System.Func<Tile, List<Tile>> Backward;
         public string ForwardName;
         public string BackwardName;
     }
@@ -49,31 +49,51 @@ public static class AdjacencySymmetryVerifier
     };
 
     /// <summary>
-    /// Verifica la simetría de la tabla completa.
+    /// Verifica la simetría de la tabla, opcionalmente filtrando tiles cuyo
+    /// nombre contenga alguno de los prefijos/subcadenas indicados.
     /// </summary>
-    /// <param name="tiles">El array tileObjects YA preprocesado (con rotaciones y vecinos calculados).</param>
-    /// <param name="logToConsole">Si true, imprime el informe en la consola de Unity.</param>
-    /// <returns>true si la tabla es perfectamente simétrica.</returns>
-    public static bool VerifySymmetry(Tile[] tiles, bool logToConsole = true)
+    /// <param name="tiles">tileObjects ya preprocesado.</param>
+    /// <param name="excludedNameContains">
+    /// Subcadenas a buscar en Tile.name; cualquier tile que coincida queda
+    /// fuera del análisis. Pasar null o vacío para auditoría completa.
+    /// Ejemplo: new[] { "limit" } para descartar las tiles virtuales LIMIT.
+    /// </param>
+    /// <param name="logToConsole">Si true, imprime informe en consola.</param>
+    /// <returns>true si la tabla restringida al subconjunto es simétrica.</returns>
+    public static bool VerifySymmetry(
+        Tile[] tiles,
+        string[] excludedNameContains = null,
+        bool logToConsole = true)
     {
+        // Construir el subconjunto activo. El filtro es por contenido del nombre
+        // para tolerar sufijos de rotación como "_RotateRight".
+        bool IsExcluded(Tile t)
+        {
+            if (excludedNameContains == null || excludedNameContains.Length == 0) return false;
+            string lowered = t.name.ToLowerInvariant();
+            foreach (string token in excludedNameContains)
+                if (!string.IsNullOrEmpty(token) && lowered.Contains(token.ToLowerInvariant()))
+                    return true;
+            return false;
+        }
+
+        var activeSet = new HashSet<Tile>(tiles.Where(t => !IsExcluded(t)));
         var violations = new List<string>();
 
-        // Para comprobar "a ∈ b.<backward>" de forma O(1) en vez de O(n) por consulta,
-        // se construye un HashSet por (tile, dirección) de los vecinos en la dirección backward.
-        // Con tilesets de decenas/cientos de variantes esto evita un coste cuadrático innecesario.
         foreach (var pair in Pairs)
         {
-            // Precalcular conjuntos de vecinos "backward" de cada tile.
+            // Conjuntos "backward" precalculados, restringidos al subconjunto activo.
             var backwardSets = new Dictionary<Tile, HashSet<Tile>>();
-            foreach (Tile t in tiles)
-                backwardSets[t] = new HashSet<Tile>(pair.Backward(t));
+            foreach (Tile t in activeSet)
+                backwardSets[t] = new HashSet<Tile>(pair.Backward(t).Where(activeSet.Contains));
 
-            foreach (Tile a in tiles)
+            foreach (Tile a in activeSet)
             {
                 foreach (Tile b in pair.Forward(a))
                 {
-                    // Dirección forward: b es vecino de a. ¿Es a vecino de b en la opuesta?
-                    bool reciprocal = backwardSets.TryGetValue(b, out var set) && set.Contains(a);
+                    if (!activeSet.Contains(b)) continue;   // b está filtrado; ignorar el par
+
+                    bool reciprocal = backwardSets[b].Contains(a);
                     if (!reciprocal)
                     {
                         violations.Add(
@@ -91,55 +111,26 @@ public static class AdjacencySymmetryVerifier
         {
             var sb = new StringBuilder();
             sb.AppendLine("=== Verificación de simetría de la tabla de adyacencia ===");
-            sb.AppendLine($"Tiles evaluadas (post-preprocesado): {tiles.Length}");
+            string filterDesc = (excludedNameContains == null || excludedNameContains.Length == 0)
+                ? "(sin filtro)"
+                : $"(filtrando: {string.Join(", ", excludedNameContains)})";
+            sb.AppendLine($"Modo: {filterDesc}");
+            sb.AppendLine($"Tiles totales tras preprocesado: {tiles.Length}");
+            sb.AppendLine($"Tiles activas en el análisis: {activeSet.Count}");
 
             if (symmetric)
             {
-                sb.AppendLine("RESULTADO: la tabla es SIMÉTRICA. " +
-                              "Puede volcarse en DeBroglie via AddAdjacency sin introducir asimetrías.");
+                sb.AppendLine("RESULTADO: la tabla restringida es SIMÉTRICA.");
                 Debug.Log(sb.ToString());
             }
             else
             {
-                sb.AppendLine($"RESULTADO: la tabla NO es simétrica. {violations.Count} violación(es):");
+                sb.AppendLine($"RESULTADO: la tabla restringida NO es simétrica. {violations.Count} violación(es):");
                 foreach (string v in violations) sb.AppendLine(v);
-                sb.AppendLine();
-                sb.AppendLine("Cada línea indica una adyacencia declarada en un sentido pero no en el opuesto. " +
-                              "Causa habitual: una exclusión (excludedNeighbours*) declarada en una sola tile " +
-                              "del par, o un socket cuya comparación no es perfectamente bidireccional.");
                 Debug.LogWarning(sb.ToString());
             }
         }
 
         return symmetric;
-    }
-
-    /// <summary>
-    /// Variante que además devuelve la lista de violaciones, por si quieres
-    /// procesarlas o exportarlas a un CSV en lugar de solo loguearlas.
-    /// </summary>
-    public static bool VerifySymmetry(Tile[] tiles, out List<string> violations)
-    {
-        violations = new List<string>();
-
-        foreach (var pair in Pairs)
-        {
-            var backwardSets = new Dictionary<Tile, HashSet<Tile>>();
-            foreach (Tile t in tiles)
-                backwardSets[t] = new HashSet<Tile>(pair.Backward(t));
-
-            foreach (Tile a in tiles)
-                foreach (Tile b in pair.Forward(a))
-                {
-                    bool reciprocal = backwardSets.TryGetValue(b, out var set) && set.Contains(a);
-                    if (!reciprocal)
-                        violations.Add(
-                            $"[{pair.ForwardName}->{pair.BackwardName}] " +
-                            $"'{b.name}' in '{a.name}'.{pair.ForwardName}Neighbours " +
-                            $"but '{a.name}' not in '{b.name}'.{pair.BackwardName}Neighbours");
-                }
-        }
-
-        return violations.Count == 0;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +8,7 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using DG.Tweening;
 using TMPro;
-using System;
 using Random = UnityEngine.Random;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
 using UnityEngine.UI;
 
 
@@ -44,8 +42,11 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField] private Tile emptyTile;
     [SerializeField] private Tile limitTile;
     [SerializeField] private Cell cellObj;
-    [SerializeField] private GameObject newTilesContainer;
+    //[SerializeField] private GameObject newTilesContainer;
     public Material previewMaterial;
+
+    [Header("Preprocesado")]
+    [SerializeField] private TilePreprocessor tilePreprocessor;
 
     [Header("Global Constraints")]
     public bool probabilityConstraint = true;
@@ -181,6 +182,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         GameEvents.OnGameFinished -= FinishGame;
     }
 
+    public static void InvokeStartGeneration() => onStartGeneration?.Invoke();
+    public static void InvokeEndGeneration() => onEndGeneration?.Invoke();
+    public static void InvokeIncompatibility() => onIncompatibility?.Invoke();
+
 
     void Awake()
     {
@@ -189,7 +194,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             ValidateConfiguration();
             audioSource = GetComponent<AudioSource>();
             PreprocessTileSet();
-            AdjacencySymmetryVerifier.VerifySymmetry(tileObjects, true); // ← verificación
+
             gridComponents = new List<Cell>();
             BuildAC4Propagator(); // precalcular propagador una sola vez tras el preprocesado
         }
@@ -218,13 +223,14 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     public void PreprocessTileSet()
     {
-        ClearNeighbours(ref tileObjects);
-        CreateRemainingCells(ref tileObjects);
-        DefineNeighbourTiles(ref tileObjects, ref tileObjects);
+        tilePreprocessor.excludedNeighborConstraint = excludedNeighborConstraint;
+        tilePreprocessor.Preprocess(ref tileObjects);
 
+        // REFACTOR filtra LIMIT de su dominio de colapso. Las listas de
+        // vecinos ya contienen las referencias a LIMIT para que el borde
+        // funcione correctamente; el solver simplemente no colapsa tiles LIMIT.
         tileObjects = tileObjects.Where(t => t.tileType != "limit").ToArray();
 
-        newTilesContainer.SetActive(false);
         tilesetPreprocessed = true;
     }
 
@@ -343,6 +349,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void ConfigureCardGenerator()
     {
+        if (cardGenerator == null) return;
         cardGenerator.tilesList = tileObjects
             .Where(t => !IsInfrastructureTile(t.tileType))
             .ToList();
@@ -410,7 +417,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             int minutes = Mathf.FloorToInt((elapsedTime % 3600) / 60);
             int seconds = Mathf.FloorToInt(elapsedTime % 60);
 
-            timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
+            if (timerText != null)
+                timerText.text = $"{hours:00}:{minutes:00}:{seconds:00}";
         }
 
         if (collapsedCells >= totalCells)
@@ -419,277 +427,19 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
     }
 
-    public void PauseTimer() { isRunning = false; pauseBtn.interactable = false; }
-    public void ResumeTimer() { isRunning = true; pauseBtn.interactable = true; }
+    public void PauseTimer() { isRunning = false; if (pauseBtn != null) pauseBtn.interactable = false; }
+    public void ResumeTimer() { isRunning = true; if (pauseBtn != null) pauseBtn.interactable = true; }
 
     public void StartGame() { cubeStep = true; tutorial = false; ResumeTimer(); RunCubeGenerationSync(); }
     public void ExitGame() => Application.Quit();
 
     private void FinishGame()
     {
-        finishPanel.SetActive(true);
-        pauseBtn.interactable = false;
-        resumeBtn.interactable = false;
+        if (finishPanel != null) finishPanel.SetActive(true);
+        if (pauseBtn != null) pauseBtn.interactable = false;
+        if (resumeBtn != null) resumeBtn.interactable = false;
         PauseTimer();
     }
-
-
-    //-------------------------------------------PREPROCESADO CON SOCKETS-------------------------------------
-
-    /// <summary>
-    /// Clears all the tiles' neighbours
-    /// </summary>
-    /// <param name="tiLeArray"></param> Array of tiles that need to be cleared
-    private void ClearNeighbours(ref Tile[] tileArray)
-    {
-        foreach (Tile tile in tileArray)
-        {
-            tile.upNeighbours.Clear();
-            tile.rightNeighbours.Clear();
-            tile.downNeighbours.Clear();
-            tile.leftNeighbours.Clear();
-            tile.aboveNeighbours.Clear();
-            tile.belowNeighbours.Clear();
-        }
-    }
-
-    /// <summary>
-    /// Generates a new tile variation based on a given tile
-    /// </summary>
-    /// <param name="tile"></param> Tile to be used as base
-    /// <param name="nameVariation"></param> Suffix added to the new tile variation
-    private Tile CreateNewTileVariation(Tile tile, string nameVariation)
-    {
-        GameObject newTile = Instantiate(tile.gameObject, newTilesContainer.transform);
-        newTile.name = tile.gameObject.name + nameVariation;
-        newTile.tag = tile.gameObject.tag;
-        newTile.SetActive(false);
-
-        Tile tileRotated = newTile.GetComponent<Tile>();
-        tileRotated.tileType = tile.tileType;
-        tileRotated.probability = tile.probability;
-        tileRotated.positionOffset = tile.positionOffset;
-        tileRotated.rotateRight = tile.rotateRight;
-        tileRotated.rotate180 = tile.rotate180;
-        tileRotated.rotateLeft = tile.rotateLeft;
-
-        // useSkirts y todas las referencias de skirts ya est�n
-        // correctamente remapeadas por el Instantiate
-
-        return tileRotated;
-    }
-
-    /// <summary>
-    /// Genera las variantes rotadas (90°, 180°, 270°) de cada tile del
-    /// conjunto base, en función de las flags rotateRight/rotate180/rotateLeft declaradas en el inspector.
-    /// </summary>
-    private void CreateRemainingCells(ref Tile[] tileArray)
-    {
-        List<Tile> generated = new List<Tile>();
-
-        foreach (Tile tile in tileArray)
-        {
-            if (tile.rotateRight) generated.Add(BuildRotatedVariant(tile, "_RotateRight", 90, 1));
-            if (tile.rotate180) generated.Add(BuildRotatedVariant(tile, "_Rotate180", 180, 2));
-            if (tile.rotateLeft) generated.Add(BuildRotatedVariant(tile, "_RotateLeft", 270, 3));
-        }
-
-        if (generated.Count > 0)
-            tileArray = tileArray.Concat(generated).ToArray();
-    }
-
-    /// <summary>
-    /// Crea una variante rotada de una tile y le aplica la transformación
-    /// de sockets, exclusiones y faldas correspondiente.
-    /// </summary>
-    private Tile BuildRotatedVariant(Tile original, string suffix, float yDegrees, int quarterSteps)
-    {
-        Tile rotated = CreateNewTileVariation(original, suffix);
-        RotateBorders(original, rotated, quarterSteps);
-        rotated.rotation = new Vector3(0f, yDegrees, 0f);
-        return rotated;
-    }
-
-    /// <summary>
-    /// Rota los sockets, exclusiones y faldas de una tile k pasos de 90°
-    /// en sentido horario.
-    /// Fórmula geométrica: para una rotación de k pasos, el lado del índice
-    /// i de la tile rotada toma el valor del lado (i − k) mod 4 de la
-    /// original. Numeración horaria de lados: U=0, R=1, D=2, L=3 para
-    /// sockets/exclusiones; N=0, E=1, S=2, W=3 para faldas cardinales;
-    /// NE=0, SE=1, SW=2, NW=3 para faldas diagonales.
-    /// 
-    /// Los sockets verticales (above/below) no rotan en plano: solo se
-    /// les actualiza el rotationIndex.
-    /// </summary>
-    private void RotateBorders(Tile original, Tile rotated, int k)
-    {
-        int steps = ((k % 4) + 4) % 4;
-        if (steps == 0) return;
-
-        // Sockets horizontales (U, R, D, L)
-        var srcSockets = new[] { original.upSocket, original.rightSocket,
-                              original.downSocket, original.leftSocket };
-        rotated.upSocket = srcSockets[Wrap(0 - steps)];
-        rotated.rightSocket = srcSockets[Wrap(1 - steps)];
-        rotated.downSocket = srcSockets[Wrap(2 - steps)];
-        rotated.leftSocket = srcSockets[Wrap(3 - steps)];
-
-        // Sockets verticales: solo se reetiqueta la rotación
-        rotated.aboveSocket = original.aboveSocket;
-        rotated.aboveSocket.rotationIndex = (original.aboveSocket.rotationIndex + steps * 90) % 360;
-        rotated.belowSocket = original.belowSocket;
-        rotated.belowSocket.rotationIndex = (original.belowSocket.rotationIndex + steps * 90) % 360;
-
-        // Exclusiones horizontales
-        var srcExcl = new[] { original.excludedNeighboursUp,    original.excludedNeighboursRight,
-                          original.excludedNeighboursDown,  original.excludedNeighboursLeft };
-        rotated.excludedNeighboursUp = srcExcl[Wrap(0 - steps)];
-        rotated.excludedNeighboursRight = srcExcl[Wrap(1 - steps)];
-        rotated.excludedNeighboursDown = srcExcl[Wrap(2 - steps)];
-        rotated.excludedNeighboursLeft = srcExcl[Wrap(3 - steps)];
-
-        // Exclusiones verticales
-        rotated.excludedNeighboursAbove = original.excludedNeighboursAbove;
-        rotated.excludedNeighboursBelow = original.excludedNeighboursBelow;
-
-
-        if (rotated.useSkirts) RotateSkirts(original, rotated, steps);
-    }
-
-    /// <summary>
-    /// Rotación específica de las faldas (cardinales y diagonales).
-    /// </summary>
-    private void RotateSkirts(Tile original, Tile rotated, int steps)
-    {
-        var srcCard = new[] { original.skirtNorth, original.skirtEast,
-                          original.skirtSouth, original.skirtWest };
-        rotated.skirtNorth = srcCard[Wrap(0 - steps)];
-        rotated.skirtEast = srcCard[Wrap(1 - steps)];
-        rotated.skirtSouth = srcCard[Wrap(2 - steps)];
-        rotated.skirtWest = srcCard[Wrap(3 - steps)];
-
-        var srcDiag = new[] { original.skirtCornerNE, original.skirtCornerSE,
-                          original.skirtCornerSW, original.skirtCornerNW };
-        rotated.skirtCornerNE = srcDiag[Wrap(0 - steps)];
-        rotated.skirtCornerSE = srcDiag[Wrap(1 - steps)];
-        rotated.skirtCornerSW = srcDiag[Wrap(2 - steps)];
-        rotated.skirtCornerNW = srcDiag[Wrap(3 - steps)];
-    }
-
-    /// <summary>
-    /// Aritmética modular para rotaciones de cuatro lados. Devuelve el
-    /// índice (i mod 4) garantizando un resultado en [0, 3], incluso si i
-    /// es negativo.
-    /// </summary>
-    private static int Wrap(int i) => ((i % 4) + 4) % 4;
-
-
-
-    /// <summary>
-    /// Compara dos sockets soportando tanto el sistema antiguo (Enum) como el nuevo (ScriptableObject)
-    /// </summary>
-    bool SocketsMatch(Tile.Socket socketA, Tile.Socket socketB)
-    {
-        // Caso 1: Ambos usan el nuevo sistema (ScriptableObjects)
-        if (socketA.HasCustomDefinition && socketB.HasCustomDefinition)
-        {
-            return socketA.socketDefinition == socketB.socketDefinition;
-        }
-
-        // Caso 2: Ambos usan el sistema antiguo (Enum)
-        // Solo si NINGUNO tiene definici�n custom
-        if (!socketA.HasCustomDefinition && !socketB.HasCustomDefinition)
-        {
-            return socketA.socket_name == socketB.socket_name;
-        }
-
-        // Caso 3: Mezcla de sistemas (Uno nuevo y uno viejo) -> No conectan nunca
-        return false;
-    }
-
-
-    /// <summary>
-    /// Calcula la tabla completa de adyacencias permitidas entre tiles
-    /// del conjunto, comparando sockets, exclusiones bidireccionales y
-    /// reglas de simetría/flip (caras horizontales) o de rotación
-    /// invariante (caras verticales).
-    /// 
-    /// Para cada par (tile, otherTile) y cada una de las seis direcciones
-    /// del cubo, si la conexión es válida se añade otherTile a la lista
-    /// de vecinos correspondiente de tile.
-    /// </summary>
-    public void DefineNeighbourTiles(ref Tile[] tileArray, ref Tile[] otherTileArray)
-    {
-        foreach (Tile a in tileArray)
-            foreach (Tile b in otherTileArray)
-            {
-                // Caras horizontales: regla de simetría/flip
-                if (CanConnectHorizontal(a.upSocket, b.downSocket,
-                    a.excludedNeighboursUp, b.excludedNeighboursDown, a.tileType, b.tileType))
-                    a.upNeighbours.Add(b);
-
-                if (CanConnectHorizontal(a.downSocket, b.upSocket,
-                    a.excludedNeighboursDown, b.excludedNeighboursUp, a.tileType, b.tileType))
-                    a.downNeighbours.Add(b);
-
-                if (CanConnectHorizontal(a.rightSocket, b.leftSocket,
-                    a.excludedNeighboursRight, b.excludedNeighboursLeft, a.tileType, b.tileType))
-                    a.rightNeighbours.Add(b);
-
-                if (CanConnectHorizontal(a.leftSocket, b.rightSocket,
-                    a.excludedNeighboursLeft, b.excludedNeighboursRight, a.tileType, b.tileType))
-                    a.leftNeighbours.Add(b);
-
-                // Caras verticales: regla de rotación invariante
-                if (CanConnectVertical(a.aboveSocket, b.belowSocket,
-                    a.excludedNeighboursAbove, b.excludedNeighboursBelow, a.tileType, b.tileType))
-                    a.aboveNeighbours.Add(b);
-
-                if (CanConnectVertical(a.belowSocket, b.aboveSocket,
-                    a.excludedNeighboursBelow, b.excludedNeighboursAbove, a.tileType, b.tileType))
-                    a.belowNeighbours.Add(b);
-            }
-    }
-
-    /// <summary>
-    /// Determina si dos tiles pueden ser vecinas en una dirección horizontal.
-    /// Tres condiciones: los sockets coinciden, las exclusiones bidireccionales
-    /// se respetan (si el constraint está activo), y la combinación de simetría
-    /// y flip permite la conexión geométrica.
-    /// </summary>
-    private bool CanConnectHorizontal(
-        Tile.Socket socketA, Tile.Socket socketB,
-        List<string> excludedA, List<string> excludedB,
-        string typeA, string typeB)
-    {
-        if (!SocketsMatch(socketA, socketB)) return false;
-
-        if (excludedNeighborConstraint
-            && (excludedA.Contains(typeB) || excludedB.Contains(typeA)))
-            return false;
-
-        return socketA.isSymmetric || socketB.isSymmetric
-            || (socketA.isFlipped != socketB.isFlipped);
-    }
-
-    /// <summary>
-    /// Determina si dos tiles pueden ser vecinas en una dirección vertical.
-    /// Las caras superior e inferior no aplican simetría ni flip: o ambas
-    /// son rotacionalmente invariantes, o sus rotationIndex coinciden.
-    /// </summary>
-    private bool CanConnectVertical(Tile.Socket socketA, Tile.Socket socketB, List<string> excludedA, List<string> excludedB, string typeA, string typeB)
-    {
-        if (!SocketsMatch(socketA, socketB)) return false;
-
-        if (excludedNeighborConstraint
-            && (excludedA.Contains(typeB) || excludedB.Contains(typeA)))
-            return false;
-
-        return (socketA.rotationallyInvariant && socketB.rotationallyInvariant)
-            || (socketA.rotationIndex == socketB.rotationIndex);
-    }
-
 
     //-------------------------CREAR TILES DE CAPAS DE INFAESTRUCTURA--------------------
 
@@ -1805,10 +1555,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         StopAllCoroutines();
 
         if (!isRunning) ResumeTimer();
-        finishPanel.SetActive(false);
+        if (finishPanel != null) finishPanel.SetActive(false);
         collapsedCells = 0;
-        pauseBtn.interactable = true;
-        resumeBtn.interactable = true;
+        if (pauseBtn != null) pauseBtn.interactable = true;
+        if (resumeBtn != null) resumeBtn.interactable = true;
 
         // Clear the grid
         for (int i = gameObject.transform.childCount - 1; i >= 0; i--)
@@ -1818,7 +1568,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         gridComponents.Clear();
 
         mapsGenerated++;
-        mapsGeneratedText.text = $"Nº mapas: {mapsGenerated}";
+        if (mapsGeneratedText != null)
+            mapsGeneratedText.text = $"Nº mapas: {mapsGenerated}";
 
         Init();
     }
@@ -1833,7 +1584,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// duplica tiles ya instanciados (el jugador puede haber instanciado su tile
     /// antes de que la cascada llegue a esa celda).
     /// </summary>
-    private void BatchInstantiateTiles()
+    public void BatchInstantiateTiles()
     {
         foreach (Cell cell in gridComponents)
         {
