@@ -358,11 +358,7 @@ public class GuminWFC : MonoBehaviour
 
                 for (int d = 0; d < 6; d++)
                 {
-                    int x2 = x + DX[d], y2 = y + DY[d], z2 = z + DZ[d];
-                    bool onBorder = x2 < 0 || x2 >= MX || y2 < 0 || y2 >= MY || z2 < 0 || z2 >= MZ;
-                    compatible[(i * T + t) * 6 + d] = onBorder
-                        ? 1                          // borde duro: se acepta cualquier tile
-                        : propagator[d * T + t].Length;
+                    compatible[(i * T + t) * 6 + d] = propagator[OPPOSITE[d] * T + t].Length;
                 }
             }
         }

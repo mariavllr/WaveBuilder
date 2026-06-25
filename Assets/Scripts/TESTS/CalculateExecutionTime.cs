@@ -269,8 +269,8 @@ public class CalculateExecutionTime : MonoBehaviour
     {
         if (!File.Exists(FilePath))
         {
-            File.WriteAllText(FilePath, "");
-            tabla = LeerCSV();
+            // Inicializar con la columna n_gen; AñadirColumna añade el algoritmo a continuación.
+            tabla = new List<string[]> { new[] { "n_gen" } };
             AñadirColumna(tabla, algorithmLabel);
             GuardarCSV(tabla);
             writeToCSV = true;

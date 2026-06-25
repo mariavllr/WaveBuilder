@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -74,8 +74,8 @@ public class WFCQualityMetrics : MonoBehaviour
     private int _successCount = 0;
     private int _incompatibilityCount = 0;
 
-    private WelfordAccumulator _accCA   = new WelfordAccumulator();
-    private WelfordAccumulator _accJS   = new WelfordAccumulator();
+    private WelfordAccumulator _accCA = new WelfordAccumulator();
+    private WelfordAccumulator _accJS = new WelfordAccumulator();
     private WelfordAccumulator _accConn = new WelfordAccumulator();
     private WelfordAccumulator _accEntM = new WelfordAccumulator();
     private WelfordAccumulator _accEntV = new WelfordAccumulator();
@@ -97,48 +97,48 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private int GetDimX() => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.dimensionsX,
-        WFCAlgorithmType.Gumin     => guminWFC.dimensionsX,
+        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsX,
+        WFCAlgorithmType.Gumin => guminWFC.dimensionsX,
         WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsX,
         _ => 0
     };
 
     private int GetDimY() => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.dimensionsY,
-        WFCAlgorithmType.Gumin     => guminWFC.dimensionsY,
+        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsY,
+        WFCAlgorithmType.Gumin => guminWFC.dimensionsY,
         WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsY,
         _ => 0
     };
 
     private int GetDimZ() => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.dimensionsZ,
-        WFCAlgorithmType.Gumin     => guminWFC.dimensionsZ,
+        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsZ,
+        WFCAlgorithmType.Gumin => guminWFC.dimensionsZ,
         WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsZ,
         _ => 0
     };
 
     private Tile GetResolvedTile(int i) => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.GetResolvedTile(i),
-        WFCAlgorithmType.Gumin     => guminWFC.GetResolvedTile(i),
+        WFCAlgorithmType.REFACTOR => refactorWFC.GetResolvedTile(i),
+        WFCAlgorithmType.Gumin => guminWFC.GetResolvedTile(i),
         WFCAlgorithmType.DeBroglie => deBroglieWFC.GetResolvedTile(i),
         _ => null
     };
 
     private bool IsInfra(string tileType) => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.IsInfrastructureTile(tileType),
-        WFCAlgorithmType.Gumin     => guminWFC.IsInfrastructureTile(tileType),
+        WFCAlgorithmType.REFACTOR => refactorWFC.IsInfrastructureTile(tileType),
+        WFCAlgorithmType.Gumin => guminWFC.IsInfrastructureTile(tileType),
         WFCAlgorithmType.DeBroglie => deBroglieWFC.IsInfrastructureTile(tileType),
         _ => false
     };
 
     private Tile[] GetTileObjects() => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR  => refactorWFC.tileObjects,
-        WFCAlgorithmType.Gumin     => guminWFC.tileObjects,
+        WFCAlgorithmType.REFACTOR => refactorWFC.tileObjects,
+        WFCAlgorithmType.Gumin => guminWFC.tileObjects,
         WFCAlgorithmType.DeBroglie => deBroglieWFC.tileObjects,
         _ => null
     };
@@ -171,8 +171,24 @@ public class WFCQualityMetrics : MonoBehaviour
         if (!valid) { active = false; return; }
         if (!active) return;
 
+        // Comprobación defensiva: configLabel y algorithmType son dos campos
+        // independientes en el Inspector y nada impide que se desincronicen
+        // (p.ej. dejar algorithmType en REFACTOR mientras se escribe
+        // configLabel = "debroglie" solo para anotar el CSV). Como
+        // DeBroglieWFC dispara los mismos eventos estáticos que REFACTOR,
+        // ese desajuste no lanza ninguna excepción: el cronómetro mide
+        // bien, pero GetResolvedTile() lee del solver equivocado y todas
+        // las métricas de contenido (JS, conectividad, entropía, diversidad)
+        // salen a cero sin ningún aviso. Esto corta el batch antes de que
+        // eso vuelva a pasar.
+        if (!ValidateAlgorithmConfigConsistency())
+        {
+            active = false;
+            return;
+        }
+
         _mapSize = $"{GetDimX()}x{GetDimZ()}x{GetDimY()}";
-        _perRunPath  = Path.Combine(Application.persistentDataPath, perRunFileName  + ".csv");
+        _perRunPath = Path.Combine(Application.persistentDataPath, perRunFileName + ".csv");
         _summaryPath = Path.Combine(Application.persistentDataPath, summaryFileName + ".csv");
 
         PrecomputeTargetDistribution();
@@ -184,14 +200,14 @@ public class WFCQualityMetrics : MonoBehaviour
         {
             case WFCAlgorithmType.REFACTOR:
             case WFCAlgorithmType.DeBroglie:
-                WaveFunctionGame_REFACTOR.onStartGeneration  += OnGenerationStart;
-                WaveFunctionGame_REFACTOR.onEndGeneration    += OnGenerationEnd;
-                WaveFunctionGame_REFACTOR.onIncompatibility  += OnIncompatibility;
+                WaveFunctionGame_REFACTOR.onStartGeneration += OnGenerationStart;
+                WaveFunctionGame_REFACTOR.onEndGeneration += OnGenerationEnd;
+                WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompatibility;
                 break;
             case WFCAlgorithmType.Gumin:
-                GuminWFC.onStartGeneration  += OnGenerationStart;
-                GuminWFC.onEndGeneration    += OnGenerationEnd;
-                GuminWFC.onIncompatibility  += OnIncompatibility;
+                GuminWFC.onStartGeneration += OnGenerationStart;
+                GuminWFC.onEndGeneration += OnGenerationEnd;
+                GuminWFC.onIncompatibility += OnIncompatibility;
                 break;
         }
 
@@ -205,16 +221,53 @@ public class WFCQualityMetrics : MonoBehaviour
         {
             case WFCAlgorithmType.REFACTOR:
             case WFCAlgorithmType.DeBroglie:
-                WaveFunctionGame_REFACTOR.onStartGeneration  -= OnGenerationStart;
-                WaveFunctionGame_REFACTOR.onEndGeneration    -= OnGenerationEnd;
-                WaveFunctionGame_REFACTOR.onIncompatibility  -= OnIncompatibility;
+                WaveFunctionGame_REFACTOR.onStartGeneration -= OnGenerationStart;
+                WaveFunctionGame_REFACTOR.onEndGeneration -= OnGenerationEnd;
+                WaveFunctionGame_REFACTOR.onIncompatibility -= OnIncompatibility;
                 break;
             case WFCAlgorithmType.Gumin:
-                GuminWFC.onStartGeneration  -= OnGenerationStart;
-                GuminWFC.onEndGeneration    -= OnGenerationEnd;
-                GuminWFC.onIncompatibility  -= OnIncompatibility;
+                GuminWFC.onStartGeneration -= OnGenerationStart;
+                GuminWFC.onEndGeneration -= OnGenerationEnd;
+                GuminWFC.onIncompatibility -= OnIncompatibility;
                 break;
         }
+    }
+
+    // ============================================================
+    // VALIDACIÓN DEFENSIVA: configLabel vs algorithmType
+    // ============================================================
+
+    /// <summary>
+    /// Comprueba que configLabel menciona el algoritmo que algorithmType
+    /// dice estar midiendo. No es una validación semántica completa, solo
+    /// una red de seguridad contra el error más probable: cambiar uno de
+    /// los dos campos en el Inspector y olvidar el otro. Si configLabel
+    /// usa una convención de nombres distinta a "gumin" / "debroglie" /
+    /// "mi_wfc" / "refactor", ajusta las cadenas de abajo en consecuencia.
+    /// </summary>
+    private bool ValidateAlgorithmConfigConsistency()
+    {
+        string label = (configLabel ?? "").ToLowerInvariant();
+        bool mentionsGumin = label.Contains("gumin");
+        bool mentionsDebroglie = label.Contains("debroglie");
+        bool mentionsMiWfc = label.Contains("mi_wfc") || label.Contains("refactor");
+
+        bool mismatch =
+            (algorithmType == WFCAlgorithmType.REFACTOR && (mentionsGumin || mentionsDebroglie)) ||
+            (algorithmType == WFCAlgorithmType.Gumin && !mentionsGumin) ||
+            (algorithmType == WFCAlgorithmType.DeBroglie && !mentionsDebroglie);
+
+        if (mismatch)
+        {
+            Debug.LogError(
+                $"[Metrics] configLabel ('{configLabel}') no coincide con algorithmType " +
+                $"('{algorithmType}'). Revisa el Inspector antes de lanzar el batch: si no " +
+                "coinciden, vas a registrar el mapa del solver equivocado sin que salte " +
+                "ninguna excepción (DeBroglieWFC y REFACTOR comparten los mismos eventos " +
+                "estáticos, así que el cronómetro seguiría funcionando con normalidad).");
+        }
+
+        return !mismatch;
     }
 
     // ============================================================
@@ -256,8 +309,8 @@ public class WFCQualityMetrics : MonoBehaviour
         }
         _storedMaps.Add(map);
 
-        float ca   = MeasureConstraintAdherence(map, tiles);
-        float js   = MeasureJSDivergence(map, tiles);
+        float ca = MeasureConstraintAdherence(map, tiles);
+        float js = MeasureJSDivergence(map, tiles);
         float conn = MeasureConnectivity(map);
         (float entM, float entV) = MeasureStructuralRegularity(map, tiles);
 
@@ -279,7 +332,7 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private float MeasureConstraintAdherence(int[] map, Tile[] tiles)
     {
-        int required  = 0;
+        int required = 0;
         int satisfied = 0;
 
         foreach (Tile proto in tiles)
@@ -293,7 +346,7 @@ public class WFCQualityMetrics : MonoBehaviour
                 if (tiles[map[i]].tileType == proto.tileType) found++;
             }
 
-            required  += proto.fixedTile;
+            required += proto.fixedTile;
             satisfied += Math.Min(found, proto.fixedTile);
         }
 
@@ -307,7 +360,7 @@ public class WFCQualityMetrics : MonoBehaviour
     private float MeasureJSDivergence(int[] map, Tile[] tiles)
     {
         var counts = new Dictionary<string, int>();
-        int total  = 0;
+        int total = 0;
 
         for (int i = 0; i < map.Length; i++)
         {
@@ -364,8 +417,8 @@ public class WFCQualityMetrics : MonoBehaviour
         if (playable.Count == 0) return 0f;
 
         int startIdx = playable.First();
-        var visited  = new HashSet<int> { startIdx };
-        var queue    = new Queue<int>();
+        var visited = new HashSet<int> { startIdx };
+        var queue = new Queue<int>();
         queue.Enqueue(startIdx);
 
         int[] dxArr = { 1, -1, 0, 0 };
@@ -374,8 +427,8 @@ public class WFCQualityMetrics : MonoBehaviour
         while (queue.Count > 0)
         {
             int cur = queue.Dequeue();
-            int x   = cur % nx;
-            int z   = (cur / nx) % nz;
+            int x = cur % nx;
+            int z = (cur / nx) % nz;
 
             for (int d = 0; d < 4; d++)
             {
@@ -402,8 +455,8 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private (float mean, float variance) MeasureStructuralRegularity(int[] map, Tile[] tiles)
     {
-        int nx   = GetDimX();
-        int nz   = GetDimZ();
+        int nx = GetDimX();
+        int nz = GetDimZ();
         int midX = nx / 2;
         int midZ = nz / 2;
 
@@ -439,7 +492,7 @@ public class WFCQualityMetrics : MonoBehaviour
             entropies[q] = (float)H;
         }
 
-        float mean     = entropies.Average();
+        float mean = entropies.Average();
         float variance = entropies.Select(e => (e - mean) * (e - mean)).Average();
         return (mean, variance);
     }
@@ -473,7 +526,7 @@ public class WFCQualityMetrics : MonoBehaviour
                 distances.Add((float)diff / denominator);
             }
 
-        float mean     = distances.Average();
+        float mean = distances.Average();
         float variance = distances.Select(d => (d - mean) * (d - mean)).Average();
         return (mean, (float)Math.Sqrt(variance));
     }
@@ -520,8 +573,8 @@ public class WFCQualityMetrics : MonoBehaviour
         AppendSummaryRow(
             successRate,
             _accTime.Mean, _accTime.PopStd,
-            _accCA.Mean,   _accCA.PopStd,
-            _accJS.Mean,   _accJS.PopStd,
+            _accCA.Mean, _accCA.PopStd,
+            _accJS.Mean, _accJS.PopStd,
             _accConn.Mean, _accConn.PopStd,
             _accEntM.Mean, _accEntM.PopStd,
             _accEntV.Mean, _accEntV.PopStd,
@@ -579,24 +632,24 @@ public class WFCQualityMetrics : MonoBehaviour
     private void AppendSummaryRow(
         float successRate,
         float meanTime, float stdTime,
-        float meanCA,   float stdCA,
-        float meanJS,   float stdJS,
+        float meanCA, float stdCA,
+        float meanJS, float stdJS,
         float meanConn, float stdConn,
         float meanEntM, float stdEntM,
         float meanEntV, float stdEntV,
-        float meanDiv,  float stdDiv)
+        float meanDiv, float stdDiv)
     {
         string row = string.Join(";",
             tilesetName, _mapSize, configLabel,
             generationsPerBatch,
             successRate.ToString("F4"),
             meanTime.ToString("F4"), stdTime.ToString("F4"),
-            meanCA.ToString("F4"),   stdCA.ToString("F4"),
-            meanJS.ToString("F6"),   stdJS.ToString("F6"),
+            meanCA.ToString("F4"), stdCA.ToString("F4"),
+            meanJS.ToString("F6"), stdJS.ToString("F6"),
             meanConn.ToString("F4"), stdConn.ToString("F4"),
             meanEntM.ToString("F4"), stdEntM.ToString("F4"),
             meanEntV.ToString("F6"), stdEntV.ToString("F6"),
-            meanDiv.ToString("F4"),  stdDiv.ToString("F4")
+            meanDiv.ToString("F4"), stdDiv.ToString("F4")
         );
         File.AppendAllText(_summaryPath, row + "\n");
     }
@@ -609,16 +662,16 @@ public class WFCQualityMetrics : MonoBehaviour
     {
         private int _n = 0;
         private double _mean = 0.0;
-        private double _M2   = 0.0;
+        private double _M2 = 0.0;
 
-        public float Mean   => _n > 0 ? (float)_mean : 0f;
+        public float Mean => _n > 0 ? (float)_mean : 0f;
         public float PopVar => _n > 1 ? (float)(_M2 / _n) : 0f;
         public float PopStd => (float)Math.Sqrt(PopVar);
 
         public void Add(float value)
         {
             _n++;
-            double delta  = value - _mean;
+            double delta = value - _mean;
             _mean += delta / _n;
             double delta2 = value - _mean;
             _M2 += delta * delta2;
