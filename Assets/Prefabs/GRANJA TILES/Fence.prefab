@@ -65,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2768710986838361614, guid: 500833d3911b15846b621a5507a6073d, type: 3}
+  - {fileID: 2100000, guid: 47454c0cebdf3824cb1366a0383c2fb3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileType: fence
   probability: 20
-  fixedTile: 0
+  fixedTile: 1
   rotateRight: 1
   rotate180: 0
   rotateLeft: 0
@@ -135,6 +135,9 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   rightNeighbours:
   - {fileID: 8667259134237476547}
   - {fileID: 0}
@@ -147,6 +150,9 @@ MonoBehaviour:
   - {fileID: 2224100139795180203, guid: bda3d79d1f4de4e47baae47f2c7837ff, type: 3}
   - {fileID: 8667259134237476547}
   - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 8692539937138069245, guid: a7564774739b7684ba8b64e3595c07aa, type: 3}
+  - {fileID: 4056696779862659432, guid: f49bf031cd0b8e44d90dd2a00257a182, type: 3}
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
