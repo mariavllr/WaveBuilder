@@ -23,7 +23,9 @@ using Debug = UnityEngine.Debug;
 ///   1. Constraint adherence  — % de tiles fijas presentes en el output
 ///   2. JS divergence         — divergencia Jensen-Shannon entre la distribución
 ///                              objetivo (pesos) y la observada
-///   3. Connectivity          — % de tiles jugables alcanzables por BFS
+///   (Conectividad por BFS retirada: presupone una semántica de transitabilidad
+///    —celdas caminables frente a obstáculos— que los tilesets de naturaleza no
+///    poseen, por lo que no es significativa y no se reporta para ningún algoritmo.)
 ///   4. Entropy mean/var      — distribución de entropía de Shannon por cuadrante
 ///   5. Diversity             — distancia Hamming normalizada entre pares de mapas
 /// </summary>
@@ -73,10 +75,10 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private int _successCount = 0;
     private int _incompatibilityCount = 0;
+    private int _warmupSeen = 0;   // generaciones vistas en el batch actual (para descartar la 1ª)
 
     private WelfordAccumulator _accCA = new WelfordAccumulator();
     private WelfordAccumulator _accJS = new WelfordAccumulator();
-    private WelfordAccumulator _accConn = new WelfordAccumulator();
     private WelfordAccumulator _accEntM = new WelfordAccumulator();
     private WelfordAccumulator _accEntV = new WelfordAccumulator();
 
@@ -290,39 +292,71 @@ public class WFCQualityMetrics : MonoBehaviour
     {
         if (!active) return;
 
-        _stopwatch.Stop();
-        _lastTime = _stopwatch.Elapsed.TotalSeconds;
-        _accTime.Add((float)_lastTime);
-
-        _successCount++;
-
         Tile[] tiles = GetTileObjects();
         int n = GetDimX() * GetDimY() * GetDimZ();
         int[] map = new int[n];
 
+        int nonEmpty = 0;
         for (int i = 0; i < n; i++)
         {
             Tile t = GetResolvedTile(i);
             map[i] = (t != null && !IsInfra(t.tileType))
                 ? Array.IndexOf(tiles, t)
                 : -1;
+            if (map[i] >= 0) nonEmpty++;
         }
+
+        // Guarda anti-evento-fantasma. Los eventos onStart/onEndGeneration de
+        // WaveFunctionGame_REFACTOR son ESTÁTICOS y los comparten REFACTOR,
+        // GuminWFC y DeBroglieWFC. Si en la escena hay un WaveFunctionGame_REFACTOR
+        // con generateOnStart = true, su Init() dispara onEndGeneration una vez al
+        // arrancar, ANTES de que el solver bajo test haya resuelto nada. Esa
+        // invocación llega aquí con el mapa del solver activo todavía sin poblar
+        // (todo a -1). Si el mapa no tiene NINGUNA tile jugable, no es una
+        // generación real del solver medido: se descarta sin tocar nada.
+        if (nonEmpty == 0)
+        {
+            Debug.LogWarning("[Metrics] onEndGeneration recibido con mapa vacío " +
+                "(0 tiles jugables). Probablemente un evento estático disparado por " +
+                "otro WaveFunctionGame_REFACTOR de la escena con generateOnStart = true. " +
+                "Descartado. Si se repite, desactiva generateOnStart en el REFACTOR de la escena.");
+            return;
+        }
+
+        // Descarte de warm-up. La primera generación de cada batch incluye coste
+        // de calentamiento (JIT, asignaciones iniciales, cachés frías) que no
+        // refleja el rendimiento estable del algoritmo. Se descarta por completo
+        // (ni tiempo ni calidad) para mantener un n idéntico entre todas las
+        // métricas. El batch efectivo pasa a ser de (generationsPerBatch - 1)
+        // generaciones medidas.
+        _warmupSeen++;
+        _stopwatch.Stop();
+        if (_warmupSeen <= 1)
+        {
+            Debug.Log("[Metrics] Generación de warm-up descartada (no se contabiliza " +
+                      "en tiempo ni en calidad).");
+            return;
+        }
+
+        _lastTime = _stopwatch.Elapsed.TotalSeconds;
+        _accTime.Add((float)_lastTime);
+
+        _successCount++;
+
         _storedMaps.Add(map);
 
         float ca = MeasureConstraintAdherence(map, tiles);
         float js = MeasureJSDivergence(map, tiles);
-        float conn = MeasureConnectivity(map);
         (float entM, float entV) = MeasureStructuralRegularity(map, tiles);
 
         _accCA.Add(ca);
         _accJS.Add(js);
-        _accConn.Add(conn);
         _accEntM.Add(entM);
         _accEntV.Add(entV);
 
-        AppendPerRunRow(_successCount, (float)_lastTime, ca, js, conn, entM, entV);
+        AppendPerRunRow(_successCount, (float)_lastTime, ca, js, entM, entV);
 
-        if (_successCount >= generationsPerBatch)
+        if (_successCount >= generationsPerBatch - 1)
             FlushBatch();
     }
 
@@ -393,60 +427,6 @@ public class WFCQualityMetrics : MonoBehaviour
         }
 
         return (float)(js * 0.5);
-    }
-
-    // ============================================================
-    // MÉTRICA 3: CONNECTIVITY (BFS en capa y=1)
-    // ============================================================
-
-    private float MeasureConnectivity(int[] map)
-    {
-        int nx = GetDimX();
-        int nz = GetDimZ();
-        int playableY = 1;
-
-        var playable = new HashSet<int>();
-        for (int z = 0; z < nz; z++)
-            for (int x = 0; x < nx; x++)
-            {
-                int idx = x + z * nx + playableY * nx * nz;
-                if (idx < map.Length && map[idx] >= 0)
-                    playable.Add(idx);
-            }
-
-        if (playable.Count == 0) return 0f;
-
-        int startIdx = playable.First();
-        var visited = new HashSet<int> { startIdx };
-        var queue = new Queue<int>();
-        queue.Enqueue(startIdx);
-
-        int[] dxArr = { 1, -1, 0, 0 };
-        int[] dzArr = { 0, 0, 1, -1 };
-
-        while (queue.Count > 0)
-        {
-            int cur = queue.Dequeue();
-            int x = cur % nx;
-            int z = (cur / nx) % nz;
-
-            for (int d = 0; d < 4; d++)
-            {
-                int nx2 = x + dxArr[d];
-                int nz2 = z + dzArr[d];
-
-                if (nx2 < 0 || nx2 >= nx || nz2 < 0 || nz2 >= nz) continue;
-                int ni = nx2 + nz2 * nx + playableY * nx * nz;
-
-                if (playable.Contains(ni) && !visited.Contains(ni))
-                {
-                    visited.Add(ni);
-                    queue.Enqueue(ni);
-                }
-            }
-        }
-
-        return (float)visited.Count / playable.Count;
     }
 
     // ============================================================
@@ -575,20 +555,20 @@ public class WFCQualityMetrics : MonoBehaviour
             _accTime.Mean, _accTime.PopStd,
             _accCA.Mean, _accCA.PopStd,
             _accJS.Mean, _accJS.PopStd,
-            _accConn.Mean, _accConn.PopStd,
             _accEntM.Mean, _accEntM.PopStd,
             _accEntV.Mean, _accEntV.PopStd,
             divMean, divStd
         );
 
         Debug.Log($"[Metrics] Lote completado. SuccessRate={successRate:F3} | " +
-                  $"JS={_accJS.Mean:F4} | Conn={_accConn.Mean:F3} | Div={divMean:F3}");
+                  $"JS={_accJS.Mean:F4} | Div={divMean:F3}");
 
         _successCount = 0;
         _incompatibilityCount = 0;
+        _warmupSeen = 0;
         _storedMaps.Clear();
         _accTime.Reset();
-        _accCA.Reset(); _accJS.Reset(); _accConn.Reset();
+        _accCA.Reset(); _accJS.Reset();
         _accEntM.Reset(); _accEntV.Reset();
     }
 
@@ -601,7 +581,7 @@ public class WFCQualityMetrics : MonoBehaviour
         if (!File.Exists(_perRunPath))
             File.WriteAllText(_perRunPath,
                 "run_id;tileset;map_size;config;time;" +
-                "constraint_adherence;js_divergence;connectivity_pct;" +
+                "constraint_adherence;js_divergence;" +
                 "entropy_mean;entropy_variance\n");
 
         if (!File.Exists(_summaryPath))
@@ -609,20 +589,18 @@ public class WFCQualityMetrics : MonoBehaviour
                 "tileset;map_size;config;n_runs;success_rate;" +
                 "mean_time;std_time;" +
                 "mean_ca;std_ca;mean_js;std_js;" +
-                "mean_conn;std_conn;" +
                 "mean_ent_mean;std_ent_mean;mean_ent_var;std_ent_var;" +
                 "mean_diversity;std_diversity\n");
     }
 
     private void AppendPerRunRow(int runId, float time,
-        float ca, float js, float conn, float entM, float entV)
+        float ca, float js, float entM, float entV)
     {
         string row = string.Join(";",
             runId, tilesetName, _mapSize, configLabel,
             time.ToString("F4"),
             ca.ToString("F4"),
             js.ToString("F6"),
-            conn.ToString("F4"),
             entM.ToString("F4"),
             entV.ToString("F6")
         );
@@ -634,19 +612,17 @@ public class WFCQualityMetrics : MonoBehaviour
         float meanTime, float stdTime,
         float meanCA, float stdCA,
         float meanJS, float stdJS,
-        float meanConn, float stdConn,
         float meanEntM, float stdEntM,
         float meanEntV, float stdEntV,
         float meanDiv, float stdDiv)
     {
         string row = string.Join(";",
             tilesetName, _mapSize, configLabel,
-            generationsPerBatch,
+            _successCount,
             successRate.ToString("F4"),
             meanTime.ToString("F4"), stdTime.ToString("F4"),
             meanCA.ToString("F4"), stdCA.ToString("F4"),
             meanJS.ToString("F6"), stdJS.ToString("F6"),
-            meanConn.ToString("F4"), stdConn.ToString("F4"),
             meanEntM.ToString("F4"), stdEntM.ToString("F4"),
             meanEntV.ToString("F6"), stdEntV.ToString("F6"),
             meanDiv.ToString("F4"), stdDiv.ToString("F4")
