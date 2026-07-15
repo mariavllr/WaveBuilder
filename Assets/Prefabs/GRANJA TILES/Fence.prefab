@@ -62,6 +62,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -83,9 +85,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &8667259134237476547
 MonoBehaviour:
@@ -103,8 +107,8 @@ MonoBehaviour:
   probability: 20
   fixedTile: 0
   rotateRight: 1
-  rotate180: 0
-  rotateLeft: 0
+  rotate180: 1
+  rotateLeft: 1
   rotation: {x: 0, y: 0, z: 0}
   scale: {x: 0, y: 0, z: 0}
   positionOffset: {x: 0, y: 0, z: 0}
@@ -169,9 +173,11 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: 1dc0478e7fcd1f14cadbd420db27b358, type: 2}
+    socketDefinition: {fileID: 11400000, guid: c475a329a33e8974996ab5cf96e50c31, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -182,7 +188,7 @@ MonoBehaviour:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: e3e8bdb05b618a44aadd29ab7c08a28e, type: 2}
     horizontalFace: 1
-    isSymmetric: 1
+    isSymmetric: 0
     isFlipped: 0
     verticalFace: 0
     rotationIndex: 0
@@ -191,8 +197,8 @@ MonoBehaviour:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: e3e8bdb05b618a44aadd29ab7c08a28e, type: 2}
     horizontalFace: 1
-    isSymmetric: 1
-    isFlipped: 0
+    isSymmetric: 0
+    isFlipped: 1
     verticalFace: 0
     rotationIndex: 0
     rotationallyInvariant: 0

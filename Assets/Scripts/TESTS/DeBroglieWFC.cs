@@ -99,6 +99,12 @@ public class DeBroglieWFC : MonoBehaviour
              "en cada Generate(), recomendado para reportar media ± σ.")]
     [SerializeField] private int fixedSeed = 0;
 
+    [Header("Reintentos ante contradicción")]
+    [Tooltip("Máximo de reintentos por generación antes de abortar. Evita bucles " +
+             "infinitos si el tileset es irresoluble. Debe ser holgado para no " +
+             "truncar mediciones legítimas.")]
+    [SerializeField] private int maxRetries = 10000;
+
     // ── estado interno ───────────────────────────────────────────────
     private Dictionary<Tile, DBTile> toDB;
     private HashSet<Tile> limitTiles;
@@ -169,43 +175,65 @@ public class DeBroglieWFC : MonoBehaviour
 
     private void GenerateInternal()
     {
-        // 1. Construcción del modelo (FUERA del cronómetro).
+        // 1. Construcción del modelo y la topología (FUERA del cronómetro).
+        //    Se hace una sola vez por llamada: equivale al preprocesado de
+        //    REFACTOR, que tampoco se repite en cada regeneración.
         IndexTiles();
         AdjacentModel model = BuildAdjacentModel();
         GridTopology topology = BuildTopology();
 
-        // 2. Construcción del propagator (sin constraints nativos: LIMIT se
-        //    aplica manualmente más abajo porque BorderConstraint no puede
-        //    restringirse a una sola capa Y).
-        TilePropagator propagator = BuildPropagator(model, topology);
+        // 2. CRONÓMETRO: arranca antes del primer intento. El contrato es
+        //    idéntico al de REFACTOR: el reloj cubre propagación + colapso,
+        //    incluidos los reintentos por contradicción.
+        WaveFunctionGame_REFACTOR.InvokeStartGeneration();
 
-        // 3. Restricciones adicionales post-construcción (FUERA del cronómetro).
-        //    Orden equivalente al de REFACTOR.ApplyGlobalConstraints():
-        //    DefineMapLimits → floor/ceiling → fixed tiles.
-        if (applyGlobalConstraints)
+        int attempt = 0;
+        Resolution result = Resolution.Contradiction;
+        TilePropagator propagator = null;
+
+        while (attempt < maxRetries)
         {
-            ApplyMapLimits(propagator);
-            ApplyFloorCeilingConstraints(propagator);
-            ApplyFixedTiles(propagator);
+            // Cada intento reconstruye el propagator y reaplica las
+            // restricciones globales, igual que REFACTOR.Regenerate() rehace
+            // el estado y vuelve a llamar a ApplyGlobalConstraints().
+            propagator = BuildPropagator(model, topology);
+
+            if (applyGlobalConstraints)
+            {
+                ApplyMapLimits(propagator);
+                ApplyFloorCeilingConstraints(propagator);
+                ApplyFixedTiles(propagator);
+            }
+
+            result = propagator.Run();
+
+            if (result == Resolution.Decided)
+                break;
+
+            // Contradicción: notifica (para el contador de fallos del
+            // benchmark) y reintenta. El cronómetro sigue corriendo, por lo
+            // que el tiempo de este intento fallido se acumula en la medición.
+            WaveFunctionGame_REFACTOR.InvokeIncompatibility();
+            Debug.LogWarning($"[DeBroglieWFC] Contradicción ({result}) en intento " +
+                             $"{attempt + 1}. Reintentando.");
+            attempt++;
         }
 
-        // 4. CRONÓMETRO: solo el bucle de propagación + colapso.
-        WaveFunctionGame_REFACTOR.InvokeStartGeneration();
-        Resolution result = propagator.Run();
-
-        // 5. Resultado e instanciación (FUERA del cronómetro).
+        // 3. Resultado e instanciación (FUERA del cronómetro).
         if (result == Resolution.Decided)
         {
-            StoreResolvedTiles(propagator);         // poblar antes de disparar el evento
+            StoreResolvedTiles(propagator);          // poblar antes del evento
             WaveFunctionGame_REFACTOR.InvokeEndGeneration();
             InstantiateTiles(propagator);
-            Debug.Log("[DeBroglie] Generacion exitosa");
+            Debug.Log($"[DeBroglie] Generación exitosa tras {attempt + 1} intento(s).");
         }
         else
         {
-            WaveFunctionGame_REFACTOR.InvokeIncompatibility();
-            Debug.LogWarning($"[DeBroglieWFC] Contradicción ({result}). " +
-                             "Equivalente a 'incompatibility' en REFACTOR.");
+            // Se agotaron los reintentos sin solución. No se dispara
+            // EndGeneration, de modo que esta medición queda incompleta y no
+            // contamina las estadísticas. Señal de tileset problemático.
+            Debug.LogError($"[DeBroglieWFC] Sin solución tras {maxRetries} reintentos. " +
+                           "Revisa la resolubilidad del tileset o aumenta maxRetries.");
         }
     }
 

@@ -63,6 +63,11 @@ public class WFCQualityMetrics : MonoBehaviour
     [SerializeField] private string perRunFileName = "quality_perrun";
     [SerializeField] private string summaryFileName = "quality_summary";
 
+    [Tooltip("WriteIfNew  → escribe solo si (tileset, mapa, config) no está ya en el CSV (modo seguro).\n" +
+             "Overwrite   → reemplaza los datos previos de esa combinación, conservando el resto.\n" +
+             "ConsoleOnly → no escribe ningún fichero; solo muestra por consola (pruebas).")]
+    [SerializeField] private WriteMode writeMode = WriteMode.WriteIfNew;
+
     // ============================================================
     // ENUM DE ALGORITMO
     // ============================================================
@@ -195,6 +200,11 @@ public class WFCQualityMetrics : MonoBehaviour
 
         PrecomputeTargetDistribution();
         EnsureCSVHeaders();
+
+        // En modo Overwrite hay que eliminar las filas per-run previas de este
+        // mismo experimento: AppendPerRunRow siempre añade al final, así que
+        // sin esta purga quedarían duplicadas junto a las nuevas.
+        if (writeMode == WriteMode.Overwrite) PurgePerRunForThisExperiment();
 
         // Suscribir eventos según el algoritmo.
         // DeBroglieWFC dispara los eventos estáticos de REFACTOR.
@@ -578,6 +588,8 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private void EnsureCSVHeaders()
     {
+        if (writeMode == WriteMode.ConsoleOnly) return;   // no crear ficheros
+
         if (!File.Exists(_perRunPath))
             File.WriteAllText(_perRunPath,
                 "run_id;tileset;map_size;config;time;" +
@@ -593,6 +605,42 @@ public class WFCQualityMetrics : MonoBehaviour
                 "mean_diversity;std_diversity\n");
     }
 
+    /// <summary>
+    /// Elimina del per-run las filas de este experimento (tileset, mapa, config).
+    /// Necesario en modo Overwrite, ya que AppendPerRunRow siempre añade al final.
+    /// El per-run identifica cada fila por sus columnas tileset;map_size;config,
+    /// que ocupan las posiciones 1, 2 y 3 (tras run_id).
+    /// </summary>
+    private void PurgePerRunForThisExperiment()
+    {
+        if (!File.Exists(_perRunPath)) return;
+
+        string[] lines = File.ReadAllLines(_perRunPath);
+        var kept = new List<string>();
+        int removed = 0;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i == 0) { kept.Add(lines[i]); continue; }              // cabecera
+            if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+            // Formato: run_id;tileset;map_size;config;...
+            string[] f = lines[i].Split(';');
+            bool esteExperimento = f.Length > 3
+                                   && f[1] == tilesetName
+                                   && f[2] == _mapSize
+                                   && f[3] == configLabel;
+
+            if (esteExperimento) { removed++; continue; }
+            kept.Add(lines[i]);
+        }
+
+        File.WriteAllLines(_perRunPath, kept);
+        if (removed > 0)
+            Debug.LogWarning($"[Metrics] Purgadas {removed} filas per-run previas de " +
+                             $"{tilesetName}/{_mapSize}/{configLabel}.");
+    }
+
     private void AppendPerRunRow(int runId, float time,
         float ca, float js, float entM, float entV)
     {
@@ -604,6 +652,13 @@ public class WFCQualityMetrics : MonoBehaviour
             entM.ToString("F4"),
             entV.ToString("F6")
         );
+
+        if (writeMode == WriteMode.ConsoleOnly)
+        {
+            Debug.Log($"[Metrics][consola] {row}");
+            return;
+        }
+
         File.AppendAllText(_perRunPath, row + "\n");
     }
 
@@ -627,7 +682,65 @@ public class WFCQualityMetrics : MonoBehaviour
             meanEntV.ToString("F6"), stdEntV.ToString("F6"),
             meanDiv.ToString("F4"), stdDiv.ToString("F4")
         );
-        File.AppendAllText(_summaryPath, row + "\n");
+
+        // ── ConsoleOnly: no se escribe nada ────────────────────────────────
+        if (writeMode == WriteMode.ConsoleOnly)
+        {
+            Debug.Log($"[Metrics][consola] RESUMEN {tilesetName}/{_mapSize}/{configLabel}\n{row}");
+            return;
+        }
+
+        if (!File.Exists(_summaryPath))
+        {
+            EnsureCSVHeaders();
+            File.AppendAllText(_summaryPath, row + "\n");
+            return;
+        }
+
+        // ¿Existe ya una fila para esta combinación (tileset, mapa, config)?
+        string[] lines = File.ReadAllLines(_summaryPath);
+        bool existe = false;
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string[] f = lines[i].Split(';');
+            if (f.Length > 2 && f[0] == tilesetName && f[1] == _mapSize && f[2] == configLabel)
+            { existe = true; break; }
+        }
+
+        // ── WriteIfNew: no pisar datos existentes ──────────────────────────
+        if (existe && writeMode == WriteMode.WriteIfNew)
+        {
+            Debug.LogWarning($"[Metrics] {tilesetName}/{_mapSize}/{configLabel} ya existe en el " +
+                             "summary. No se escribe (modo WriteIfNew). Usa Overwrite para repetirlo.");
+            Debug.Log($"[Metrics][no escrito] {row}");
+            return;
+        }
+
+        // ── Overwrite (o la fila no existía): reconstruir el fichero sin la
+        //    fila previa de esta combinación y añadir la nueva al final ──────
+        var kept = new List<string>();
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i == 0) { kept.Add(lines[i]); continue; }              // cabecera
+            if (string.IsNullOrWhiteSpace(lines[i])) continue;
+
+            string[] f = lines[i].Split(';');
+            bool esteExperimento = f.Length > 2
+                                   && f[0] == tilesetName
+                                   && f[1] == _mapSize
+                                   && f[2] == configLabel;
+
+            if (esteExperimento)
+            {
+                Debug.LogWarning($"[Metrics] Reemplazando resultado previo de " +
+                                 $"{tilesetName}/{_mapSize}/{configLabel} en el summary.");
+                continue;
+            }
+            kept.Add(lines[i]);
+        }
+
+        kept.Add(row);
+        File.WriteAllLines(_summaryPath, kept);
     }
 
     // ============================================================

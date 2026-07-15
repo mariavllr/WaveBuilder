@@ -63,6 +63,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -84,9 +86,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &5691875260123568318
 BoxCollider:
@@ -122,7 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: grass_side
-  probability: 50
+  probability: 20
   fixedTile: 0
   rotateRight: 1
   rotate180: 1
@@ -154,8 +158,9 @@ MonoBehaviour:
   - {fileID: 3902244382606320449, guid: b139275780734c940a36346916a10bf3, type: 3}
   - {fileID: 5161399217323514139, guid: 3c49bfdd9fc2a2746b0167fd2d5c45be, type: 3}
   - {fileID: 2224100139795180203, guid: bda3d79d1f4de4e47baae47f2c7837ff, type: 3}
-  - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
   - {fileID: 6483053177798025878, guid: 477f82f5163ba324ab4b55e389e687b9, type: 3}
+  - {fileID: 8692539937138069245, guid: a7564774739b7684ba8b64e3595c07aa, type: 3}
+  - {fileID: 4056696779862659432, guid: f49bf031cd0b8e44d90dd2a00257a182, type: 3}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -178,6 +183,8 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: f8d120573fc5e7242a3119fed2098850, type: 2}

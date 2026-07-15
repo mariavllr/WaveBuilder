@@ -192,7 +192,8 @@ public class GuminWFC : MonoBehaviour
             return;
         }
 
-        StartCoroutine(GenerateCoroutine());
+        // Llamada directa y SÍNCRONA
+        GenerateSync();
     }
 
     /// <summary>Tile resuelta en el índice lineal i = x + z*MX + y*MX*MZ. Null si no observada.</summary>
@@ -206,20 +207,23 @@ public class GuminWFC : MonoBehaviour
     /// <summary>GuminWFC no tiene tiles de infraestructura; todas las tiles son jugables.</summary>
     public bool IsInfrastructureTile(string tileType) => false;
 
-    // =========================================================================
-    // CORRUTINA PRINCIPAL
-    // =========================================================================
+    // ─── Pipeline de generación (síncrono) ─────────────────────────────────
+    //
+    //  Equivale al bucle de reintento del Program.cs original:
+    //    for (int k = 0; k < N; k++) { if (model.Run(seed, limit)) break; }
+    //  Cada intento reinicia el wave (InitWave, equivalente a Model.Clear) y
+    //  usa una nueva realización aleatoria, de modo que reintentos sucesivos
+    //  exploran caminos distintos del espacio de soluciones.
 
-    private IEnumerator GenerateCoroutine()
+    private void GenerateSync()
     {
         FailCount = 0;
 
         if (!BuildPropagator())
         {
             Debug.LogError("[GuminWFC] El propagador no pudo construirse (tileset vacío o inválido).");
-            yield break;
+            return;
         }
-
         rng = seed != 0 ? new System.Random(seed) : new System.Random();
 
         onStartGeneration?.Invoke();
@@ -233,18 +237,16 @@ public class GuminWFC : MonoBehaviour
             {
                 onEndGeneration?.Invoke();
                 InstantiateTiles();
-                yield break;
+                return;
             }
 
             FailCount++;
             onIncompatibility?.Invoke();
-
-            if (attempt < maxRetries)
-                yield return null; // esperar un frame entre reintentos
         }
 
         Debug.LogWarning($"[GuminWFC] Agotados {maxRetries} reintentos sin solución.");
     }
+
 
     // =========================================================================
     // CONSTRUCCIÓN DEL PROPAGADOR  (SimpleTiledModel ctor en Gumin)

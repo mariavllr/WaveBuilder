@@ -1,8 +1,38 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using static UnityEngine.InputSystem.Controls.DiscreteButtonControl;
 using Debug = UnityEngine.Debug;
+
+/// <summary>
+/// Modo de escritura de resultados de los benchmarks.
+/// Compartido por CalculateExecutionTime (tiempos) y WFCQualityMetrics (calidad),
+/// de modo que ambos scripts se configuren con el mismo criterio.
+/// </summary>
+public enum WriteMode
+{
+    /// <summary>
+    /// Escribe solo si el experimento NO existe todavía en el CSV.
+    /// Si ya existe, no escribe nada y avisa por consola.
+    /// Modo seguro: protege los datos ya recogidos. Úsalo por defecto.
+    /// </summary>
+    WriteIfNew,
+
+    /// <summary>
+    /// Sobrescribe el experimento aunque ya exista, conservando el resto del
+    /// fichero. Úsalo para repetir una medición concreta (p. ej. gumin en
+    /// desert 10x10x5) sin perder los datos de los demás algoritmos.
+    /// Acuérdate de volver a WriteIfNew al terminar.
+    /// </summary>
+    Overwrite,
+
+    /// <summary>
+    /// No toca ningún fichero. Ejecuta el experimento y vuelca los resultados
+    /// solo por consola. Para pruebas y depuración.
+    /// </summary>
+    ConsoleOnly
+}
 
 /// <summary>
 /// Script central de los tests de rendimiento WFC.
@@ -35,6 +65,12 @@ public class CalculateExecutionTime : MonoBehaviour
 
     [Header("Configuración del test")]
     public int numberOfGenerations = 50;
+
+    [Tooltip("WriteIfNew  → escribe solo si este algoritmo aún no está en el CSV (modo seguro).\n" +
+             "Overwrite   → repite y sobrescribe SOLO la columna de este algoritmo, " +
+             "conservando las de los demás. Acuérdate de volver a WriteIfNew al terminar.\n" +
+             "ConsoleOnly → no escribe ningún fichero; solo muestra por consola (pruebas).")]
+    public WriteMode writeMode = WriteMode.WriteIfNew;
 
     [Header("Etiqueta del experimento")]
     [Tooltip("Tileset activo. Se usa en el nombre del CSV: times_{tileset}_{mapSize}.csv")]
@@ -267,6 +303,16 @@ public class CalculateExecutionTime : MonoBehaviour
 
     private void PrepararCSV()
     {
+        // ── ConsoleOnly: no se toca ningún fichero ──────────────────────────
+        if (writeMode == WriteMode.ConsoleOnly)
+        {
+            writeToCSV = false;
+            Debug.Log($"[Benchmark] MODO CONSOLA. No se escribirá ningún fichero. " +
+                      $"Resultados de '{algorithmLabel}' solo por consola.");
+            return;
+        }
+
+        // ── El CSV no existe: se crea desde cero ───────────────────────────
         if (!File.Exists(FilePath))
         {
             // Inicializar con la columna n_gen; AñadirColumna añade el algoritmo a continuación.
@@ -275,22 +321,44 @@ public class CalculateExecutionTime : MonoBehaviour
             GuardarCSV(tabla);
             writeToCSV = true;
             Debug.Log($"[Benchmark] CSV creado: {FilePath}");
+            return;
         }
-        else
+
+        tabla = LeerCSV();
+        int col = ObtenerColumna(tabla, algorithmLabel);
+
+        // ── La columna no existe: se añade con normalidad ───────────────────
+        if (col == -1)
         {
-            tabla = LeerCSV();
-            if (ObtenerColumna(tabla, algorithmLabel) == -1)
-            {
-                AñadirColumna(tabla, algorithmLabel);
-                GuardarCSV(tabla);
-                writeToCSV = true;
-            }
-            else
-            {
-                writeToCSV = false;
-                Debug.Log($"[Benchmark] '{algorithmLabel}' ya existe en el CSV. Solo se mostrará por consola.");
-            }
+            AñadirColumna(tabla, algorithmLabel);
+            GuardarCSV(tabla);
+            writeToCSV = true;
+            Debug.Log($"[Benchmark] Añadida columna '{algorithmLabel}' a {FilePath}");
+            return;
         }
+
+        // ── La columna YA existe ────────────────────────────────────────────
+        if (writeMode == WriteMode.WriteIfNew)
+        {
+            writeToCSV = false;
+            Debug.LogWarning($"[Benchmark] '{algorithmLabel}' ya existe en el CSV. " +
+                             "No se escribe (modo WriteIfNew); solo se mostrará por consola. " +
+                             "Usa Overwrite para repetir este experimento.");
+            return;
+        }
+
+        // Overwrite: limpiar SOLO esta columna, incluidas las filas de
+        // estadísticas finales (Avg Time, Fail Rate…), dejando intactas las
+        // columnas de los demás algoritmos.
+        for (int fila = 1; fila < tabla.Count; fila++)
+            if (col < tabla[fila].Length)
+                tabla[fila][col] = "";
+
+        GuardarCSV(tabla);
+        writeToCSV = true;
+        Debug.LogWarning($"[Benchmark] SOBRESCRIBIENDO la columna '{algorithmLabel}' en {FilePath}. " +
+                         "Los datos previos de este algoritmo se han descartado; " +
+                         "el resto del fichero se conserva.");
     }
 
     private List<string[]> LeerCSV()
