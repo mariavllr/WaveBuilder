@@ -108,6 +108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: grass_end
+  isInfrastructureTile: 0
   probability: 20
   fixedTile: 0
   rotateRight: 1

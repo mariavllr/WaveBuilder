@@ -351,7 +351,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     {
         if (cardGenerator == null) return;
         cardGenerator.tilesList = tileObjects
-            .Where(t => !IsInfrastructureTile(t.tileType))
+            .Where(t => !IsInfrastructureTile(t))
             .ToList();
     }
 
@@ -359,18 +359,16 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// Identifica tiles que solo deben colocarse de forma automática
     /// (suelo, techo, bordes, esquinas de borde) y no aparecer en el
     /// CardGenerator.
-    /// 
-    /// TODO: idealmente sustituir por un flag bool isInfrastructure en
-    /// Tile.cs, para no mantener esta lista de tipos hardcoded.
     /// </summary>
-    public bool IsInfrastructureTile(string tileType)
+    public bool IsInfrastructureTile(Tile tile)
     {
-        return tileType == "limit" || tileType == "empty_limit"
+       /* return tileType == "limit" || tileType == "empty_limit"
             || tileType == "solid" || tileType == "empty"
             || tileType == "border" || tileType == "borderSand"
             || tileType == "cornerExtBorder" || tileType == "cornerIntBorder"
-            || tileType == "cornerExt_border_sand" || tileType == "cornerInt_border_sand";
-    }
+            || tileType == "cornerExt_border_sand" || tileType == "cornerInt_border_sand";*/
+       return tile != null && tile.isInfrastructureTile;
+}
 
     /// <summary>
     /// Arranque del bucle WFC según el modo:

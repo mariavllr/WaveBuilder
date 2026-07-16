@@ -205,7 +205,8 @@ public class GuminWFC : MonoBehaviour
     }
 
     /// <summary>GuminWFC no tiene tiles de infraestructura; todas las tiles son jugables.</summary>
-    public bool IsInfrastructureTile(string tileType) => false;
+   // public bool IsInfrastructureTile(string tileType) => false;
+    public bool IsInfrastructureTile(Tile tile) => tile != null && tile.isInfrastructureTile;
 
     // ─── Pipeline de generación (síncrono) ─────────────────────────────────
     //

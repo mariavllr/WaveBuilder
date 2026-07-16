@@ -57,6 +57,7 @@ public class Tile : MonoBehaviour
 
     [Header("Tile properties")]
     public string tileType;
+    public bool isInfrastructureTile;
     public int probability;
     public int fixedTile; //If 0, not fixed. If >1, fixed tile with that number of tiles.
     public (int, int) fixedTileWithRange; //The tile will appear between these two numbers of times.

@@ -146,6 +146,7 @@ public class TilePreprocessor : MonoBehaviour
         Tile tileRotated = newTile.GetComponent<Tile>();
         tileRotated.tileType = tile.tileType;
         tileRotated.probability = tile.probability;
+        tileRotated.isInfrastructureTile = tile.isInfrastructureTile;
         tileRotated.positionOffset = tile.positionOffset;
         tileRotated.rotateRight = tile.rotateRight;
         tileRotated.rotate180 = tile.rotate180;

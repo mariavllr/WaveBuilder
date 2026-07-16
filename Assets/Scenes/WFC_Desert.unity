@@ -448,7 +448,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726879456}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -462,22 +462,22 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726879456}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 666b1abcd2b642949b9703a1ad400568, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  active: 1
-  algorithmType: 1
+  active: 0
+  algorithmType: 2
   refactorWFC: {fileID: 726879460}
   guminWFC: {fileID: 750456133}
   deBroglieWFC: {fileID: 1193673289}
   tilesetName: desert
-  configLabel: gumin
+  configLabel: debroglie
   generationsPerBatch: 50
   perRunFileName: quality_perrun
   summaryFileName: quality_summary
-  writeMode: 1
+  writeMode: 0
 --- !u!114 &726879459
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -485,19 +485,19 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 726879456}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   testMyWFC: 0
   testTypeMyWFC: 0
-  testGumin: 1
+  testGumin: 0
   testDeBroglie: 0
   numberOfGenerations: 50
-  writeMode: 1
+  writeMode: 0
   tilesetName: desert
-  algorithmLabel: gumin
+  algorithmLabel: debroglie
   guminWFC: {fileID: 750456133}
   debroglie: {fileID: 1193673289}
 --- !u!114 &726879460
@@ -512,16 +512,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cda9842fed2a57948ad49612bc522074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generateOnStart: 0
+  generateOnStart: 1
   GENERATE_ALL: 1
   randomGeneration: 0
   stopOnIncompatibility: 0
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 0
-  dimensionsX: 30
+  dimensionsX: 20
   dimensionsY: 5
-  dimensionsZ: 30
+  dimensionsZ: 20
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
@@ -704,7 +704,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &750456132
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -712,7 +712,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 750456131}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -726,7 +726,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 750456131}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db4219f6788fcd3459d4160502865aa5, type: 3}
   m_Name: 
@@ -1116,7 +1116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   newTilesContainer: {fileID: 2111692170}
-  excludedNeighborConstraint: 0
+  excludedNeighborConstraint: 1
 --- !u!114 &1193673289
 MonoBehaviour:
   m_ObjectHideFlags: 0

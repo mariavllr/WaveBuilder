@@ -134,11 +134,11 @@ public class WFCQualityMetrics : MonoBehaviour
         _ => null
     };
 
-    private bool IsInfra(string tileType) => algorithmType switch
+    private bool IsInfra(Tile tile) => algorithmType switch
     {
-        WFCAlgorithmType.REFACTOR => refactorWFC.IsInfrastructureTile(tileType),
-        WFCAlgorithmType.Gumin => guminWFC.IsInfrastructureTile(tileType),
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.IsInfrastructureTile(tileType),
+        WFCAlgorithmType.REFACTOR => refactorWFC.IsInfrastructureTile(tile),
+        WFCAlgorithmType.Gumin => guminWFC.IsInfrastructureTile(tile),
+        WFCAlgorithmType.DeBroglie => deBroglieWFC.IsInfrastructureTile(tile),
         _ => false
     };
 
@@ -310,7 +310,7 @@ public class WFCQualityMetrics : MonoBehaviour
         for (int i = 0; i < n; i++)
         {
             Tile t = GetResolvedTile(i);
-            map[i] = (t != null && !IsInfra(t.tileType))
+            map[i] = (t != null && !IsInfra(t))
                 ? Array.IndexOf(tiles, t)
                 : -1;
             if (map[i] >= 0) nonEmpty++;
@@ -532,7 +532,7 @@ public class WFCQualityMetrics : MonoBehaviour
 
         foreach (Tile t in GetTileObjects())
         {
-            if (IsInfra(t.tileType)) continue;
+            if (IsInfra(t)) continue;
 
             float w = Mathf.Max((float)t.probability, 1f);
             _targetDist.TryGetValue(t.tileType, out float prev);

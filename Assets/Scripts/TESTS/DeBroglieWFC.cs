@@ -182,10 +182,6 @@ public class DeBroglieWFC : MonoBehaviour
         AdjacentModel model = BuildAdjacentModel();
         GridTopology topology = BuildTopology();
 
-        // 2. CRONÓMETRO: arranca antes del primer intento. El contrato es
-        //    idéntico al de REFACTOR: el reloj cubre propagación + colapso,
-        //    incluidos los reintentos por contradicción.
-        WaveFunctionGame_REFACTOR.InvokeStartGeneration();
 
         int attempt = 0;
         Resolution result = Resolution.Contradiction;
@@ -204,6 +200,11 @@ public class DeBroglieWFC : MonoBehaviour
                 ApplyFloorCeilingConstraints(propagator);
                 ApplyFixedTiles(propagator);
             }
+            // 2. CRONÓMETRO: arranca antes del primer intento. El contrato es
+            //    idéntico al de REFACTOR: el reloj cubre propagación + colapso,
+            //    incluidos los reintentos por contradicción.
+            WaveFunctionGame_REFACTOR.InvokeStartGeneration();
+
 
             result = propagator.Run();
 
@@ -578,12 +579,7 @@ public class DeBroglieWFC : MonoBehaviour
         return _resolvedTiles[index];
     }
 
-    public bool IsInfrastructureTile(string tileType)
-    {
-        if (tileType == null) return false;
-        var t = tileType.ToLowerInvariant();
-        return t == "limit" || t == "floor" || t == "ceiling" || t == "empty" || t == "border";
-    }
+    public bool IsInfrastructureTile(Tile tile) => tile != null && tile.isInfrastructureTile;
 
     /// <summary>Guarda el output resuelto en el array plano _resolvedTiles.
     /// Índice: x + z*dimX + y*dimX*dimZ (igual que REFACTOR y GuminWFC).</summary>

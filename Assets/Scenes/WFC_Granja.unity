@@ -767,7 +767,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   newTilesContainer: {fileID: 2111692170}
-  excludedNeighborConstraint: 1
+  excludedNeighborConstraint: 0
 --- !u!114 &446276376
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -810,9 +810,9 @@ MonoBehaviour:
   - {fileID: 4056696779862659432, guid: f49bf031cd0b8e44d90dd2a00257a182, type: 3}
   - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
   - {fileID: 5095738051829565818, guid: d15767b0e915d254c9bafa269c779f46, type: 3}
-  dimensionsX: 10
+  dimensionsX: 30
   dimensionsY: 5
-  dimensionsZ: 10
+  dimensionsZ: 30
   gridSize: 2
   seed: 0
   maxRetries: 100
@@ -1519,7 +1519,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cda9842fed2a57948ad49612bc522074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generateOnStart: 0
+  generateOnStart: 1
   GENERATE_ALL: 1
   randomGeneration: 0
   stopOnIncompatibility: 0
@@ -1716,7 +1716,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
@@ -1724,8 +1724,9 @@ MonoBehaviour:
   testMyWFC: 0
   testTypeMyWFC: 0
   testGumin: 0
-  testDeBroglie: 1
+  testDeBroglie: 0
   numberOfGenerations: 50
+  writeMode: 0
   tilesetName: farm
   algorithmLabel: debroglie
   guminWFC: {fileID: 446276376}
@@ -1737,7 +1738,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -1751,12 +1752,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 666b1abcd2b642949b9703a1ad400568, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WFCQualityMetrics
-  active: 1
+  active: 0
   algorithmType: 2
   refactorWFC: {fileID: 1653789838}
   guminWFC: {fileID: 446276376}
@@ -1766,6 +1767,7 @@ MonoBehaviour:
   generationsPerBatch: 50
   perRunFileName: quality_perrun
   summaryFileName: quality_summary
+  writeMode: 0
 --- !u!224 &1730239620 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9042685547334628167, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -1788,7 +1790,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1733426895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1796,7 +1798,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1733426894}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -1810,7 +1812,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1733426894}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73d4dcb0c3a37f643a6952dc539ec590, type: 3}
   m_Name: 
