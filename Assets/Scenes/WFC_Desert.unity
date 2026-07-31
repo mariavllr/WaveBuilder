@@ -495,7 +495,7 @@ MonoBehaviour:
   testGumin: 0
   testDeBroglie: 0
   numberOfGenerations: 50
-  writeMode: 0
+  writeMode: 1
   tilesetName: desert
   algorithmLabel: debroglie
   guminWFC: {fileID: 750456133}

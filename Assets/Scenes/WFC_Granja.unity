@@ -1726,7 +1726,7 @@ MonoBehaviour:
   testGumin: 0
   testDeBroglie: 0
   numberOfGenerations: 50
-  writeMode: 0
+  writeMode: 1
   tilesetName: farm
   algorithmLabel: debroglie
   guminWFC: {fileID: 446276376}
@@ -1767,7 +1767,7 @@ MonoBehaviour:
   generationsPerBatch: 50
   perRunFileName: quality_perrun
   summaryFileName: quality_summary
-  writeMode: 0
+  writeMode: 1
 --- !u!224 &1730239620 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 9042685547334628167, guid: 5c4ef844dbe00bd4c83d68b1fd12b5a6, type: 3}
@@ -1847,9 +1847,9 @@ MonoBehaviour:
   - {fileID: 4056696779862659432, guid: f49bf031cd0b8e44d90dd2a00257a182, type: 3}
   - {fileID: 8667259134237476547, guid: 0c80db74309c83048a1951e37d741e63, type: 3}
   - {fileID: 5095738051829565818, guid: d15767b0e915d254c9bafa269c779f46, type: 3}
-  dimensionsX: 30
+  dimensionsX: 10
   dimensionsY: 5
-  dimensionsZ: 30
+  dimensionsZ: 10
   gridSize: 2
   applyGlobalConstraints: 1
   floorTile: {fileID: 5161399217323514139, guid: 5f1e7acc71e7f6145b6246e5defec9ed, type: 3}

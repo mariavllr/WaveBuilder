@@ -815,7 +815,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1311016780
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -823,7 +823,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311016779}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73d4dcb0c3a37f643a6952dc539ec590, type: 3}
   m_Name: 
@@ -887,7 +887,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1311016779}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -943,16 +943,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cda9842fed2a57948ad49612bc522074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generateOnStart: 0
+  generateOnStart: 1
   GENERATE_ALL: 1
   randomGeneration: 0
   stopOnIncompatibility: 0
   tutorial: 0
   useOptimization: 0
   OneTileCollapseOptimization: 0
-  dimensionsX: 30
-  dimensionsY: 5
-  dimensionsZ: 30
+  dimensionsX: 16
+  dimensionsY: 4
+  dimensionsZ: 16
   totalCells: 0
   cellSize: 2
   initialCubeSize: 3
@@ -1137,7 +1137,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d5381a568c4ea54eaca2fe2479802fa, type: 3}
   m_Name: 
@@ -1145,11 +1145,11 @@ MonoBehaviour:
   testMyWFC: 0
   testTypeMyWFC: 0
   testGumin: 0
-  testDeBroglie: 1
+  testDeBroglie: 0
   numberOfGenerations: 50
-  writeMode: 0
+  writeMode: 2
   tilesetName: nature
-  algorithmLabel: debroglie
+  algorithmLabel: mi_wfc
   guminWFC: {fileID: 475089836}
   debroglie: {fileID: 1311016780}
 --- !u!114 &1653789842
@@ -1182,7 +1182,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 

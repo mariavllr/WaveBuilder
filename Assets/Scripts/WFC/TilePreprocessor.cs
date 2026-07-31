@@ -52,6 +52,7 @@ public class TilePreprocessor : MonoBehaviour
              "flag 'excludedNeighborConstraint' de WaveFunctionGame_REFACTOR.")]
     [SerializeField] public bool excludedNeighborConstraint = true;
 
+    int generatedRules = 0;
     // ════════════════════════════════════════════════════════════════
     //  API PÚBLICA
     // ════════════════════════════════════════════════════════════════
@@ -264,34 +265,56 @@ public class TilePreprocessor : MonoBehaviour
                 if (CanConnectHorizontal(a.upSocket, b.downSocket,
                         a.excludedNeighboursUp, b.excludedNeighboursDown,
                         a.tileType, b.tileType))
+                {
                     a.upNeighbours.Add(b);
+                    generatedRules++;
+                }
+
 
                 if (CanConnectHorizontal(a.downSocket, b.upSocket,
                         a.excludedNeighboursDown, b.excludedNeighboursUp,
                         a.tileType, b.tileType))
+                {
                     a.downNeighbours.Add(b);
+                    generatedRules++;
+                }
 
                 if (CanConnectHorizontal(a.rightSocket, b.leftSocket,
                         a.excludedNeighboursRight, b.excludedNeighboursLeft,
                         a.tileType, b.tileType))
+                    
+                {
                     a.rightNeighbours.Add(b);
+                    generatedRules++;
+                }
 
                 if (CanConnectHorizontal(a.leftSocket, b.rightSocket,
                         a.excludedNeighboursLeft, b.excludedNeighboursRight,
                         a.tileType, b.tileType))
+                    
+                {
                     a.leftNeighbours.Add(b);
-
+                    generatedRules++;
+                }
                 // Caras verticales: regla de rotación invariante
                 if (CanConnectVertical(a.aboveSocket, b.belowSocket,
                         a.excludedNeighboursAbove, b.excludedNeighboursBelow,
                         a.tileType, b.tileType))
+                    
+                {
                     a.aboveNeighbours.Add(b);
-
+                    generatedRules++;
+                }
                 if (CanConnectVertical(a.belowSocket, b.aboveSocket,
                         a.excludedNeighboursBelow, b.excludedNeighboursAbove,
                         a.tileType, b.tileType))
+                    
+                {
                     a.belowNeighbours.Add(b);
+                    generatedRules++;
+                }
             }
+        Debug.Log($"Generated adjacency relations: {generatedRules}");
     }
 
     // ════════════════════════════════════════════════════════════════
