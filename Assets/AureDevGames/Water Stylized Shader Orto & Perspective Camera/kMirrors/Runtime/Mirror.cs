@@ -207,8 +207,8 @@ namespace kTools.Mirrors
                 return;
 
             // Profiling command
-            CommandBuffer cmd = CommandBufferPool.Get($"Mirror {gameObject.GetInstanceID()}");
-            using (new ProfilingSample(cmd, $"Mirror {gameObject.GetInstanceID()}"))
+            CommandBuffer cmd = CommandBufferPool.Get($"Mirror {gameObject.GetEntityId()}");
+            using (new ProfilingSample(cmd, $"Mirror {gameObject.GetEntityId()}"))
             {
                 ExecuteCommand(context, cmd);
 
