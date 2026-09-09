@@ -117,6 +117,34 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     public bool isRunning = true;
 
     // ============================================================
+    // AC-4 — CONSTANTES Y CAMPOS (solver unificado, ambos modos)
+    // ============================================================
+
+    // Direcciones ortogonales: 0=Right+X, 1=Left-X, 2=Fwd+Z, 3=Back-Z, 4=Above+Y, 5=Below-Y
+    private static readonly int[] AC4_DX = { 1, -1, 0, 0, 0, 0 };
+    private static readonly int[] AC4_DY = { 0, 0, 0, 0, 1, -1 };
+    private static readonly int[] AC4_DZ = { 0, 0, 1, -1, 0, 0 };
+    private static readonly int[] AC4_OPP = { 1, 0, 3, 2, 5, 4 };
+
+    private int AC4_T;            // tileObjects.Length
+    private bool[] AC4_wave;         // [cellIdx * T + tileIdx]  ¿es posible aún?
+    private int[] AC4_compatible;   // [(cellIdx * T + tileIdx) * 6 + dir]  contador soporte
+    private int[] AC4_domain;       // opciones restantes por celda
+    private double[] AC4_entropy;     // entropía de Shannon por celda
+    private double[] AC4_sumW;        // suma de pesos por celda
+    private double[] AC4_sumWLogW;    // suma w·log(w) por celda
+    private double[] AC4_tileW;       // peso por tile
+    private double[] AC4_tileWLogW;   // w·log(w) por tile
+    private double AC4_totalW;      // suma global de pesos
+    private double AC4_totalWLogW;
+    private double AC4_startEntropy;
+    private int[][] AC4_propagator;  // [dir * T + tileIdx] → índices de vecinos válidos
+    private (int cell, int tile)[] AC4_stack; // stack de banes pendientes
+    private int AC4_stackSize;
+    private bool AC4_contradiction;
+    private Dictionary<Tile, int> AC4_tileIndex; // Tile → índice en tileObjects
+
+    // ============================================================
     // EVENTOS
     // ============================================================
 
@@ -159,6 +187,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         PreprocessTileSet();
 
         gridComponents = new List<Cell>();
+        BuildAC4Propagator(); // precalcular propagador una sola vez tras el preprocesado
         Init();
     }
 
@@ -205,6 +234,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         InitializeGrid();
         ApplyGlobalConstraints();
+
+        // Inicializar AC-4 desde el estado post-restricciones (ambos modos).
+        InitAC4FromCellState();
+        if (!GENERATE_ALL) SyncUncollapsedOptionsFromWave();
 
         if (!GENERATE_ALL) GetCenterCube();
 
@@ -291,9 +324,9 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
         if (fixedTilesConstraint) CreateFixedTiles();
 
-        //Propagar sus cambios
-        foreach (Cell c in gridComponents)
-            if (c.collapsed) PropagateFromCell(c);
+        // La propagación de estas restricciones hacia el resto del grid la
+        // realiza InitAC4FromCellState() (cuenta soportes de las celdas fijas
+        // y banea del wave las tiles sin soporte). Aquí solo se colocan.
     }
 
     /// <summary>
@@ -805,27 +838,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// central. Si randomGeneration está activo, devuelve una celda aleatoria
     /// sin tener en cuenta la entropía.
     /// </summary>
-    private Cell SelectCellWithMinimumEntropy()
-    {
-        List<Cell> candidates = GetSelectableCells();
-        if (candidates.Count == 0) return null;
-
-        if (randomGeneration)
-            return candidates[_rng.Next(0, candidates.Count)];
-
-        // MRV: un único barrido lineal para localizar la entropía mínima
-        int minEntropy = int.MaxValue;
-        foreach (Cell c in candidates)
-            if (c.tileOptions.Length < minEntropy)
-                minEntropy = c.tileOptions.Length;
-
-        // Desempate aleatorio entre las celdas con esa entropía
-        List<Cell> tied = candidates
-            .Where(c => c.tileOptions.Length == minEntropy)
-            .ToList();
-
-        return tied[_rng.Next(0, tied.Count)];
-    }
+    private Cell SelectCellWithMinimumEntropy() => SelectCellAC4();
 
     /// <summary>
     /// Devuelve las celdas no colapsadas susceptibles de selección.
@@ -908,20 +921,90 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// selección es ponderada por probability si probabilityConstraint
     /// está activo, o uniforme en caso contrario.
     /// </summary>
-    private bool CollapseCell(Cell cell)
-    {
-        Tile selectedTile = probabilityConstraint
-            ? ChooseTile(cell.tileOptions)
-            : ChooseRandomTile(cell.tileOptions.ToList());
+    private bool CollapseCell(Cell cell) => CollapseCellAC4(cell);
 
-        if (selectedTile == null)
+    /// <summary>
+    /// Colapsa la celda muestreando una tile de su dominio en el wave AC-4.
+    /// Banea del wave todas las tiles rechazadas (alimenta PropagateAC4) y
+    /// aplica inmediatamente la vista + instanciación mediante ApplyCollapse.
+    /// El muestreo es ponderado por peso si probabilityConstraint está activo,
+    /// o uniforme en caso contrario.
+    /// </summary>
+    private bool CollapseCellAC4(Cell cell)
+    {
+        int i = cell.index;
+        int T = AC4_T;
+        int chosen = -1;
+
+        if (probabilityConstraint)
         {
-            cell.GetComponent<SpriteRenderer>().color = Color.red;
-            HandleIncompatibility();
+            double threshold = _rng.NextDouble() * AC4_sumW[i];
+            double cumulative = 0;
+            for (int t = 0; t < T; t++)
+            {
+                if (!AC4_wave[i * T + t]) continue;
+                cumulative += AC4_tileW[t];
+                if (cumulative >= threshold) { chosen = t; break; }
+            }
+        }
+        else
+        {
+            int available = AC4_domain[i];
+            if (available > 0)
+            {
+                int pick = _rng.Next(0, available);
+                for (int t = 0; t < T; t++)
+                    if (AC4_wave[i * T + t] && pick-- == 0) { chosen = t; break; }
+            }
+        }
+
+        // Fallback numérico: última tile disponible
+        if (chosen < 0)
+            for (int t = T - 1; t >= 0; t--)
+                if (AC4_wave[i * T + t]) { chosen = t; break; }
+
+        if (chosen < 0) { HandleIncompatibility(); return false; }
+
+        for (int t = 0; t < T; t++)
+            if (AC4_wave[i * T + t] && t != chosen)
+                BanAC4(i, t);
+
+        ApplyCollapse(cell, tileObjects[chosen]); // vista sincronizada + instanciación inmediata
+        GetNeighboursCloseToCollapsedCell(cell);
+        return true;
+    }
+
+    /// <summary>
+    /// Colapso forzado a una tile concreta (colocación del jugador / fusión).
+    /// Banea del wave el resto de opciones de la celda y aplica la vista +
+    /// instanciación. No elige tile: la impone el llamador.
+    /// </summary>
+    private bool ForceCollapseCellAC4(Cell cell, Tile persistentTile)
+    {
+        int i = cell.index;
+        int T = AC4_T;
+
+        if (!AC4_tileIndex.TryGetValue(persistentTile, out int chosen))
+        {
+            Debug.LogError($"[WFC] Tile {persistentTile.tileType} no está en el índice AC-4.");
             return false;
         }
 
-        ApplyCollapse(cell, selectedTile);
+        // Si la propagación previa ya había baneado esta tile en la celda,
+        // la reincorporamos para poder colapsar a ella (colocación del jugador).
+        if (!AC4_wave[i * T + chosen])
+        {
+            AC4_wave[i * T + chosen] = true;
+            AC4_domain[i]++;
+            AC4_sumW[i] += AC4_tileW[chosen];
+            AC4_sumWLogW[i] += AC4_tileWLogW[chosen];
+        }
+
+        for (int t = 0; t < T; t++)
+            if (AC4_wave[i * T + t] && t != chosen)
+                BanAC4(i, t);
+
+        ApplyCollapse(cell, persistentTile);
         GetNeighboursCloseToCollapsedCell(cell);
         return true;
     }
@@ -996,7 +1079,16 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         if (!CollapseCell(cell)) yield break; // incompatibilidad ya gestionada
 
-        PropagateFromCell(cell);
+        // Propagación AC-4: detecta contradicción de inmediato
+        if (!PropagateAC4())
+        {
+            HandleIncompatibility();
+            yield break;
+        }
+
+        // El modo juego consume cell.tileOptions (preview, cartas, cascada):
+        // hay que reflejar el wave en la vista. GENERATE_ALL no lo necesita.
+        if (!GENERATE_ALL) SyncUncollapsedOptionsFromWave();
 
         if (cubeStep)
             UpdateGenerationCube();
@@ -1135,13 +1227,14 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// Orquestador del bucle principal de WFC en modo generación automática
     /// (GENERATE_ALL). Decide si seguir iterando o terminar.
     /// 
-    /// La propagación de restricciones se delega a PropagateFromCell (AC-3),
-    /// que se llama desde CollapseCell tras cada colapso. Esta función NO
-    /// hace barridos completos del grid: solo se encarga del control de flujo.
-    /// 
+    /// La propagación de restricciones se delega a PropagateAC4(), que se llama
+    /// desde CheckEntropy tras cada colapso. Esta función NO hace barridos
+    /// completos del grid: solo se encarga del control de flujo.
+    ///
     /// En modo juego (GENERATE_ALL = false) esta función no debe llamarse.
     /// La secuencia tras una acción del jugador es:
-    ///     PropagateFromCell(cell) -> UpdateGlobalValidTiles() -> CollapseEntropyOneCells()
+    ///     ForceCollapseCellAC4 -> PropagateAC4 -> SyncUncollapsedOptionsFromWave
+    ///     -> UpdateGlobalValidTiles -> cascada
     /// y se ejecuta directamente en OnTileRemoved / ForcePlaceTile.
     /// </summary>
     public void UpdateGeneration()
@@ -1229,8 +1322,10 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             Cell next = FindNextUnitaryCell();
             if (next == null) yield break;
 
+            // AC-4 ya propagó por completo tras la colocación: todas las celdas
+            // de dominio 1 existen ya. La cascada solo las confirma (con rebote y
+            // delay), sin volver a propagar (confirmar no banea nada nuevo).
             ApplyForcedCollapse(next);
-            PropagateFromCell(next);
             UpdateGlobalValidTiles();
 
             if (animations)
@@ -1312,110 +1407,323 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         }
     }
 
-    //--------------------------------------------METODO DE PROPAGACION CON ARC CONSISTENCY 3---------------------------------------------
+    //==================================================================================================
+    //  SOLVER AC-4 (unificado: GENERATE_ALL + modo juego)
+    //  Equivalencia con Gumin: BuildPropagator→BuildAC4Propagator, Clear→InitAC4FromCellState,
+    //  Ban→BanAC4, Propagate→PropagateAC4, NextUnobservedNode→SelectCellAC4.
+    //  El wave[] es la fuente de verdad; cell.tileOptions/collapsed son una vista sincronizada
+    //  para el modo juego (preview, cartas, cascada, skirts).
+    //==================================================================================================
 
-    private void PropagateFromCell(Cell placedCell)
+    /// <summary>
+    /// Refresca cell.tileOptions de cada celda no colapsada a partir de su fila del wave.
+    /// El modo juego consume tileOptions; GENERATE_ALL lee los arrays AC-4 directamente y no lo necesita.
+    /// </summary>
+    private void SyncUncollapsedOptionsFromWave()
     {
-        var queue = new Queue<int>();
-        var inQueue = new HashSet<int>();
+        if (AC4_wave == null) return;
+        int T = AC4_T;
 
-        // Semilla: los 6 vecinos directos de la celda colocada
-        EnqueueNeighbors(placedCell.index, placedCell.coords.x,
-                         placedCell.coords.y, placedCell.coords.z,
-                         queue, inQueue);
-
-        int safety = gridComponents.Count * 2;
-
-        while (queue.Count > 0 && safety-- > 0)
+        for (int i = 0; i < gridComponents.Count; i++)
         {
-            int idx = queue.Dequeue();
-            inQueue.Remove(idx);
-
-            Cell cell = gridComponents[idx];
+            Cell cell = gridComponents[i];
             if (cell.collapsed) continue;
 
-            int prevLen = cell.tileOptions.Length;
+            int baseI = i * T;
+            List<Tile> opts = new List<Tile>(Math.Max(AC4_domain[i], 0));
+            for (int t = 0; t < T; t++)
+                if (AC4_wave[baseI + t]) opts.Add(tileObjects[t]);
 
-            // Recomputar dominio en sitio (sin copia del grid completo)
-            int x = cell.coords.x;
-            int y = cell.coords.y;
-            int z = cell.coords.z;
-
-            List<Tile> options = ComputeValidOptions(x, y, z);
-            cell.tileOptions = options.ToArray();
-
-            // Si el dominio se redujo, los vecinos pueden verse afectados
-            if (cell.tileOptions.Length < prevLen)
-            {
-                EnqueueNeighbors(idx, x, y, z, queue, inQueue);
-            }
+            cell.tileOptions = opts.ToArray();
         }
     }
-
-    //-------------------------------------------------ACTUALIZAR VECINOS (CHECK NEIGHBORS)-----------------------------------------------
 
     /// <summary>
-    /// PREVIOUS CHECK NEIGHBORS
-    /// looks and update the options in every cell of the given list looking at the neighbours
+    /// Re-deriva el wave completo desde las celdas colapsadas (fijas) actuales.
+    /// AC-4 no soporta undo incremental, así que este es el mecanismo para
+    /// reincorporar dominio tras un ResetCell (fusión de tiles): las celdas no
+    /// colapsadas recuperan el dominio completo y InitAC4FromCellState vuelve a
+    /// propagar las restricciones de las celdas fijas.
     /// </summary>
-    /// <param name="x"></param> x coordinate of the cell
-    /// <param name="y"></param> y coordinate of the cell
-    /// <param name="z"></param> z coordinate of the cell
-    /// <param name="newGenerationCell"></param> List of cells to be updated
-
-
-    private List<Tile> ComputeValidOptions(int x, int y, int z)
+    private void RebuildAC4FromCollapsed()
     {
-        List<Tile> options = new List<Tile>(tileObjects);
+        foreach (Cell cell in gridComponents)
+            if (!cell.collapsed)
+                cell.tileOptions = tileObjects.ToArray();
 
-        void FilterBy(int neighborIdx, Func<Tile, List<Tile>> getValid)
+        InitAC4FromCellState();
+        SyncUncollapsedOptionsFromWave();
+    }
+
+    /// <summary>
+    /// Construye el propagador AC-4 y los pesos de entropía de Shannon.
+    /// Se llama UNA VEZ en Awake() tras PreprocessTileSet(), no en cada regeneración.
+    /// </summary>
+    private void BuildAC4Propagator()
+    {
+        if (tileObjects == null || tileObjects.Length == 0) return;
+
+        AC4_T = tileObjects.Length;
+
+        AC4_tileIndex = new Dictionary<Tile, int>(AC4_T);
+        for (int t = 0; t < AC4_T; t++) AC4_tileIndex[tileObjects[t]] = t;
+
+        AC4_tileW = new double[AC4_T];
+        AC4_tileWLogW = new double[AC4_T];
+        AC4_totalW = 0;
+        AC4_totalWLogW = 0;
+        for (int t = 0; t < AC4_T; t++)
         {
-            HashSet<Tile> validSet = new HashSet<Tile>();
-            foreach (Tile opt in gridComponents[neighborIdx].tileOptions)
-                validSet.UnionWith(getValid(opt));
-            options.RemoveAll(o => !validSet.Contains(o) || o.tileType == "limit");
+            double w = Math.Max(tileObjects[t].probability, 1);
+            AC4_tileW[t] = w;
+            AC4_tileWLogW[t] = w * Math.Log(w);
+            AC4_totalW += w;
+            AC4_totalWLogW += AC4_tileWLogW[t];
+        }
+        AC4_startEntropy = Math.Log(AC4_totalW) - AC4_totalWLogW / AC4_totalW;
+
+        AC4_propagator = new int[6 * AC4_T][];
+        for (int t = 0; t < AC4_T; t++)
+        {
+            Tile tile = tileObjects[t];
+            AC4_propagator[0 * AC4_T + t] = AC4ToIndices(tile.rightNeighbours);
+            AC4_propagator[1 * AC4_T + t] = AC4ToIndices(tile.leftNeighbours);
+            AC4_propagator[2 * AC4_T + t] = AC4ToIndices(tile.upNeighbours);
+            AC4_propagator[3 * AC4_T + t] = AC4ToIndices(tile.downNeighbours);
+            AC4_propagator[4 * AC4_T + t] = AC4ToIndices(tile.aboveNeighbours);
+            AC4_propagator[5 * AC4_T + t] = AC4ToIndices(tile.belowNeighbours);
+        }
+    }
+
+    private int[] AC4ToIndices(List<Tile> neighbours)
+    {
+        var result = new List<int>(neighbours.Count);
+        foreach (Tile n in neighbours)
+            if (AC4_tileIndex.TryGetValue(n, out int idx))
+                result.Add(idx);
+        return result.ToArray();
+    }
+
+    /// <summary>
+    /// Inicializa wave[] y compatible[] desde el estado de cell.tileOptions
+    /// DESPUÉS de que ApplyGlobalConstraints() haya colocado la infraestructura.
+    /// Llamar una vez por regeneración (y en RebuildAC4FromCollapsed).
+    /// </summary>
+    private void InitAC4FromCellState()
+    {
+        int N = gridComponents.Count;
+        int T = AC4_T;
+
+        AC4_wave = new bool[N * T];
+        AC4_compatible = new int[N * T * 6];
+        AC4_domain = new int[N];
+        AC4_entropy = new double[N];
+        AC4_sumW = new double[N];
+        AC4_sumWLogW = new double[N];
+        AC4_stack = new (int, int)[N * T];
+        AC4_stackSize = 0;
+        AC4_contradiction = false;
+
+        // PASO 1: inicializar wave desde cell.tileOptions
+        for (int i = 0; i < N; i++)
+        {
+            Cell cell = gridComponents[i];
+            var optSet = new HashSet<Tile>(cell.tileOptions);
+            int count = 0;
+            double sumW = 0, sumWLogW = 0;
+
+            for (int t = 0; t < T; t++)
+            {
+                bool valid = optSet.Contains(tileObjects[t]);
+                AC4_wave[i * T + t] = valid;
+                if (valid) { count++; sumW += AC4_tileW[t]; sumWLogW += AC4_tileWLogW[t]; }
+            }
+
+            // Celdas colapsadas por infraestructura tienen domain = 1 aunque
+            // su tile (ej. limit) no esté en tileObjects
+            AC4_domain[i] = cell.collapsed ? 1 : count;
+            AC4_sumW[i] = sumW;
+            AC4_sumWLogW[i] = sumWLogW;
+            AC4_entropy[i] = (count > 1 && sumW > 0)
+                ? Math.Log(sumW) - sumWLogW / sumW : 0;
         }
 
-        if (z > 0) FilterBy(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.upNeighbours);
-        if (z < dimensionsZ - 1) FilterBy(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.downNeighbours);
-        if (x > 0) FilterBy((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.rightNeighbours);
-        if (x < dimensionsX - 1) FilterBy((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ), o => o.leftNeighbours);
-        if (y > 0) FilterBy(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ), o => o.aboveNeighbours);
-        if (y < dimensionsY - 1) FilterBy(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ), o => o.belowNeighbours);
-
-        return options;
-    }
-    /// <summary>
-    /// Devuelve true si la celda en coordenadas (x, y, z) está dentro del cubo
-    /// central cuya generación es independiente del mapa.
-    /// </summary>
-    private bool IsInsideCube(int x, int y, int z)
-    {
-        return x >= cubeStartX && x < cubeEndX
-            && y >= cubeStartY && y < cubeEndY
-            && z >= cubeStartZ && z < cubeEndZ;
-    }
-
-
-    private void EnqueueNeighbors(int idx, int x, int y, int z,
-                               Queue<int> queue, HashSet<int> inQueue)
-    {
-        void TryEnqueue(int ni)
+        // PASO 2: inicializar compatible[] según el estado actual del wave
+        for (int i = 0; i < N; i++)
         {
-            if (ni >= 0 && ni < gridComponents.Count &&
-                !gridComponents[ni].collapsed && !inQueue.Contains(ni))
+            int x1 = i % dimensionsX;
+            int z1 = (i / dimensionsX) % dimensionsZ;
+            int y1 = i / (dimensionsX * dimensionsZ);
+
+            for (int t = 0; t < T; t++)
             {
-                queue.Enqueue(ni);
-                inQueue.Add(ni);
+                for (int d = 0; d < 6; d++)
+                {
+                    int oppDir = AC4_OPP[d];
+                    int x2 = x1 + AC4_DX[oppDir];
+                    int y2 = y1 + AC4_DY[oppDir];
+                    int z2 = z1 + AC4_DZ[oppDir];
+                    int compIdx = (i * T + t) * 6 + d;
+
+                    if (x2 < 0 || x2 >= dimensionsX || y2 < 0 || y2 >= dimensionsY || z2 < 0 || z2 >= dimensionsZ)
+                    {
+                        AC4_compatible[compIdx] = AC4_propagator[oppDir * T + t].Length;
+                        continue;
+                    }
+
+                    int j = x2 + z2 * dimensionsX + y2 * dimensionsX * dimensionsZ;
+                    Cell jCell = gridComponents[j];
+
+                    if (jCell.collapsed)
+                    {
+                        Tile jTile = jCell.tileOptions.Length > 0 ? jCell.tileOptions[0] : null;
+                        if (jTile == null) { AC4_compatible[compIdx] = 0; continue; }
+                        bool supports = AC4GetNeighboursForDir(jTile, d).Contains(tileObjects[t]);
+                        AC4_compatible[compIdx] = supports ? 1 : 0;
+                    }
+                    else
+                    {
+                        int count = 0;
+                        int[] supporters = AC4_propagator[oppDir * T + t];
+                        for (int l = 0; l < supporters.Length; l++)
+                            if (AC4_wave[j * T + supporters[l]]) count++;
+                        AC4_compatible[compIdx] = count;
+                    }
+                }
             }
         }
 
-        if (z > 0) TryEnqueue(x + ((z - 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
-        if (z < dimensionsZ - 1) TryEnqueue(x + ((z + 1) * dimensionsX) + (y * dimensionsX * dimensionsZ));
-        if (x > 0) TryEnqueue((x - 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
-        if (x < dimensionsX - 1) TryEnqueue((x + 1) + (z * dimensionsX) + (y * dimensionsX * dimensionsZ));
-        if (y > 0) TryEnqueue(x + (z * dimensionsX) + ((y - 1) * dimensionsX * dimensionsZ));
-        if (y < dimensionsY - 1) TryEnqueue(x + (z * dimensionsX) + ((y + 1) * dimensionsX * dimensionsZ));
+        // PASO 3: banear tiles sin soporte en alguna dirección no frontera
+        for (int i = 0; i < N; i++)
+        {
+            if (gridComponents[i].collapsed) continue;
+            int x1 = i % dimensionsX;
+            int z1 = (i / dimensionsX) % dimensionsZ;
+            int y1 = i / (dimensionsX * dimensionsZ);
+
+            for (int t = 0; t < T; t++)
+            {
+                if (!AC4_wave[i * T + t]) continue;
+                for (int d = 0; d < 6; d++)
+                {
+                    int x2 = x1 + AC4_DX[d]; int y2 = y1 + AC4_DY[d]; int z2 = z1 + AC4_DZ[d];
+                    bool boundary = x2 < 0 || x2 >= dimensionsX || y2 < 0 || y2 >= dimensionsY || z2 < 0 || z2 >= dimensionsZ;
+                    if (!boundary && AC4_compatible[(i * T + t) * 6 + d] == 0) { BanAC4(i, t); break; }
+                }
+            }
+        }
+
+        if (AC4_stackSize > 0) PropagateAC4();
+    }
+
+    private List<Tile> AC4GetNeighboursForDir(Tile tile, int dir)
+    {
+        switch (dir)
+        {
+            case 0: return tile.rightNeighbours;
+            case 1: return tile.leftNeighbours;
+            case 2: return tile.upNeighbours;
+            case 3: return tile.downNeighbours;
+            case 4: return tile.aboveNeighbours;
+            case 5: return tile.belowNeighbours;
+            default: return new List<Tile>();
+        }
+    }
+
+    /// <summary>
+    /// Elimina tile t de la celda i del wave AC-4. Actualiza contadores de
+    /// soporte, entropía incremental y encola para propagación.
+    /// </summary>
+    private void BanAC4(int i, int t)
+    {
+        AC4_wave[i * AC4_T + t] = false;
+        int baseComp = (i * AC4_T + t) * 6;
+        for (int d = 0; d < 6; d++) AC4_compatible[baseComp + d] = 0;
+
+        AC4_stack[AC4_stackSize++] = (i, t);
+
+        AC4_domain[i]--;
+        AC4_sumW[i] -= AC4_tileW[t];
+        AC4_sumWLogW[i] -= AC4_tileWLogW[t];
+
+        if (AC4_domain[i] == 0)
+            AC4_contradiction = true;
+        else
+        {
+            double s = AC4_sumW[i];
+            AC4_entropy[i] = s > 0 ? Math.Log(s) - AC4_sumWLogW[i] / s : 0;
+        }
+    }
+
+    /// <summary>
+    /// Propagación AC-4: procesa el stack de tiles baneadas, decrementa los
+    /// contadores de soporte de los vecinos y banea aquellos que llegan a 0.
+    /// Devuelve false si hay contradicción.
+    /// </summary>
+    private bool PropagateAC4()
+    {
+        int T = AC4_T;
+        while (AC4_stackSize > 0 && !AC4_contradiction)
+        {
+            var (i1, t1) = AC4_stack[--AC4_stackSize];
+            int x1 = i1 % dimensionsX;
+            int z1 = (i1 / dimensionsX) % dimensionsZ;
+            int y1 = i1 / (dimensionsX * dimensionsZ);
+
+            for (int d = 0; d < 6; d++)
+            {
+                int x2 = x1 + AC4_DX[d]; int y2 = y1 + AC4_DY[d]; int z2 = z1 + AC4_DZ[d];
+                if (x2 < 0 || x2 >= dimensionsX || y2 < 0 || y2 >= dimensionsY || z2 < 0 || z2 >= dimensionsZ) continue;
+
+                int i2 = x2 + z2 * dimensionsX + y2 * dimensionsX * dimensionsZ;
+                if (gridComponents[i2].collapsed) continue; // fijo → no modificar
+
+                int[] supported = AC4_propagator[d * T + t1];
+                for (int l = 0; l < supported.Length; l++)
+                {
+                    int t2 = supported[l];
+                    ref int comp = ref AC4_compatible[(i2 * T + t2) * 6 + d];
+                    comp--;
+                    if (comp == 0 && AC4_wave[i2 * T + t2]) BanAC4(i2, t2);
+                }
+            }
+        }
+        return !AC4_contradiction;
+    }
+
+    /// <summary>
+    /// Selecciona la celda de menor entropía de Shannon en O(N) sobre los arrays AC-4.
+    /// Respeta la fase de cubo (cubeStep → solo celdas del cubo central) y randomGeneration.
+    /// </summary>
+    private Cell SelectCellAC4()
+    {
+        if (randomGeneration)
+        {
+            List<Cell> free = new List<Cell>();
+            for (int i = 0; i < gridComponents.Count; i++)
+            {
+                Cell c = gridComponents[i];
+                if (c.collapsed || AC4_domain[i] <= 0) continue;
+                if (cubeStep && !c.centerCubeCell) continue;
+                free.Add(c);
+            }
+            return free.Count > 0 ? free[_rng.Next(0, free.Count)] : null;
+        }
+
+        double minE = double.MaxValue;
+        int minIdx = -1;
+
+        for (int i = 0; i < gridComponents.Count; i++)
+        {
+            Cell cell = gridComponents[i];
+            if (cell.collapsed || AC4_domain[i] <= 0) continue;
+            if (cubeStep && !cell.centerCubeCell) continue;
+
+            double e = AC4_entropy[i] + 1E-6 * _rng.NextDouble(); // tie-breaking estocástico
+            if (e < minE) { minE = e; minIdx = i; }
+        }
+
+        return minIdx >= 0 ? gridComponents[minIdx] : null;
     }
 
 
@@ -1608,7 +1916,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         if (STOPWATCH && testType == StopwatchTest.TILE_PROPAGATION && onStartGeneration != null)
             onStartGeneration();
 
-        PropagateFromCell(targetCell);
+        if (!PropagateAC4())
+        {
+            HandleIncompatibility();
+            return;
+        }
+        SyncUncollapsedOptionsFromWave();
         UpdateGlobalValidTiles();
 
         // FIN TEST COLOCAR UNA FICHA
@@ -1661,8 +1974,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void PlaceTileOnCell(Tile persistentTile, Cell cell)
     {
-        ApplyCollapse(cell, persistentTile);
-        GetNeighboursCloseToCollapsedCell(cell);
+        ForceCollapseCellAC4(cell, persistentTile); // banea el resto en el wave + vista + instancia
 
         if (animations)
             PlayCollapseBounce(cell, jumpPower: 0.5f, duration: 0.3f);
@@ -1741,13 +2053,20 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         // colgada e ignore la siguiente colocación legítima del jugador.
         skipEntireTileRemoved = false;
 
+        // 1) Fijar la nueva tile como celda colapsada (vista + instancia). targetCell
+        //    puede venir ya colapsada con su tile anterior; ApplyCollapse la reemplaza.
         ApplyCollapse(targetCell, persistentTile);
         GetNeighboursCloseToCollapsedCell(targetCell);
 
         if (animations)
             PlayCollapseBounce(targetCell, jumpPower: 0.8f, duration: 0.5f);
 
-        PropagateFromCell(targetCell);
+        // 2) La fusión ha des-colapsado celdas con ResetCell (que no toca el wave) y
+        //    ahora targetCell tiene una tile nueva. AC-4 no soporta undo incremental,
+        //    así que re-derivamos el wave completo desde TODAS las celdas fijas
+        //    actuales (incluida targetCell); RebuildAC4FromCollapsed ya propaga y sincroniza.
+        RebuildAC4FromCollapsed();
+
         UpdateGlobalValidTiles();
         TriggerCascadeIfEnabled();
     }
