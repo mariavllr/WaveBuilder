@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -33,10 +34,8 @@ using Resolution = DeBroglie.Resolution;
 ///   - Dimensiones: propias (deben coincidir con REFACTOR para benchmark).
 ///   - Output visual: propio (InstantiateTiles, similar a GuminWFC).
 ///   - Restricciones: replicadas desde los datos de los tiles, no de gridComponents.
-///   - Única referencia de clase (no instancia): WaveFunctionGame_REFACTOR.Invoke*()
-///     se usa para disparar los eventos estáticos que CalculateExecutionTime escucha.
-///     Esto es una referencia de clase, no de objeto, y es aceptable en el diseño
-///     del harness de benchmark.
+///   - Eventos: propios, de instancia (contrato IWFCGenerator: OnStart/OnEnd/
+///     OnIncompatibility). Ya NO reutiliza los eventos estáticos de REFACTOR.
 ///
 /// Restricciones globales (applyGlobalConstraints = true):
 /// --------------------------------------------------------
@@ -59,8 +58,24 @@ using Resolution = DeBroglie.Resolution;
 /// construcción del modelo, topología, constraints y restricciones previas
 /// al bucle ocurren fuera del cronómetro.
 /// </summary>
-public class DeBroglieWFC : MonoBehaviour
+public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
 {
+    // Eventos de instancia (contrato IWFCGenerator). Antes se reutilizaban los
+    // eventos estáticos de WaveFunctionGame_REFACTOR; ahora DeBroglie es autónomo.
+    public event Action OnStart;
+    public event Action OnEnd;
+    public event Action OnIncompatibility;
+
+    [Header("Etiqueta del experimento (columna del CSV)")]
+    public string algorithmLabel = "debroglie_full";
+
+    // IWFCGenerator
+    public int DimensionsX => dimensionsX;
+    public int DimensionsY => dimensionsY;
+    public int DimensionsZ => dimensionsZ;
+    public string AlgorithmLabel => algorithmLabel;
+    public Tile[] TileObjects => tileObjects;
+
     [Header("Preprocesado de tiles")]
     [Tooltip("TilePreprocessor compartido por todos los solvers.")]
     [SerializeField] private TilePreprocessor tilePreprocessor;
@@ -160,6 +175,7 @@ public class DeBroglieWFC : MonoBehaviour
             Debug.LogError("[DeBroglieWFC] Tileset no preprocesado. Asegúrate de que Awake() se haya ejecutado.");
             return;
         }
+        ClearOutput();      // idempotente: permite repetir Generate() en el benchmark
         GenerateInternal();
     }
 
@@ -203,7 +219,7 @@ public class DeBroglieWFC : MonoBehaviour
             // 2. CRONÓMETRO: arranca antes del primer intento. El contrato es
             //    idéntico al de REFACTOR: el reloj cubre propagación + colapso,
             //    incluidos los reintentos por contradicción.
-            WaveFunctionGame_REFACTOR.InvokeStartGeneration();
+            OnStart?.Invoke();
 
 
             result = propagator.Run();
@@ -214,7 +230,7 @@ public class DeBroglieWFC : MonoBehaviour
             // Contradicción: notifica (para el contador de fallos del
             // benchmark) y reintenta. El cronómetro sigue corriendo, por lo
             // que el tiempo de este intento fallido se acumula en la medición.
-            WaveFunctionGame_REFACTOR.InvokeIncompatibility();
+            OnIncompatibility?.Invoke();
             Debug.LogWarning($"[DeBroglieWFC] Contradicción ({result}) en intento " +
                              $"{attempt + 1}. Reintentando.");
             attempt++;
@@ -224,7 +240,7 @@ public class DeBroglieWFC : MonoBehaviour
         if (result == Resolution.Decided)
         {
             StoreResolvedTiles(propagator);          // poblar antes del evento
-            WaveFunctionGame_REFACTOR.InvokeEndGeneration();
+            OnEnd?.Invoke();
             InstantiateTiles(propagator);
             Debug.Log($"[DeBroglie] Generación exitosa tras {attempt + 1} intento(s).");
         }

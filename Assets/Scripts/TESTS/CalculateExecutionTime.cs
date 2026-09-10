@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
-using static UnityEngine.InputSystem.Controls.DiscreteButtonControl;
 using Debug = UnityEngine.Debug;
 
 /// <summary>
@@ -35,33 +34,25 @@ public enum WriteMode
 }
 
 /// <summary>
-/// Script central de los tests de rendimiento WFC.
-/// Centraliza toda la lógica de test: qué medir, cuándo, cuántas veces y qué guardar.
+/// Arnés central de los tests de rendimiento WFC del artículo.
+/// Mide el tiempo de generación completa (GENERATE_ALL) de los tres solvers
+/// comparados (MyWFC, Gumin, DeBroglie) y vuelca los resultados a un CSV.
 ///
-/// REFACTOR, GuminWFC y DeBroglieWFC solo disparan eventos; este script decide qué escuchar.
-/// DeBroglieWFC reutiliza los eventos estáticos de REFACTOR (onStartGeneration,
-/// onEndGeneration, onIncompatibility), por lo que el cronómetro y los handlers son idénticos.
+/// Los tres solvers implementan <see cref="IWFCGenerator"/>: se elige uno con
+/// el enum <see cref="algorithm"/> y el arnés se suscribe a SUS eventos de
+/// instancia (OnStart/OnEnd/OnIncompatibility). La etiqueta de columna del CSV
+/// (mi_wfc_full, gumin_prob, debroglie_full…) la aporta el propio solver
+/// mediante AlgorithmLabel, así que la config viaja con él.
 ///
-/// Tests disponibles para MyWFC (REFACTOR):
-///   ALL_GENERATION    – tiempo de generar el mapa completo (GENERATE_ALL)
-///   CUBE_GENERATION   – tiempo de generar el cubo inicial (modo juego)
-///   TILE_PROPAGATION  – tiempo de respuesta al colocar una ficha (modo juego)
-///
-/// Tests disponibles para Gumin:
-///   ALL_GENERATION    – único test aplicable
-///
-/// Tests disponibles para DeBroglie:
-///   ALL_GENERATION    – único test aplicable; no soporta modo juego ni propagación incremental
+/// IMPORTANTE: en el solver seleccionado, deja generateOnStart = false; este
+/// arnés dispara la primera generación en Start().
 /// </summary>
 public class CalculateExecutionTime : MonoBehaviour
 {
-    public enum StopwatchTest { ALL_GENERATION, CUBE_GENERATION, TILE_PROPAGATION }
+    public enum Algorithm { MyWFC, Gumin, DeBroglie }
 
-    [Header("¿Qué algoritmo testear? (máximo uno activo)")]
-    public bool testMyWFC = false;
-    public StopwatchTest testTypeMyWFC = StopwatchTest.ALL_GENERATION;
-    public bool testGumin = false;
-    public bool testDeBroglie = false;
+    [Header("¿Qué algoritmo testear?")]
+    public Algorithm algorithm = Algorithm.MyWFC;
 
     [Header("Configuración del test")]
     public int numberOfGenerations = 50;
@@ -75,16 +66,14 @@ public class CalculateExecutionTime : MonoBehaviour
     [Header("Etiqueta del experimento")]
     [Tooltip("Tileset activo. Se usa en el nombre del CSV: times_{tileset}_{mapSize}.csv")]
     public string tilesetName = "nature";
-    [Tooltip("Algoritmo + config activos. Se convierte en la cabecera de columna del CSV.\n" +
-             "Valores recomendados: gumin_prob | mi_wfc_prob | mi_wfc_full | debroglie_prob | debroglie_full")]
-    public string algorithmLabel = "mi_wfc_full";
 
-    [Header("Referencias")]
+    [Header("Referencias a los solvers")]
+    [SerializeField] private MyWFC myWFC;
     [SerializeField] private GuminWFC guminWFC;
     [SerializeField] private DeBroglieWFC debroglie;
 
     // ── estado interno ──────────────────────────────────────────────
-    private WaveFunctionGame_REFACTOR wfc;
+    private IWFCGenerator selected;
     private Stopwatch stopwatch;
 
     private bool active = false;
@@ -98,13 +87,12 @@ public class CalculateExecutionTime : MonoBehaviour
     private double timeSum = 0, maxTime = 0, minTime = 0;
 
     // Dispara la siguiente generación en Update() para evitar recursión síncrona.
-    // No se usa para TILE_PROPAGATION (la siguiente medición la activa el jugador).
     private bool pendingNext = false;
 
+    private string algorithmLabel;   // proviene del solver (AlgorithmLabel)
     private string mapSize;
     private List<string[]> tabla = new List<string[]>();
     // Nombre del CSV: times_{tileset}_{mapSize}.csv  (ej. times_nature_10x10x5.csv)
-    // La columna dentro del CSV identifica el algoritmo/config (algorithmLabel).
     private string FilePath => Path.Combine(Application.persistentDataPath,
         $"times_{tilesetName}_{mapSize}.csv");
 
@@ -114,110 +102,60 @@ public class CalculateExecutionTime : MonoBehaviour
 
     void Awake()
     {
-        wfc = GetComponent<WaveFunctionGame_REFACTOR>();
         stopwatch = new Stopwatch();
 
-        int activos = (testMyWFC ? 1 : 0) + (testGumin ? 1 : 0) + (testDeBroglie ? 1 : 0);
-        if (activos > 1)
+        selected = ResolveSelected();
+        if (selected == null)
         {
-            Debug.LogError("[Benchmark] Solo puede ejecutarse un test a la vez. Desactiva los demás.");
+            Debug.LogError($"[Benchmark] El solver '{algorithm}' no está asignado en el Inspector.");
+            active = false;
             return;
         }
+        active = true;
 
-        active = activos == 1;
-        if (!active) return;
+        selected.OnStart += OnStart;
+        selected.OnEnd += OnEnd;
+        selected.OnIncompatibility += OnIncompat;
 
-        // Suscribirse solo al par de eventos que corresponde al test activo
-        if (testMyWFC)
-        {
-            switch (testTypeMyWFC)
-            {
-                case StopwatchTest.ALL_GENERATION:
-                    WaveFunctionGame_REFACTOR.onStartGeneration += OnStart;
-                    WaveFunctionGame_REFACTOR.onEndGeneration += OnEnd;
-                    WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompat;
-                    break;
-                case StopwatchTest.CUBE_GENERATION:
-                    WaveFunctionGame_REFACTOR.onStartCubeGeneration += OnStart;
-                    WaveFunctionGame_REFACTOR.onEndCubeGeneration += OnEnd;
-                    WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompat;
-                    break;
-                case StopwatchTest.TILE_PROPAGATION:
-                    WaveFunctionGame_REFACTOR.onStartTilePropagation += OnStart;
-                    WaveFunctionGame_REFACTOR.onEndTilePropagation += OnEnd;
-                    // Sin incompatibilidad: la colocación de fichas no genera contradicciones
-                    break;
-            }
-        }
-        else if (testGumin) // solo ALL_GENERATION
-        {
-            GuminWFC.onStartGeneration += OnStart;
-            GuminWFC.onEndGeneration += OnEnd;
-            GuminWFC.onIncompatibility += OnIncompat;
-        }
-        else if (testDeBroglie) // solo ALL_GENERATION
-        {
-            // El adaptador DeBroglieWFC dispara los eventos estáticos de REFACTOR,
-            // así que reutilizamos exactamente las mismas suscripciones que para
-            // testMyWFC en modo ALL_GENERATION. Esto garantiza que el contrato del
-            // cronómetro es idéntico entre ambos sistemas.
-            WaveFunctionGame_REFACTOR.onStartGeneration += OnStart;
-            WaveFunctionGame_REFACTOR.onEndGeneration += OnEnd;
-            WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompat;
-        }
-
-        if (testMyWFC)
-            mapSize = $"{wfc.dimensionsX}x{wfc.dimensionsZ}x{wfc.dimensionsY}";
-        else if (testGumin && guminWFC != null)
-            mapSize = $"{guminWFC.dimensionsX}x{guminWFC.dimensionsZ}x{guminWFC.dimensionsY}";
-        else if (testDeBroglie && debroglie != null)
-            mapSize = $"{debroglie.dimensionsX}x{debroglie.dimensionsZ}x{debroglie.dimensionsY}";
+        algorithmLabel = selected.AlgorithmLabel;
+        mapSize = $"{selected.DimensionsX}x{selected.DimensionsZ}x{selected.DimensionsY}";
         PrepararCSV();
+    }
+
+    private IWFCGenerator ResolveSelected()
+    {
+        switch (algorithm)
+        {
+            case Algorithm.MyWFC:     return myWFC;
+            case Algorithm.Gumin:     return guminWFC;
+            case Algorithm.DeBroglie: return debroglie;
+            default:                  return null;
+        }
     }
 
     void Start()
     {
         if (!active) return;
-
-        if (testGumin)
-        {
-            if (guminWFC == null) { Debug.LogError("[Benchmark] guminWFC no asignado en el Inspector."); return; }
-            guminWFC.Generate();
-        }
-        else if (testDeBroglie)
-        {
-            if (debroglie == null) { Debug.LogError("[Benchmark] debroglie no asignado en el Inspector."); return; }
-            debroglie.Generate();
-        }
-        // testMyWFC arranca por su propio Awake/Start de REFACTOR; no se dispara aquí.
+        selected.Generate(); // arranca la primera medición (todos los solvers vía Generate)
     }
 
     void OnDestroy()
     {
-        WaveFunctionGame_REFACTOR.onStartGeneration -= OnStart;
-        WaveFunctionGame_REFACTOR.onEndGeneration -= OnEnd;
-        WaveFunctionGame_REFACTOR.onStartCubeGeneration -= OnStart;
-        WaveFunctionGame_REFACTOR.onEndCubeGeneration -= OnEnd;
-        WaveFunctionGame_REFACTOR.onStartTilePropagation -= OnStart;
-        WaveFunctionGame_REFACTOR.onEndTilePropagation -= OnEnd;
-        WaveFunctionGame_REFACTOR.onIncompatibility -= OnIncompat;
-        GuminWFC.onStartGeneration -= OnStart;
-        GuminWFC.onEndGeneration -= OnEnd;
-        GuminWFC.onIncompatibility -= OnIncompat;
+        if (selected == null) return;
+        selected.OnStart -= OnStart;
+        selected.OnEnd -= OnEnd;
+        selected.OnIncompatibility -= OnIncompat;
     }
 
     // ════════════════════════════════════════════════════════════════
-    // LOOP DE GENERACIONES (solo ALL_GENERATION y CUBE_GENERATION)
+    // LOOP DE GENERACIONES
     // ════════════════════════════════════════════════════════════════
 
     void Update()
     {
         if (!pendingNext) return;
         pendingNext = false;
-
-        if (testGumin) guminWFC.Generate();
-        else if (testDeBroglie) debroglie.Regenerate();
-        else if (testMyWFC) wfc.Regenerate();
+        selected.Generate();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -256,10 +194,8 @@ public class CalculateExecutionTime : MonoBehaviour
 
         if (generationsDone >= numberOfGenerations)
             FinalizarBenchmark();
-        else if (testGumin || testDeBroglie || testTypeMyWFC != StopwatchTest.TILE_PROPAGATION)
+        else
             pendingNext = true;
-        // TILE_PROPAGATION (solo testMyWFC): no se dispara pendingNext; la siguiente
-        // medición ocurre cuando el jugador coloca la siguiente ficha.
     }
 
     private void OnIncompat()

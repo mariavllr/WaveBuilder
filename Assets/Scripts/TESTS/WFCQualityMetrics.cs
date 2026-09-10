@@ -10,10 +10,9 @@ using Debug = UnityEngine.Debug;
 /// Recolector de métricas de calidad para el artículo científico.
 /// Soporta los tres algoritmos: REFACTOR, GuminWFC y DeBroglieWFC.
 /// Se suscribe a los eventos del algoritmo seleccionado en el Inspector.
-///
-/// DeBroglieWFC dispara los eventos estáticos de REFACTOR
-/// (WaveFunctionGame_REFACTOR.InvokeStartGeneration/InvokeEndGeneration),
-/// por lo que en modo DeBroglie se escuchan los mismos eventos que en modo REFACTOR.
+/// Gumin y DeBroglie exponen sus propios eventos de instancia (contrato
+/// IWFCGenerator: OnStart/OnEnd/OnIncompatibility); REFACTOR (motor del juego)
+/// conserva sus eventos estáticos.
 ///
 /// Produce dos CSV al finalizar cada lote de N generaciones:
 ///   quality_perrun.csv   → una fila por generación exitosa
@@ -39,13 +38,13 @@ public class WFCQualityMetrics : MonoBehaviour
     [SerializeField] private bool active = false;
 
     [Header("Algoritmo a medir")]
-    [Tooltip("Selecciona qué solver se testea en este run. " +
-             "Los otros dos deben tener generateOnStart = false para no interferir.")]
-    [SerializeField] private WFCAlgorithmType algorithmType = WFCAlgorithmType.REFACTOR;
+    [Tooltip("Selecciona qué solver se mide. DEBE coincidir con el 'Algorithm' de " +
+             "CalculateExecutionTime, que es quien dispara las generaciones que este " +
+             "arnés mide de forma pasiva.")]
+    [SerializeField] private WFCAlgorithmType algorithmType = WFCAlgorithmType.MyWFC;
 
     [Header("Referencias a solvers")]
-    [Tooltip("Se busca automáticamente en el mismo GameObject. No hace falta asignarlo.")]
-    [SerializeField] private WaveFunctionGame_REFACTOR refactorWFC;
+    [SerializeField] private MyWFC myWFC;
     [SerializeField] private GuminWFC guminWFC;
     [SerializeField] private DeBroglieWFC deBroglieWFC;
 
@@ -53,8 +52,9 @@ public class WFCQualityMetrics : MonoBehaviour
     [Tooltip("Nombre del tileset activo (nature / desert / farm …)")]
     [SerializeField] private string tilesetName = "nature";
 
-    [Tooltip("Etiqueta de la configuración activa (gumin_prob / mi_wfc_prob / mi_wfc_full / debroglie_prob / debroglie_full …)")]
-    [SerializeField] private string configLabel = "mi_wfc_full";
+    // La etiqueta viaja con el solver (AlgorithmLabel), igual que en
+    // CalculateExecutionTime. Se fija en Awake desde selected.AlgorithmLabel.
+    private string configLabel;
 
     [Tooltip("Número de generaciones exitosas por lote (debe coincidir con CalculateExecutionTime.numberOfGenerations)")]
     [SerializeField] private int generationsPerBatch = 50;
@@ -72,11 +72,13 @@ public class WFCQualityMetrics : MonoBehaviour
     // ENUM DE ALGORITMO
     // ============================================================
 
-    public enum WFCAlgorithmType { REFACTOR, Gumin, DeBroglie }
+    public enum WFCAlgorithmType { MyWFC, Gumin, DeBroglie }
 
     // ============================================================
     // ESTADO INTERNO
     // ============================================================
+
+    private IWFCGenerator selected;   // solver activo (resuelto en Awake desde algorithmType)
 
     private int _successCount = 0;
     private int _incompatibilityCount = 0;
@@ -102,53 +104,13 @@ public class WFCQualityMetrics : MonoBehaviour
     // ABSTRACCIÓN DE DATOS — delegaciones al solver activo
     // ============================================================
 
-    private int GetDimX() => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsX,
-        WFCAlgorithmType.Gumin => guminWFC.dimensionsX,
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsX,
-        _ => 0
-    };
-
-    private int GetDimY() => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsY,
-        WFCAlgorithmType.Gumin => guminWFC.dimensionsY,
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsY,
-        _ => 0
-    };
-
-    private int GetDimZ() => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.dimensionsZ,
-        WFCAlgorithmType.Gumin => guminWFC.dimensionsZ,
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.dimensionsZ,
-        _ => 0
-    };
-
-    private Tile GetResolvedTile(int i) => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.GetResolvedTile(i),
-        WFCAlgorithmType.Gumin => guminWFC.GetResolvedTile(i),
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.GetResolvedTile(i),
-        _ => null
-    };
-
-    private bool IsInfra(Tile tile) => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.IsInfrastructureTile(tile),
-        WFCAlgorithmType.Gumin => guminWFC.IsInfrastructureTile(tile),
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.IsInfrastructureTile(tile),
-        _ => false
-    };
-
-    private Tile[] GetTileObjects() => algorithmType switch
-    {
-        WFCAlgorithmType.REFACTOR => refactorWFC.tileObjects,
-        WFCAlgorithmType.Gumin => guminWFC.tileObjects,
-        WFCAlgorithmType.DeBroglie => deBroglieWFC.tileObjects,
-        _ => null
-    };
+    // Delegación uniforme al solver seleccionado (contrato IWFCGenerator).
+    private int GetDimX() => selected.DimensionsX;
+    private int GetDimY() => selected.DimensionsY;
+    private int GetDimZ() => selected.DimensionsZ;
+    private Tile GetResolvedTile(int i) => selected.GetResolvedTile(i);
+    private bool IsInfra(Tile tile) => selected.IsInfrastructureTile(tile);
+    private Tile[] GetTileObjects() => selected.TileObjects;
 
     // ============================================================
     // CICLO DE VIDA UNITY
@@ -156,43 +118,20 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private void Awake()
     {
-        // Resolver referencias
-        bool valid = false;
-        switch (algorithmType)
+        selected = ResolveSelected();
+        if (selected == null)
         {
-            case WFCAlgorithmType.REFACTOR:
-                if (refactorWFC == null) refactorWFC = GetComponent<WaveFunctionGame_REFACTOR>();
-                valid = refactorWFC != null;
-                if (!valid) Debug.LogError("[Metrics] WaveFunctionGame_REFACTOR no encontrado.");
-                break;
-            case WFCAlgorithmType.Gumin:
-                valid = guminWFC != null;
-                if (!valid) Debug.LogError("[Metrics] GuminWFC no asignado en el Inspector.");
-                break;
-            case WFCAlgorithmType.DeBroglie:
-                valid = deBroglieWFC != null;
-                if (!valid) Debug.LogError("[Metrics] DeBroglieWFC no asignado en el Inspector.");
-                break;
-        }
-
-        if (!valid) { active = false; return; }
-        if (!active) return;
-
-        // Comprobación defensiva: configLabel y algorithmType son dos campos
-        // independientes en el Inspector y nada impide que se desincronicen
-        // (p.ej. dejar algorithmType en REFACTOR mientras se escribe
-        // configLabel = "debroglie" solo para anotar el CSV). Como
-        // DeBroglieWFC dispara los mismos eventos estáticos que REFACTOR,
-        // ese desajuste no lanza ninguna excepción: el cronómetro mide
-        // bien, pero GetResolvedTile() lee del solver equivocado y todas
-        // las métricas de contenido (JS, conectividad, entropía, diversidad)
-        // salen a cero sin ningún aviso. Esto corta el batch antes de que
-        // eso vuelva a pasar.
-        if (!ValidateAlgorithmConfigConsistency())
-        {
+            Debug.LogError($"[Metrics] El solver '{algorithmType}' no está asignado en el Inspector.");
             active = false;
             return;
         }
+        if (!active) return;
+
+        // La etiqueta viaja con el solver (AlgorithmLabel), igual que en
+        // CalculateExecutionTime: no puede desincronizarse. Recuerda que
+        // algorithmType debe coincidir con el Algorithm de CalculateExecutionTime,
+        // que es quien dispara las generaciones que este arnés mide.
+        configLabel = selected.AlgorithmLabel;
 
         _mapSize = $"{GetDimX()}x{GetDimZ()}x{GetDimY()}";
         _perRunPath = Path.Combine(Application.persistentDataPath, perRunFileName + ".csv");
@@ -206,22 +145,10 @@ public class WFCQualityMetrics : MonoBehaviour
         // sin esta purga quedarían duplicadas junto a las nuevas.
         if (writeMode == WriteMode.Overwrite) PurgePerRunForThisExperiment();
 
-        // Suscribir eventos según el algoritmo.
-        // DeBroglieWFC dispara los eventos estáticos de REFACTOR.
-        switch (algorithmType)
-        {
-            case WFCAlgorithmType.REFACTOR:
-            case WFCAlgorithmType.DeBroglie:
-                WaveFunctionGame_REFACTOR.onStartGeneration += OnGenerationStart;
-                WaveFunctionGame_REFACTOR.onEndGeneration += OnGenerationEnd;
-                WaveFunctionGame_REFACTOR.onIncompatibility += OnIncompatibility;
-                break;
-            case WFCAlgorithmType.Gumin:
-                GuminWFC.onStartGeneration += OnGenerationStart;
-                GuminWFC.onEndGeneration += OnGenerationEnd;
-                GuminWFC.onIncompatibility += OnIncompatibility;
-                break;
-        }
+        // Suscripción uniforme a los eventos de instancia del solver seleccionado.
+        selected.OnStart += OnGenerationStart;
+        selected.OnEnd += OnGenerationEnd;
+        selected.OnIncompatibility += OnIncompatibility;
 
         Debug.Log($"[Metrics] Activo | Algoritmo: {algorithmType} | Config: {configLabel} | " +
                   $"Mapa: {_mapSize} | PerRun: {_perRunPath}");
@@ -229,57 +156,21 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private void OnDestroy()
     {
-        switch (algorithmType)
-        {
-            case WFCAlgorithmType.REFACTOR:
-            case WFCAlgorithmType.DeBroglie:
-                WaveFunctionGame_REFACTOR.onStartGeneration -= OnGenerationStart;
-                WaveFunctionGame_REFACTOR.onEndGeneration -= OnGenerationEnd;
-                WaveFunctionGame_REFACTOR.onIncompatibility -= OnIncompatibility;
-                break;
-            case WFCAlgorithmType.Gumin:
-                GuminWFC.onStartGeneration -= OnGenerationStart;
-                GuminWFC.onEndGeneration -= OnGenerationEnd;
-                GuminWFC.onIncompatibility -= OnIncompatibility;
-                break;
-        }
+        if (selected == null) return;
+        selected.OnStart -= OnGenerationStart;
+        selected.OnEnd -= OnGenerationEnd;
+        selected.OnIncompatibility -= OnIncompatibility;
     }
 
-    // ============================================================
-    // VALIDACIÓN DEFENSIVA: configLabel vs algorithmType
-    // ============================================================
-
-    /// <summary>
-    /// Comprueba que configLabel menciona el algoritmo que algorithmType
-    /// dice estar midiendo. No es una validación semántica completa, solo
-    /// una red de seguridad contra el error más probable: cambiar uno de
-    /// los dos campos en el Inspector y olvidar el otro. Si configLabel
-    /// usa una convención de nombres distinta a "gumin" / "debroglie" /
-    /// "mi_wfc" / "refactor", ajusta las cadenas de abajo en consecuencia.
-    /// </summary>
-    private bool ValidateAlgorithmConfigConsistency()
+    private IWFCGenerator ResolveSelected()
     {
-        string label = (configLabel ?? "").ToLowerInvariant();
-        bool mentionsGumin = label.Contains("gumin");
-        bool mentionsDebroglie = label.Contains("debroglie");
-        bool mentionsMiWfc = label.Contains("mi_wfc") || label.Contains("refactor");
-
-        bool mismatch =
-            (algorithmType == WFCAlgorithmType.REFACTOR && (mentionsGumin || mentionsDebroglie)) ||
-            (algorithmType == WFCAlgorithmType.Gumin && !mentionsGumin) ||
-            (algorithmType == WFCAlgorithmType.DeBroglie && !mentionsDebroglie);
-
-        if (mismatch)
+        switch (algorithmType)
         {
-            Debug.LogError(
-                $"[Metrics] configLabel ('{configLabel}') no coincide con algorithmType " +
-                $"('{algorithmType}'). Revisa el Inspector antes de lanzar el batch: si no " +
-                "coinciden, vas a registrar el mapa del solver equivocado sin que salte " +
-                "ninguna excepción (DeBroglieWFC y REFACTOR comparten los mismos eventos " +
-                "estáticos, así que el cronómetro seguiría funcionando con normalidad).");
+            case WFCAlgorithmType.MyWFC:     return myWFC;
+            case WFCAlgorithmType.Gumin:     return guminWFC;
+            case WFCAlgorithmType.DeBroglie: return deBroglieWFC;
+            default:                         return null;
         }
-
-        return !mismatch;
     }
 
     // ============================================================
@@ -316,20 +207,14 @@ public class WFCQualityMetrics : MonoBehaviour
             if (map[i] >= 0) nonEmpty++;
         }
 
-        // Guarda anti-evento-fantasma. Los eventos onStart/onEndGeneration de
-        // WaveFunctionGame_REFACTOR son ESTÁTICOS y los comparten REFACTOR,
-        // GuminWFC y DeBroglieWFC. Si en la escena hay un WaveFunctionGame_REFACTOR
-        // con generateOnStart = true, su Init() dispara onEndGeneration una vez al
-        // arrancar, ANTES de que el solver bajo test haya resuelto nada. Esa
-        // invocación llega aquí con el mapa del solver activo todavía sin poblar
-        // (todo a -1). Si el mapa no tiene NINGUNA tile jugable, no es una
-        // generación real del solver medido: se descarta sin tocar nada.
+        // Guarda defensiva: si el mapa no tiene NINGUNA tile jugable, no es una
+        // generación real (evento recibido antes de que el solver resuelva nada);
+        // se descarta sin contabilizar. Con los eventos de instancia esto ya no
+        // debería ocurrir, pero se mantiene como red de seguridad.
         if (nonEmpty == 0)
         {
-            Debug.LogWarning("[Metrics] onEndGeneration recibido con mapa vacío " +
-                "(0 tiles jugables). Probablemente un evento estático disparado por " +
-                "otro WaveFunctionGame_REFACTOR de la escena con generateOnStart = true. " +
-                "Descartado. Si se repite, desactiva generateOnStart en el REFACTOR de la escena.");
+            Debug.LogWarning("[Metrics] OnEnd recibido con mapa vacío (0 tiles jugables). " +
+                "Descartado.");
             return;
         }
 

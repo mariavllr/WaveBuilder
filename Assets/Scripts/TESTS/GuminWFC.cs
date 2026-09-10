@@ -45,7 +45,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GuminWFC : MonoBehaviour
+public class GuminWFC : MonoBehaviour, IWFCGenerator
 {
     // =========================================================================
     // INSPECTOR
@@ -82,16 +82,20 @@ public class GuminWFC : MonoBehaviour
     // EVENTOS
     // =========================================================================
 
-    public delegate void OnStartGeneration();
-    public delegate void OnIncompatibility();
-    public delegate void OnEndGeneration();
+    // Eventos de instancia (contrato IWFCGenerator, compartido con MyWFC/DeBroglie).
+    public event Action OnStart;
+    public event Action OnEnd;
+    public event Action OnIncompatibility;
 
-    /// <summary>Disparado justo antes de comenzar cada generación completa.</summary>
-    public static event OnStartGeneration onStartGeneration;
-    /// <summary>Disparado cada vez que un intento falla por contradicción.</summary>
-    public static event OnIncompatibility onIncompatibility;
-    /// <summary>Disparado cuando la generación termina con éxito.</summary>
-    public static event OnEndGeneration onEndGeneration;
+    [Header("Etiqueta del experimento (columna del CSV)")]
+    public string algorithmLabel = "gumin_prob";
+
+    // IWFCGenerator
+    public int DimensionsX => dimensionsX;
+    public int DimensionsY => dimensionsY;
+    public int DimensionsZ => dimensionsZ;
+    public string AlgorithmLabel => algorithmLabel;
+    public Tile[] TileObjects => tileObjects;
 
     // =========================================================================
     // PROPIEDADES PÚBLICAS (consulta post-generación)
@@ -227,7 +231,7 @@ public class GuminWFC : MonoBehaviour
         }
         rng = seed != 0 ? new System.Random(seed) : new System.Random();
 
-        onStartGeneration?.Invoke();
+        OnStart?.Invoke();
 
         for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
@@ -236,13 +240,13 @@ public class GuminWFC : MonoBehaviour
             bool success = RunAlgorithm();
             if (success)
             {
-                onEndGeneration?.Invoke();
+                OnEnd?.Invoke();
                 InstantiateTiles();
                 return;
             }
 
             FailCount++;
-            onIncompatibility?.Invoke();
+            OnIncompatibility?.Invoke();
         }
 
         Debug.LogWarning($"[GuminWFC] Agotados {maxRetries} reintentos sin solución.");
