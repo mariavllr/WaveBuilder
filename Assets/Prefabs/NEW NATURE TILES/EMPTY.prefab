@@ -72,6 +72,8 @@ MonoBehaviour:
   excludedNeighboursRight: []
   excludedNeighboursDown: []
   excludedNeighboursLeft: []
+  excludedNeighboursAbove: []
+  excludedNeighboursBelow: []
   upSocket:
     socket_name: 0
     socketDefinition: {fileID: 11400000, guid: d468b48b418a04b4281e5faace6200a6, type: 2}

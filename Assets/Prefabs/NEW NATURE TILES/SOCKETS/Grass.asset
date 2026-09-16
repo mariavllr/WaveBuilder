@@ -11,5 +11,5 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1332d844a89f16e44bdf9ccfbff03e77, type: 3}
   m_Name: Grass
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::SocketDefinition
   debugColor: {r: 1, g: 1, b: 1, a: 1}

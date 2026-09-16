@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 95b9d589a779e0e48bc8d64a746a39a7
+guid: eeb6354a3679c3f489ca9e3b041a15af
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
@@ -7,13 +7,13 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Grass
-    second: {fileID: 2100000, guid: 40fcb6d3e5620154aa4d8ab995d4e972, type: 2}
+      name: Mountain
+    second: {fileID: 2100000, guid: 3ccc24057d700ac49a4a9ce9acb870f8, type: 2}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: grass
-    second: {fileID: 2800000, guid: 1f97e77b0d91fa948be8418dec75f513, type: 3}
+      name: Mountain Base Color
+    second: {fileID: 2800000, guid: 85a4aa1b1991c49468964faccb34123e, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

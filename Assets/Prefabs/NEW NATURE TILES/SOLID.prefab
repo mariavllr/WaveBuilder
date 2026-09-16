@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tileType: solid
-  probability: 100
+  probability: 1
   fixedTile: 0
   rotateRight: 0
   rotate180: 0
@@ -103,7 +103,7 @@ MonoBehaviour:
   excludedNeighboursBelow: []
   upSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -112,7 +112,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   rightSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -121,7 +121,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   leftSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -130,7 +130,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   downSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 1
     isSymmetric: 1
     isFlipped: 0
@@ -139,7 +139,7 @@ MonoBehaviour:
     rotationallyInvariant: 0
   aboveSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0
@@ -148,7 +148,7 @@ MonoBehaviour:
     rotationallyInvariant: 1
   belowSocket:
     socket_name: 0
-    socketDefinition: {fileID: 11400000, guid: ec188309378cf994eabd74e3016449d0, type: 2}
+    socketDefinition: {fileID: 11400000, guid: 55983a68cee62aa45875e6315124cc1c, type: 2}
     horizontalFace: 0
     isSymmetric: 0
     isFlipped: 0

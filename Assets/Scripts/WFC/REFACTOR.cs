@@ -31,6 +31,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField] private bool randomGeneration;
     [SerializeField] private bool stopOnIncompatibility = false;
     [SerializeField] public bool tutorial = false;
+    public bool activateFinishPanel;
     public bool useOptimization;
     public bool OneTileCollapseOptimization;
 
@@ -439,7 +440,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
     private void FinishGame()
     {
-        finishPanel.SetActive(true);
+        if(activateFinishPanel) finishPanel.SetActive(true);
         pauseBtn.interactable = false;
         resumeBtn.interactable = false;
         PauseTimer();
