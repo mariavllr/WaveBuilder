@@ -1862,10 +1862,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cda9842fed2a57948ad49612bc522074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GENERATE_ALL: 0
+  GENERATE_ALL: 1
   randomGeneration: 0
   stopOnIncompatibility: 0
   tutorial: 0
+  activateFinishPanel: 0
   useOptimization: 0
   OneTileCollapseOptimization: 1
   dimensionsX: 16

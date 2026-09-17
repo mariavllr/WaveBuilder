@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Leaves2
+  m_Name: M_Leaves3
   m_Shader: {fileID: -6465566751694194690, guid: b673ce7362612a643a9e4a9fd899e918, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -134,8 +134,8 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0.5847107, g: 0.65882355, b: 0.15686274, a: 1}
-    - _ColorB: {r: 0.23685852, g: 0.34901962, b: 0.078431375, a: 1}
+    - _Color: {r: 0.94716984, g: 0.70810145, b: 0.119736545, a: 1}
+    - _ColorB: {r: 0.35761836, g: 0.3584906, b: 0.037201814, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _WindDirection: {r: 1, g: 0, b: 0, a: 0}
