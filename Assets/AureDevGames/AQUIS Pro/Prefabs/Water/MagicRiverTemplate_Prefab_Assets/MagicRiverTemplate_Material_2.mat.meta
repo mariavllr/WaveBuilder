@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 09dbbd30e6338704a90d447f20dec119
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/Prefabs/Water/MagicRiverTemplate_Prefab_Assets/MagicRiverTemplate_Material_2.mat
+  uploadId: 905150

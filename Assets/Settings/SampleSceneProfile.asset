@@ -21,10 +21,10 @@ MonoBehaviour:
     m_Value: 1
   intensity:
     m_OverrideState: 1
-    m_Value: 0.8
+    m_Value: 0.49
   scatter:
-    m_OverrideState: 1
-    m_Value: 0.309
+    m_OverrideState: 0
+    m_Value: 0.516
   clamp:
     m_OverrideState: 0
     m_Value: 65472
@@ -34,6 +34,9 @@ MonoBehaviour:
   highQualityFiltering:
     m_OverrideState: 1
     m_Value: 1
+  filter:
+    m_OverrideState: 0
+    m_Value: 0
   downscale:
     m_OverrideState: 0
     m_Value: 0
@@ -47,6 +50,34 @@ MonoBehaviour:
   dirtIntensity:
     m_OverrideState: 0
     m_Value: 0
+--- !u!114 &-6102325364153508815
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66f335fb1ffd8684294ad653bf1c7564, type: 3}
+  m_Name: ColorAdjustments
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ColorAdjustments
+  active: 1
+  postExposure:
+    m_OverrideState: 1
+    m_Value: 0.39
+  contrast:
+    m_OverrideState: 0
+    m_Value: 2.8
+  colorFilter:
+    m_OverrideState: 0
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  hueShift:
+    m_OverrideState: 0
+    m_Value: 13
+  saturation:
+    m_OverrideState: 1
+    m_Value: 2.9
 --- !u!114 &-3357603926938260329
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -68,10 +99,10 @@ MonoBehaviour:
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0.318
+    m_Value: 0.442
   smoothness:
     m_OverrideState: 1
-    m_Value: 0.17
+    m_Value: 0.145
   rounded:
     m_OverrideState: 0
     m_Value: 0
@@ -92,6 +123,7 @@ MonoBehaviour:
   - {fileID: -7893295128165547882}
   - {fileID: -3357603926938260329}
   - {fileID: 6593114285808381994}
+  - {fileID: -6102325364153508815}
 --- !u!114 &849379129802519247
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -147,10 +179,10 @@ MonoBehaviour:
   active: 1
   lift:
     m_OverrideState: 0
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 1, y: 1, z: 1, w: 0.02420562}
   gamma:
     m_OverrideState: 0
-    m_Value: {x: 1, y: 1, z: 1, w: 0.11573227}
+    m_Value: {x: 0.9569485, y: 1, z: 0.98435634, w: 0.091526896}
   gain:
     m_OverrideState: 1
-    m_Value: {x: 0.91952074, y: 0.9311368, z: 1, w: 0.13019916}
+    m_Value: {x: 0.95474726, y: 0.8161021, z: 1, w: 0.13019916}

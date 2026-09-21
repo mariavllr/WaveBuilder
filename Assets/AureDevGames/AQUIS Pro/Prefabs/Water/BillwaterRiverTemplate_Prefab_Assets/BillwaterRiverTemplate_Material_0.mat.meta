@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3cd205322c54b044abe0526d3001852d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/Prefabs/Water/BillwaterRiverTemplate_Prefab_Assets/BillwaterRiverTemplate_Material_0.mat
+  uploadId: 905150

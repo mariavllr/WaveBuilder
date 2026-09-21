@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fd7f8c3516718ae4089829c947910f28
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/Shader/HLSL/WaterWaves.hlsl
+  uploadId: 905150

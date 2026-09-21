@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3fb18d076b0fadf4f8714b5b8ff1f6be
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/PresetMaterials/Oceans/M_OceanStylizedTemplate.mat
+  uploadId: 905150

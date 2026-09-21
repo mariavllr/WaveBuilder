@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 9ec46a2fd8a98924e9af6e1cf4be7007
+ShaderIncludeImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/Shader/HLSL/MainLighting.hlsl
+  uploadId: 905150

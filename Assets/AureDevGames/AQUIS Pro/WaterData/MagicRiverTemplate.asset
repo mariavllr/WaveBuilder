@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ede4068c2c720bd459ed9b5b8a610376, type: 3}
+  m_Name: MagicRiverTemplate
+  m_EditorClassIdentifier: 
+  previewMaterial: {fileID: 2100000, guid: 630c427c90aac9c4eb808801c83485dd, type: 2}
+  sceneGUIDs:
+  - 35f8b328227a0ec47907a0d311e300a2
+  lastExportedPrefabPath: 
+  tessellationLevel: 128
+  snapToRiverbed: 1
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  adaptiveTessellation: 0
+  lod1Tessellation: 2
+  lod2Tessellation: 1
+  lod1ScreenHeight: 0.3
+  lod2ScreenHeight: 0.1
+  splines:
+  - name: RiverSegment_0
+    debugColor: {r: 0, g: 1, b: 1, a: 1}
+    points:
+    - {x: -94.66324, y: 7.7809544, z: -357.67517}
+    - {x: -92.54798, y: 8.210573, z: -343.38913}
+    inHandles:
+    - {x: -96.80115, y: 7.2849407, z: -358.2307}
+    - {x: -92.06338, y: 8.204407, z: -348.1765}
+    outHandles:
+    - {x: -94.7562, y: 8.380194, z: -352.243}
+    - {x: -92.0754, y: 8.313421, z: -341.74005}
+    pointWidths:
+    - 5
+    - 5
+    width: 5
+    flowSpeed: 0.25
+    useBezier: 1
+    invertNormals: 0
+    riverId: 0
+    linkToPrevious: 0
+    flowMap: {fileID: 2800000, guid: dfc401a344b668f468d57801d8f793cd, type: 3}
+    point0Locks:
+      x: 0
+      y: 0
+      z: 0
+    lastPointLocks:
+      x: 0
+      y: 0
+      z: 0
+    outHandle0Locks:
+      x: 0
+      y: 0
+      z: 0
+    inHandleLastLocks:
+      x: 0
+      y: 0
+      z: 0
+  - name: RiverSegment_1
+    debugColor: {r: 0, g: 1, b: 1, a: 1}
+    points:
+    - {x: -92.54798, y: 8.210573, z: -343.38913}
+    - {x: -99.87057, y: 7.4328613, z: -321.59042}
+    inHandles:
+    - {x: -91.63266, y: 8.307787, z: -346.11395}
+    - {x: -97.84668, y: 7.865798, z: -329.37305}
+    outHandles:
+    - {x: -93.35902, y: 8.220894, z: -335.37698}
+    - {x: -100.78589, y: 7.3356476, z: -318.8656}
+    pointWidths:
+    - 5
+    - 5
+    width: 5
+    flowSpeed: 0.25
+    useBezier: 1
+    invertNormals: 0
+    riverId: 0
+    linkToPrevious: 1
+    flowMap: {fileID: 2800000, guid: f16b2297e1e7b6045abb6eb28988ba1c, type: 3}
+    point0Locks:
+      x: 0
+      y: 0
+      z: 0
+    lastPointLocks:
+      x: 0
+      y: 0
+      z: 0
+    outHandle0Locks:
+      x: 0
+      y: 0
+      z: 0
+    inHandleLastLocks:
+      x: 0
+      y: 0
+      z: 0
+  - name: RiverSegment_2
+    debugColor: {r: 0, g: 1, b: 1, a: 1}
+    points:
+    - {x: -99.87057, y: 7.4328613, z: -321.59042}
+    - {x: -102.49968, y: 6.081772, z: -305.12112}
+    inHandles:
+    - {x: -99.54193, y: 7.6017475, z: -323.64908}
+    - {x: -101.57949, y: 6.554653, z: -310.88538}
+    outHandles:
+    - {x: -101.34238, y: 7.118022, z: -315.9308}
+    - {x: -102.82832, y: 5.9128857, z: -303.06247}
+    pointWidths:
+    - 5
+    - 5
+    width: 5
+    flowSpeed: 0.25
+    useBezier: 1
+    invertNormals: 0
+    riverId: 0
+    linkToPrevious: 1
+    flowMap: {fileID: 2800000, guid: 1bc2a05466fbea5479b577ae392fd8eb, type: 3}
+    point0Locks:
+      x: 0
+      y: 0
+      z: 0
+    lastPointLocks:
+      x: 0
+      y: 0
+      z: 0
+    outHandle0Locks:
+      x: 0
+      y: 0
+      z: 0
+    inHandleLastLocks:
+      x: 0
+      y: 0
+      z: 0
+  sectors: []
+  uvWorldScaleU: 5
+  uvWorldScaleV: 10
+  flowMapMode: 1
+  flowMapWidth: 512
+  flowMapHeight: 32
+  slopeInfluence: 1
+  centerSpeedMultiplier: 1.5
+  edgeSpeedMultiplier: 0.25
+  lateralFalloffPower: 1
+  enableReflectionProbes: 1
+  probeSpacing: 50
+  probeResolution: 128
+  reflectionProbeLayout: 0
+  reflectionProbeVerticalOffset: 1
+  waveSettings:
+    waveStrength: 2
+    waveFrequency: 3
+    waveSpeed: 0.7
+    waveHeight: 0.25
+    dominantDirection: -305.34
+    waveChaos: 68
+    wave1:
+      wavelength: 3.3333333
+      amplitude: 0.099999994
+      speed: 1.2
+      steepness: 0.5
+    wave2:
+      wavelength: 2.2222223
+      amplitude: 0.06499999
+      speed: 1
+      steepness: 0.4
+    wave3:
+      wavelength: 2.5
+      amplitude: 0.04
+      speed: 0.9
+      steepness: 0.3
+    wave4:
+      wavelength: 1.6666666
+      amplitude: 0.02
+      speed: 1.5
+      steepness: 0.2
+    foamColor: {r: 1, g: 1, b: 1, a: 1}
+    foamStrength: 0
+    foamThreshold: 0
+    foamWidth: 0.69
+    foamNoiseTiling: 40.41
+    riverFlowDirection: 0
+    riverDirectionality: 0.85
+    riverFlowSpeed: 1.5
+    riverLength: 50
+    riverWidth: 5
+    useUV: 0

@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ede4068c2c720bd459ed9b5b8a610376, type: 3}
+  m_Name: StylizedOceanTemplate
+  m_EditorClassIdentifier: 
+  previewMaterial: {fileID: 2100000, guid: 3fb18d076b0fadf4f8714b5b8ff1f6be, type: 2}
+  sceneGUIDs:
+  - 35f8b328227a0ec47907a0d311e300a2
+  lastExportedPrefabPath: 
+  tessellationLevel: 512
+  snapToRiverbed: 0
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  adaptiveTessellation: 0
+  lod1Tessellation: 2
+  lod2Tessellation: 1
+  lod1ScreenHeight: 0.3
+  lod2ScreenHeight: 0.1
+  splines: []
+  sectors:
+  - name: Sector_0
+    position: {x: 300, y: 0, z: 0}
+    width: 200
+    length: 200
+    subdivisions: 64
+    sectorCountX: 8
+    sectorCountZ: 8
+    riverId: 0
+  uvWorldScaleU: 10
+  uvWorldScaleV: 5
+  flowMapMode: 0
+  flowMapWidth: 512
+  flowMapHeight: 32
+  slopeInfluence: 1
+  centerSpeedMultiplier: 1.5
+  edgeSpeedMultiplier: 0.25
+  lateralFalloffPower: 1.2
+  enableReflectionProbes: 0
+  probeSpacing: 50
+  probeResolution: 128
+  reflectionProbeLayout: 1
+  reflectionProbeVerticalOffset: 20
+  waveSettings:
+    waveStrength: 3.46
+    waveFrequency: 0.99
+    waveSpeed: 1.46
+    waveHeight: 0.06
+    dominantDirection: -519
+    waveChaos: 180
+    wave1:
+      wavelength: 10
+      amplitude: 0.5
+      speed: 1
+      steepness: 0.5
+    wave2:
+      wavelength: 7
+      amplitude: 0.3
+      speed: 1.2
+      steepness: 0.4
+    wave3:
+      wavelength: 5
+      amplitude: 0.15
+      speed: 0.8
+      steepness: 0.3
+    wave4:
+      wavelength: 3
+      amplitude: 0.08
+      speed: 1.5
+      steepness: 0.2
+    foamColor: {r: 0.69411767, g: 1, b: 0.9892433, a: 1}
+    foamStrength: 0.021
+    foamThreshold: 0.094
+    foamWidth: 0.018
+    foamNoiseTiling: 0.01
+    riverFlowDirection: 0
+    riverDirectionality: 0.85
+    riverFlowSpeed: 1.5
+    riverLength: 50
+    riverWidth: 5
+    useUV: 0

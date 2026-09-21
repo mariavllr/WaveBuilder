@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 35f8b328227a0ec47907a0d311e300a2
+timeCreated: 1507331512
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 370678
+  packageName: AQUIS PRO - Water Tool & Shader (Orto & Perspective)
+  packageVersion: 1.0
+  assetPath: Assets/AureDevGames/AQUIS Pro/SceneTemplate/WaterTemplate.unity
+  uploadId: 905150
