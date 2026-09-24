@@ -52,11 +52,11 @@ MonoBehaviour:
   reflectionProbeVerticalOffset: 0.5
   waveSettings:
     waveStrength: 0.35
-    waveFrequency: 2.13
-    waveSpeed: 1.8
-    waveHeight: 0.5
+    waveFrequency: 1.22
+    waveSpeed: 1.45
+    waveHeight: 0.46
     dominantDirection: 0
-    waveChaos: 45
+    waveChaos: 123
     wave1:
       wavelength: 10
       amplitude: 0.5
@@ -79,8 +79,8 @@ MonoBehaviour:
       steepness: 0.2
     foamColor: {r: 1, g: 1, b: 1, a: 1}
     foamStrength: 1
-    foamThreshold: 0.7
-    foamWidth: 0.3
+    foamThreshold: 1
+    foamWidth: 0.235
     foamNoiseTiling: 1
     riverFlowDirection: 0
     riverDirectionality: 0.85

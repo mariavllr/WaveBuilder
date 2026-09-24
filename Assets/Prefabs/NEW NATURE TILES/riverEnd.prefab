@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tile
-  tileType: riverEnd
+  tileType: river_end
   probability: 1
   fixedTile: 0
   rotateRight: 1
@@ -143,12 +143,29 @@ MonoBehaviour:
   skirtCornerNW: {fileID: 0}
   skirtCornerSE: {fileID: 0}
   skirtCornerSW: {fileID: 0}
-  upNeighbours: []
-  rightNeighbours: []
-  downNeighbours: []
-  leftNeighbours: []
-  aboveNeighbours: []
-  belowNeighbours: []
+  upNeighbours:
+  - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
+  - {fileID: 2690808361046983326, guid: 18c51fb2be88f4549a20d7ff77cca302, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  rightNeighbours:
+  - {fileID: 5466932740151443572}
+  - {fileID: 0}
+  - {fileID: 0}
+  downNeighbours:
+  - {fileID: 0}
+  - {fileID: 8391647836910188360, guid: ec83ba72ba9b6d84980be1f48dd15632, type: 3}
+  - {fileID: 4813511046928512752, guid: d8fbd98b45206254cb875b22fa5d6aa3, type: 3}
+  - {fileID: 0}
+  leftNeighbours:
+  - {fileID: 5466932740151443572}
+  - {fileID: 0}
+  - {fileID: 0}
+  aboveNeighbours:
+  - {fileID: 8904933399352538738, guid: 24933a71e97eb9442bac32303a2e0f5e, type: 3}
+  belowNeighbours:
+  - {fileID: 8904933399352538738, guid: 930920c30eb55b64faffe2f66eca5493, type: 3}
   excludedNeighboursUp: []
   excludedNeighboursRight: []
   excludedNeighboursDown: []

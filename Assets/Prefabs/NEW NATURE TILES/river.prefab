@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 277a89576ce83074ea0775dfc62e2206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tile
-  tileType: river
+  tileType: river_straight
   probability: 1
   fixedTile: 0
   rotateRight: 1
@@ -144,12 +144,16 @@ MonoBehaviour:
   skirtCornerSE: {fileID: 0}
   skirtCornerSW: {fileID: 0}
   upNeighbours:
-  - {fileID: 2690808361046983326}
   - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
+  - {fileID: 2690808361046983326}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   rightNeighbours:
+  - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
+  - {fileID: 2690808361046983326}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 204761118517138297, guid: 9e9724b11fa61da41aeea0a83dde34a4, type: 3}
   - {fileID: 242236956949256527, guid: 4b77106046919fe40acbacda01c6dea9, type: 3}
   - {fileID: 17459403900724252, guid: 78b62ba7ab7a27a4f9de567ef7f950f8, type: 3}
@@ -162,10 +166,6 @@ MonoBehaviour:
   - {fileID: 204761118517138297, guid: dfe361793835370438dac234f0e1d573, type: 3}
   - {fileID: 204761118517138297, guid: fe7ab1550fa2fd84d8916565e3e12963, type: 3}
   - {fileID: 6504113691304503018, guid: b343806c7fd1caa4fb81f68753c0f848, type: 3}
-  - {fileID: 2690808361046983326}
-  - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -201,12 +201,16 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   downNeighbours:
-  - {fileID: 2690808361046983326}
-  - {fileID: 5466932740151443572, guid: 8f504c3a83f454c41b32bddc26edb70c, type: 3}
   - {fileID: 600539119511687259, guid: 012d6ebab908266459e011d5508b5526, type: 3}
+  - {fileID: 5466932740151443572, guid: 8f504c3a83f454c41b32bddc26edb70c, type: 3}
+  - {fileID: 2690808361046983326}
   - {fileID: 0}
   - {fileID: 0}
   leftNeighbours:
+  - {fileID: 2690808361046983326}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 204761118517138297, guid: 9e9724b11fa61da41aeea0a83dde34a4, type: 3}
   - {fileID: 17459403900724252, guid: 78b62ba7ab7a27a4f9de567ef7f950f8, type: 3}
   - {fileID: 8228571990843372572, guid: 29c293dc9921070428d6197df578d230, type: 3}
@@ -218,10 +222,6 @@ MonoBehaviour:
   - {fileID: 204761118517138297, guid: a9b96a196f410a44cbb6a2e1e3ea8905, type: 3}
   - {fileID: 204761118517138297, guid: dfe361793835370438dac234f0e1d573, type: 3}
   - {fileID: 204761118517138297, guid: fe7ab1550fa2fd84d8916565e3e12963, type: 3}
-  - {fileID: 2690808361046983326}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

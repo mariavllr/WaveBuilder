@@ -1907,17 +1907,23 @@ MonoBehaviour:
   - {fileID: 8039929165240716065, guid: a7ae48649c1621c42af761835e122a41, type: 3}
   - {fileID: 8687938326941638174, guid: 30e39fa887df67f43889889e96bc00d8, type: 3}
   - {fileID: 7131639211825135148, guid: dc910edb3a69d7746a4052166ce89e1a, type: 3}
-  - {fileID: 2690808361046983326, guid: 18c51fb2be88f4549a20d7ff77cca302, type: 3}
-  - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
-  - {fileID: 5466932740151443572, guid: 8f504c3a83f454c41b32bddc26edb70c, type: 3}
-  - {fileID: 600539119511687259, guid: 012d6ebab908266459e011d5508b5526, type: 3}
-  - {fileID: 8354611211665082670, guid: ff0daff377575e441aef92cb4c9049d1, type: 3}
   floorTile: {fileID: 8904933399352538738, guid: 930920c30eb55b64faffe2f66eca5493, type: 3}
   emptyTile: {fileID: 8904933399352538738, guid: 24933a71e97eb9442bac32303a2e0f5e, type: 3}
   limitTile: {fileID: 8904933399352538738, guid: a1012ce2fa476b640bfd1468e6c738eb, type: 3}
   cellObj: {fileID: -4312026199669856736, guid: 9469c2b24035b984b8ee9081628e4604, type: 3}
   newTilesContainer: {fileID: 2111692170}
   previewMaterial: {fileID: 2100000, guid: a73241f484e4587449d4a4626a539797, type: 2}
+  generateRiver: 1
+  riverPrefabs:
+  - {fileID: 600539119511687259, guid: 012d6ebab908266459e011d5508b5526, type: 3}
+  - {fileID: 8354611211665082670, guid: ff0daff377575e441aef92cb4c9049d1, type: 3}
+  - {fileID: 5466932740151443572, guid: 8f504c3a83f454c41b32bddc26edb70c, type: 3}
+  - {fileID: 6984061467975376847, guid: d1dfa507046cae34db55de5d1b9dcac6, type: 3}
+  - {fileID: 2690808361046983326, guid: 18c51fb2be88f4549a20d7ff77cca302, type: 3}
+  riverSocket: {fileID: 11400000, guid: 860f2d4791dd90c44aca40b76e3763fc, type: 2}
+  riverBorderMargin: 3
+  riverMinLength: 5
+  riverTurnChance: 0.489
   probabilityConstraint: 1
   excludedNeighborConstraint: 1
   floorCeilingConstraint: 1
