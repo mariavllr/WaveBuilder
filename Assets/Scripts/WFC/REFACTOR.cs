@@ -716,7 +716,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
         cell.collapsed = true;
 
         DestroyTileChildren(cell);
-        InstantiateTileInCell(tile, cell);
+        InstantiateTileInCell(tile, cell, false);
 
         if (expandFrontier) GetNeighboursCloseToCollapsedCell(cell);
 
@@ -1030,7 +1030,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// Instancia visualmente una tile dentro de una celda aplicando su
     /// rotación y su offset de posición.
     /// </summary>
-    private void InstantiateTileInCell(Tile tile, Cell cell)
+    private void InstantiateTileInCell(Tile tile, Cell cell, bool meshVisible = true)
     {
         Tile instance = Instantiate(tile, cell.transform.position,
                                     Quaternion.identity, cell.transform);
@@ -1039,7 +1039,9 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             instance.gameObject.transform.Rotate(tile.rotation, Space.Self);
 
         instance.gameObject.transform.position += tile.positionOffset;
-        instance.gameObject.SetActive(true);
+        if(meshVisible) instance.gameObject.SetActive(true);
+        else instance.gameObject.SetActive(false);
+        
         collapsedCells++;
     }
 
