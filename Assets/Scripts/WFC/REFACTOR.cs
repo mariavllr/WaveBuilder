@@ -51,6 +51,18 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField] private GameObject newTilesContainer;
     public Material previewMaterial;
 
+    [Header("River")]
+    [Tooltip("Prefabs de las piezas de río (recta, curva, final, cascada, tapa de cascada, etc). " +
+             "No deben estar también en Tile Objects: se gestionan aparte para que WFC nunca las coloque libremente.")]
+    [SerializeField] private Tile[] riverPrefabs;
+    [SerializeField] private bool generateRiver = true;
+    [SerializeField] private int riverMinLength = 5;
+    [SerializeField] private int riverMaxLength = 12;
+    [Tooltip("Distancia mínima al borde del mapa que debe respetar todo el trazado del río.")]
+    [SerializeField] private int riverBorderMargin = 2;
+    [SerializeField, Range(0f, 1f)] private float riverTurnChance = 0.35f;
+    [SerializeField] private int riverMaxAttempts = 40;
+
     [Header("Global Constraints")]
     public bool probabilityConstraint = true;
     public bool excludedNeighborConstraint = true;
@@ -98,6 +110,12 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     private System.Random _rng = new System.Random();
     private bool cubeStep = true;
     private bool collapseOneOptionThisIteration = true;
+
+    // Río: piezas de riverPrefabs (ya rotadas) clasificadas por rol geométrico,
+    // deducido de sus propios sockets/vecinos — ver PreprocessRiverTileSet().
+    private enum RiverRole { Straight, Corner, End, Origin, Unknown }
+    private Dictionary<RiverRole, List<Tile>> riverRoleGroups;
+    private HashSet<Tile> riverTileSet;
 
     // Cubo central
     private int cubeStartX, cubeEndX;
@@ -216,8 +234,98 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         tileObjects = tileObjects.Where(t => t.tileType != "limit").ToArray();
 
+        PreprocessRiverTileSet();
+
         newTilesContainer.SetActive(false);
     }
+
+    /// <summary>
+    /// Preprocesamiento del conjunto de tiles de río (riverPrefabs). Se mantienen
+    /// fuera de tileObjects para que WFC nunca las coloque libremente: solo se
+    /// instancian a través de CreateRiverPath() sobre celdas concretas.
+    ///
+    /// Aun así necesitan pasar por el mismo pipeline de rotación/sockets que
+    /// tileObjects (para generar sus variantes rotadas y saber contra qué tiles
+    /// de terreno pueden apoyarse), así que se calculan sus vecinos contra sí
+    /// mismas y contra tileObjects.
+    /// </summary>
+    private void PreprocessRiverTileSet()
+    {
+        riverRoleGroups = new Dictionary<RiverRole, List<Tile>>();
+        riverTileSet = new HashSet<Tile>();
+
+        if (riverPrefabs == null || riverPrefabs.Length == 0) return;
+
+        ClearNeighbours(ref riverPrefabs);
+        CreateRemainingCells(ref riverPrefabs);
+        DefineNeighbourTiles(ref riverPrefabs, ref riverPrefabs);
+        DefineNeighbourTiles(ref riverPrefabs, ref tileObjects);
+
+        riverTileSet = new HashSet<Tile>(riverPrefabs);
+        ClassifyRiverPrefabs();
+    }
+
+    /// <summary>
+    /// Clasifica cada tileType de riverPrefabs por su forma geométrica (nº de
+    /// lados horizontales que conectan con OTRA pieza de río, y si conecta
+    /// verticalmente hacia arriba con otra pieza de río). No se compara ningún
+    /// tileType por nombre: el rol se deduce solo de los vecinos ya calculados.
+    /// </summary>
+    private void ClassifyRiverPrefabs()
+    {
+        var groupedByType = riverPrefabs.GroupBy(t => t.tileType);
+        foreach (var group in groupedByType)
+        {
+            List<Tile> variants = group.ToList();
+            RiverRole role = ClassifyRiverGroup(variants);
+
+            // popcount distinto de 1 y 2 (p.ej. la tapa superior de una cascada,
+            // sin aberturas horizontales) no participa como pieza de trazado:
+            // se coloca automáticamente junto al origen vía sus propios vecinos.
+            if (role == RiverRole.Unknown) continue;
+
+            if (!riverRoleGroups.TryGetValue(role, out var bucket))
+                riverRoleGroups[role] = bucket = new List<Tile>();
+            bucket.AddRange(variants);
+        }
+    }
+
+    private RiverRole ClassifyRiverGroup(List<Tile> variants)
+    {
+        Tile sample = variants[0];
+        int mask = ComputeRiverOpenMask(sample);
+        int popcount = CountSetBits(mask);
+        bool hasAboveRiver = AC4GetNeighboursForDir(sample, 4).Any(riverTileSet.Contains);
+
+        switch (popcount)
+        {
+            case 1: return hasAboveRiver ? RiverRole.Origin : RiverRole.End;
+            case 2: return IsOppositeMask(mask) ? RiverRole.Straight : RiverRole.Corner;
+            default: return RiverRole.Unknown;
+        }
+    }
+
+    /// <summary>
+    /// Máscara de bits (0=Right, 1=Left, 2=Fwd/+Z, 3=Back/-Z) de los lados
+    /// horizontales de la tile que conectan con OTRA pieza de riverPrefabs.
+    /// </summary>
+    private int ComputeRiverOpenMask(Tile variant)
+    {
+        int mask = 0;
+        for (int d = 0; d < 4; d++)
+            if (AC4GetNeighboursForDir(variant, d).Any(riverTileSet.Contains))
+                mask |= (1 << d);
+        return mask;
+    }
+
+    private static int CountSetBits(int mask)
+    {
+        int count = 0;
+        while (mask != 0) { count += mask & 1; mask >>= 1; }
+        return count;
+    }
+
+    private static bool IsOppositeMask(int mask) => mask == 0b0011 || mask == 0b1100;
 
     //---------------------------------INICIALIZACION------------------------------------------------------------------
 
@@ -317,6 +425,11 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void ApplyGlobalConstraints()
     {
+        // Primero: el río se traza y fija ANTES que cualquier otra restricción,
+        // para que CreateFixedTiles (que elige celdas libres al azar) nunca
+        // pise una celda que el río ya ha reservado.
+        CreateRiverPath();
+
         if (borderConstraint) DefineMapLimits();
         if (floorCeilingConstraint)
         {
@@ -827,6 +940,193 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             }
             PlaceInfrastructureTile(target, tile);
         }
+    }
+
+
+    //----------------------------------------------------TRAZADO PREVIO DEL RÍO--------------------------------------
+
+    /// <summary>
+    /// Traza un único río (cascada → recorrido → final) y lo fija en el grid
+    /// ANTES de que WFC coloque nada más. Esto garantiza por construcción
+    /// exactamente un origen y un final conectados entre sí, en vez de dejar
+    /// que WFC decida localmente dónde pone cada pieza.
+    ///
+    /// El recorrido vive entero en la capa y=1 salvo el origen, que ocupa
+    /// también la celda de encima (y=2) con la tapa de la cascada: es la única
+    /// pieza del set que ya soporta un salto de altura, así que el trazado no
+    /// necesita (ni puede) subir de nivel en ningún otro punto.
+    /// </summary>
+    private void CreateRiverPath()
+    {
+        if (!generateRiver) return;
+
+        if (!riverRoleGroups.TryGetValue(RiverRole.Origin, out var originVariants) ||
+            !riverRoleGroups.TryGetValue(RiverRole.End, out var endVariants) ||
+            !riverRoleGroups.TryGetValue(RiverRole.Straight, out var straightVariants) ||
+            !riverRoleGroups.TryGetValue(RiverRole.Corner, out var cornerVariants))
+        {
+            if (riverPrefabs != null && riverPrefabs.Length > 0)
+                Debug.LogWarning("[WFC][Rio] riverPrefabs no contiene piezas de origen/final/recta/curva reconocibles. Se omite el río.");
+            return;
+        }
+
+        const int y = 1;
+        bool expandFrontier = useOptimization && GENERATE_ALL;
+
+        for (int attempt = 0; attempt < riverMaxAttempts; attempt++)
+        {
+            List<Vector2Int> path = TryBuildRiverPath();
+            if (path == null) continue;
+
+            if (PlaceRiverPath(path, y, originVariants, endVariants, straightVariants, cornerVariants, expandFrontier))
+                return;
+        }
+
+        Debug.LogWarning("[WFC][Rio] No se pudo trazar un río válido tras varios intentos.");
+    }
+
+    /// <summary>
+    /// Random walk autoevitante sobre el plano (x,z): elige un origen y una
+    /// dirección inicial al azar, avanza recto con giros ocasionales de 90°
+    /// (nunca 180°, no hay pieza en U), evita revisitar celdas y evita que el
+    /// camino quede adyacente a sí mismo fuera de la celda anterior (para no
+    /// generar recodos imposibles de encajar con sockets rectos/curvos).
+    /// Devuelve null si no alcanza la longitud mínima.
+    /// </summary>
+    private List<Vector2Int> TryBuildRiverPath()
+    {
+        int minX = riverBorderMargin, maxX = dimensionsX - 1 - riverBorderMargin;
+        int minZ = riverBorderMargin, maxZ = dimensionsZ - 1 - riverBorderMargin;
+        if (maxX - minX < 2 || maxZ - minZ < 2) return null;
+
+        Vector2Int start = new Vector2Int(_rng.Next(minX, maxX + 1), _rng.Next(minZ, maxZ + 1));
+        int targetLength = _rng.Next(riverMinLength, riverMaxLength + 1);
+
+        List<Vector2Int> path = new List<Vector2Int> { start };
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int> { start };
+
+        int dir = _rng.Next(0, 4);
+
+        while (path.Count < targetLength)
+        {
+            if (_rng.NextDouble() < riverTurnChance)
+                dir = TurnDirection(dir, _rng.Next(0, 2) == 0);
+
+            Vector2Int next = path[path.Count - 1] + new Vector2Int(AC4_DX[dir], AC4_DZ[dir]);
+
+            if (next.x < minX || next.x > maxX || next.y < minZ || next.y > maxZ) break;
+            if (visited.Contains(next)) break;
+            if (HasNonPredecessorNeighbourInPath(next, path, visited)) break;
+
+            path.Add(next);
+            visited.Add(next);
+        }
+
+        return path.Count >= riverMinLength ? path : null;
+    }
+
+    /// <summary>
+    /// Gira 90° en sentido horario o antihorario (dirs 0..3, convención AC4:
+    /// 0=Right+X, 1=Left-X, 2=Fwd+Z, 3=Back-Z). Nunca invierte el sentido.
+    /// </summary>
+    private static readonly int[,] RIVER_TURN = { { 2, 3 }, { 3, 2 }, { 1, 0 }, { 0, 1 } };
+    private int TurnDirection(int dir, bool clockwise) => RIVER_TURN[dir, clockwise ? 0 : 1];
+
+    private bool HasNonPredecessorNeighbourInPath(Vector2Int cell, List<Vector2Int> path, HashSet<Vector2Int> visited)
+    {
+        Vector2Int predecessor = path[path.Count - 1];
+        for (int d = 0; d < 4; d++)
+        {
+            Vector2Int neighbour = cell + new Vector2Int(AC4_DX[d], AC4_DZ[d]);
+            if (neighbour == predecessor) continue;
+            if (visited.Contains(neighbour)) return true;
+        }
+        return false;
+    }
+
+    private int DirFromDelta(Vector2Int delta)
+    {
+        for (int d = 0; d < 4; d++)
+            if (AC4_DX[d] == delta.x && AC4_DZ[d] == delta.y) return d;
+        return -1;
+    }
+
+    private Cell CellAt(int x, int y, int z)
+    {
+        if (x < 0 || x >= dimensionsX || y < 0 || y >= dimensionsY || z < 0 || z >= dimensionsZ) return null;
+        int idx = x + (z * dimensionsX) + (y * dimensionsX * dimensionsZ);
+        return gridComponents[idx];
+    }
+
+    private Tile FindVariantWithMask(List<Tile> variants, int requiredMask)
+    {
+        foreach (Tile v in variants)
+            if (ComputeRiverOpenMask(v) == requiredMask) return v;
+        return null;
+    }
+
+    /// <summary>
+    /// Traduce el camino (celdas x,z en la capa y) a piezas concretas y las
+    /// fija en el grid. Para cada celda calcula qué lados deben quedar
+    /// abiertos según sus vecinos en el camino y busca la variante rotada que
+    /// los abre exactamente. Si en algún punto falta la pieza necesaria
+    /// (tileset incompleto), no coloca nada y devuelve false para reintentar
+    /// con otro trazado.
+    /// </summary>
+    private bool PlaceRiverPath(List<Vector2Int> path, int y,
+        List<Tile> originVariants, List<Tile> endVariants,
+        List<Tile> straightVariants, List<Tile> cornerVariants,
+        bool expandFrontier)
+    {
+        if (path.Count < 2) return false; // hace falta al menos origen + final
+
+        int last = path.Count - 1;
+        var placements = new List<(Cell cell, Tile tile)>(path.Count + 1);
+
+        for (int i = 0; i <= last; i++)
+        {
+            Cell cell = CellAt(path[i].x, y, path[i].y);
+            if (cell == null || cell.collapsed) return false;
+
+            if (i == 0)
+            {
+                int outDir = DirFromDelta(path[1] - path[0]);
+                Tile origin = FindVariantWithMask(originVariants, 1 << outDir);
+                if (origin == null) return false;
+
+                Tile cap = AC4GetNeighboursForDir(origin, 4).FirstOrDefault(riverTileSet.Contains);
+                Cell capCell = CellAt(path[i].x, y + 1, path[i].y);
+                if (cap == null || capCell == null || capCell.collapsed) return false;
+
+                placements.Add((cell, origin));
+                placements.Add((capCell, cap));
+            }
+            else if (i == last)
+            {
+                int inDir = DirFromDelta(path[i] - path[i - 1]);
+                Tile end = FindVariantWithMask(endVariants, 1 << AC4_OPP[inDir]);
+                if (end == null) return false;
+
+                placements.Add((cell, end));
+            }
+            else
+            {
+                int inDir = DirFromDelta(path[i] - path[i - 1]);
+                int outDir = DirFromDelta(path[i + 1] - path[i]);
+                int requiredMask = (1 << AC4_OPP[inDir]) | (1 << outDir);
+
+                var candidates = IsOppositeMask(requiredMask) ? straightVariants : cornerVariants;
+                Tile segment = FindVariantWithMask(candidates, requiredMask);
+                if (segment == null) return false;
+
+                placements.Add((cell, segment));
+            }
+        }
+
+        foreach (var (placedCell, tile) in placements)
+            PlaceInfrastructureTile(placedCell, tile, expandFrontier);
+
+        return true;
     }
 
 
