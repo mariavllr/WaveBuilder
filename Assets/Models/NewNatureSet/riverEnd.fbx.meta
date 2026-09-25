@@ -3,7 +3,12 @@ guid: 427c986345c1e32498ba2ece552a7b80
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rio
+    second: {fileID: 2100000, guid: 56786b4fbf9a1bb4db530f9256c73465, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

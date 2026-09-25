@@ -64,6 +64,29 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     [SerializeField, Min(2)] private int riverMinLength = 5;
     [SerializeField, Range(0f, 1f)] private float riverTurnChance = 0.3f;
 
+    [Header("Towns")]
+    [SerializeField] private bool generateTowns = true;
+    [Tooltip("Prefabs de casas (con componente Tile). Solo las coloca CreateTowns: no las pongas en Tile Objects.")]
+    [SerializeField] private List<GameObject> townHouses;
+    [SerializeField, Min(0)] private int townNumber = 2;
+    [Tooltip("Distancia mínima en celdas (plano XZ) entre los centros de dos pueblos.")]
+    [SerializeField, Min(0)] private int townMinDistance = 6;
+    [Tooltip("Número de casas de cada pueblo, elegido al azar entre el mínimo y el máximo.")]
+    [SerializeField, Min(1)] private int townMinSize = 3;
+    [SerializeField, Min(1)] private int townMaxSize = 6;
+    private Tile[] townTiles; // townHouses con sus variantes rotadas
+    private List<List<Cell>> towns = new List<List<Cell>>(); // casas de cada pueblo; la primera es su centro
+
+    [Header("Paths")]
+    [SerializeField] private bool generatePaths = true;
+    [Tooltip("Piezas de camino. Su tileType debe acabar en straight, curve, end (sirve de principio y de final) " +
+             "o stairs. Incluye también la parte alta de la escalera. No las pongas en Tile Objects.")]
+    [SerializeField] private Tile[] pathPrefabs;
+    [Tooltip("Socket del camino (SOCKETS/Path): marca por qué caras conecta cada pieza con el resto del camino.")]
+    [SerializeField] private SocketDefinition pathSocket;
+    [Tooltip("Mesh que se coloca encima del río donde lo cruza un camino. Debe estar orientada a lo largo del eje Z.")]
+    [SerializeField] private GameObject bridgePrefab;
+
     [Header("Global Constraints")]
     public bool probabilityConstraint = true;
     public bool excludedNeighborConstraint = true;
@@ -223,6 +246,14 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     /// </summary>
     private void PreprocessTileSet()
     {
+        townTiles = (townHouses ?? new List<GameObject>())
+            .Where(h => h != null).Select(h => h.GetComponent<Tile>()).Where(t => t != null).ToArray();
+        if (pathPrefabs == null) pathPrefabs = new Tile[0];
+        // Las casas y los caminos solo los colocan CreateTowns y CreatePaths: si también están en Tile
+        // Objects se quitan de ahí, porque compartir el mismo prefab en ambos preprocesados duplicaría
+        // variantes y vecinos.
+        tileObjects = tileObjects.Where(t => !townTiles.Contains(t) && !pathPrefabs.Contains(t)).ToArray();
+
         ClearNeighbours(ref tileObjects);
         CreateRemainingCells(ref tileObjects);
         DefineNeighbourTiles(ref tileObjects, ref tileObjects);
@@ -238,6 +269,27 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             CreateRemainingCells(ref riverPrefabs);
             DefineNeighbourTiles(ref riverPrefabs, ref riverPrefabs);
             DefineNeighbourTiles(ref riverPrefabs, ref tileObjects);
+        }
+
+        // Igual que el río: vecinos contra el terreno (para que WFC encaje alrededor), entre ellas
+        // (casas contiguas del pueblo) y contra el río (casas pegadas a él).
+        if (townTiles.Length > 0)
+        {
+            ClearNeighbours(ref townTiles);
+            CreateRemainingCells(ref townTiles);
+            DefineNeighbourTiles(ref townTiles, ref townTiles);
+            DefineNeighbourTiles(ref townTiles, ref tileObjects);
+            if (riverPrefabs != null && riverPrefabs.Length > 0)
+                DefineNeighbourTiles(ref townTiles, ref riverPrefabs);
+        }
+
+        // Igual que el río: vecinos contra el terreno y entre ellas (para la parte alta de la escalera).
+        if (pathPrefabs.Length > 0)
+        {
+            ClearNeighbours(ref pathPrefabs);
+            CreateRemainingCells(ref pathPrefabs);
+            DefineNeighbourTiles(ref pathPrefabs, ref pathPrefabs);
+            DefineNeighbourTiles(ref pathPrefabs, ref tileObjects);
         }
 
         newTilesContainer.SetActive(false);
@@ -262,6 +314,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
 
         // Inicializar AC-4 desde el estado post-restricciones (ambos modos).
         InitAC4FromCellState();
+        if (AC4_contradiction)
+            Debug.LogWarning("[WFC] El mapa nace sin solución: las restricciones globales (río, pueblos...) chocan entre sí.");
         if (!GENERATE_ALL) SyncUncollapsedOptionsFromWave();
 
         if (!GENERATE_ALL) GetCenterCube();
@@ -275,6 +329,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     {
         centerCubeCells = 0;
         iterations = 0;
+        towns.Clear();
         collapseOneOptionThisIteration = true;
     }
 
@@ -348,6 +403,8 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
             CreateSolidCeiling();
         }
         CreateRiver(); // necesita suelo, techo y límites ya colocados
+        CreateTowns(); // después del río: es más difícil de trazar, y las casas se adaptan a él
+        CreatePaths(); // necesita los pueblos y el río (para los puentes)
         if (fixedTilesConstraint) CreateFixedTiles();
 
         // La propagación de estas restricciones hacia el resto del grid la
@@ -934,7 +991,7 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
                         : i == path.Count - 1 ? "end"
                         : (waterMask == 0b0011 || waterMask == 0b1100) ? "straight" : "curve";
 
-            Tile tile = FindRiverTile(role, waterMask);
+            Tile tile = FindPiece(riverPrefabs, riverSocket, role, waterMask);
             if (tile == null) return null;
             river.Add((CellAt(path[i].x, y, path[i].y), tile));
         }
@@ -970,27 +1027,27 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     }
 
     /// <summary>
-    /// Variante rotada de la pieza con ese sufijo cuyas caras de agua coinciden exactamente
-    /// con waterMask.
+    /// Variante rotada de la pieza del pool con ese sufijo cuyas caras con el socket dado
+    /// (agua, camino...) coinciden exactamente con mask.
     /// </summary>
-    private Tile FindRiverTile(string role, int waterMask)
+    private Tile FindPiece(Tile[] pool, SocketDefinition socket, string role, int mask)
     {
-        foreach (Tile t in riverPrefabs)
-            if (t.tileType.EndsWith(role, StringComparison.OrdinalIgnoreCase) && WaterMask(t) == waterMask)
+        foreach (Tile t in pool)
+            if (t.tileType.EndsWith(role, StringComparison.OrdinalIgnoreCase) && SocketMask(t, socket) == mask)
                 return t;
 
-        Debug.LogWarning($"[WFC] No hay ninguna pieza de río '{role}' con agua en las caras {waterMask}.");
+        Debug.LogWarning($"[WFC] No hay ninguna pieza '{role}' con el socket {socket.name} en las caras {mask}.");
         return null;
     }
 
     // Bits según las direcciones AC-4: 0 = Right (+X), 1 = Left (-X), 2 = Up (+Z), 3 = Down (-Z).
-    private int WaterMask(Tile t)
+    private static int SocketMask(Tile t, SocketDefinition socket)
     {
         int mask = 0;
-        if (t.rightSocket.socketDefinition == riverSocket) mask |= 1 << 0;
-        if (t.leftSocket.socketDefinition == riverSocket) mask |= 1 << 1;
-        if (t.upSocket.socketDefinition == riverSocket) mask |= 1 << 2;
-        if (t.downSocket.socketDefinition == riverSocket) mask |= 1 << 3;
+        if (t.rightSocket.socketDefinition == socket) mask |= 1 << 0;
+        if (t.leftSocket.socketDefinition == socket) mask |= 1 << 1;
+        if (t.upSocket.socketDefinition == socket) mask |= 1 << 2;
+        if (t.downSocket.socketDefinition == socket) mask |= 1 << 3;
         return mask;
     }
 
@@ -1007,6 +1064,337 @@ public class WaveFunctionGame_REFACTOR : MonoBehaviour
     {
         if (x < 0 || x >= dimensionsX || y < 0 || y >= dimensionsY || z < 0 || z >= dimensionsZ) return null;
         return gridComponents[x + z * dimensionsX + y * dimensionsX * dimensionsZ];
+    }
+
+    private Cell CellAt(Vector3Int c) => CellAt(c.x, c.y, c.z);
+
+    /// <summary>
+    /// Celdas libres pegadas por los lados (misma capa) a alguna de las celdas dadas.
+    /// </summary>
+    private IEnumerable<Cell> FreeSideNeighbours(IEnumerable<Cell> cells)
+    {
+        return cells
+            .SelectMany(h => Enumerable.Range(0, 4).Select(d => CellAt(h.coords.x + AC4_DX[d], h.coords.y, h.coords.z + AC4_DZ[d])))
+            .Where(c => c != null && !c.collapsed).Distinct();
+    }
+
+    /// <summary>
+    /// Las casas y los caminos solo se apoyan en SOLID, y SOLID solo encaja de lado con SOLID o con la
+    /// trasera de una montaña (que a su vez se apoya en SOLID): debajo de algo en la capa y el WFC tiene
+    /// que levantar una montaña escalonada que se ensancha una celda por nivel. Más cerca del borde
+    /// que esto chocaría con el limit y el mapa nacería sin solución.
+    /// </summary>
+    private bool FarFromBorder(Vector3Int c)
+    {
+        int margin = c.y + 1; // en y = 1: limit + la franja pegada a él
+        return c.x >= margin && c.x < dimensionsX - margin && c.z >= margin && c.z < dimensionsZ - margin;
+    }
+
+
+    //------------------------------------------------------PUEBLOS------------------------------------------------------
+
+    /// <summary>
+    /// Coloca townNumber pueblos antes del WFC. Cada pueblo nace en una celda de cualquier capa
+    /// salvo el subsuelo y el cielo, lejos del borde, y crece por celdas contiguas de su misma capa
+    /// hasta su número de casas. Como con el río, las casas quedan colapsadas y
+    /// InitAC4FromCellState restringe el resto del mapa a partir de ellas. Si un pueblo deja el mapa
+    /// sin solución (p. ej. la montaña que necesita debajo choca con el río u otro pueblo), se descarta
+    /// y se prueba en otro sitio.
+    /// </summary>
+    private void CreateTowns()
+    {
+        if (!generateTowns || townTiles == null || townTiles.Length == 0 || dimensionsY < 3) return;
+
+        // Si el mapa ya no tiene solución antes de los pueblos, todos fallarían la validación
+        InitAC4FromCellState();
+        if (AC4_contradiction) return;
+
+        HashSet<Cell> houses = new HashSet<Cell>(); // casas de los pueblos ya terminados
+        List<Vector3Int> centers = new List<Vector3Int>();
+
+        for (int attempt = 0; centers.Count < townNumber && attempt < townNumber * 50; attempt++)
+        {
+            Vector3Int p = new Vector3Int(_rng.Next(0, dimensionsX), _rng.Next(1, dimensionsY - 1), _rng.Next(0, dimensionsZ));
+            if (centers.Any(c => Vector2.Distance(new Vector2(c.x, c.z), new Vector2(p.x, p.z)) < townMinDistance)) continue;
+
+            List<Cell> town = new List<Cell>();
+            if (!TryPlaceHouse(CellAt(p.x, p.y, p.z), houses, town)) continue;
+
+            int size = _rng.Next(townMinSize, Mathf.Max(townMinSize, townMaxSize) + 1);
+            while (town.Count < size)
+            {
+                List<Cell> frontier = FreeSideNeighbours(town).ToList();
+
+                bool placed = false;
+                while (!placed && frontier.Count > 0)
+                {
+                    int k = _rng.Next(frontier.Count);
+                    placed = TryPlaceHouse(frontier[k], houses, town);
+                    frontier.RemoveAt(k);
+                }
+                if (!placed) break; // no cabe más: el pueblo se queda con las casas que tenga
+            }
+
+            if (!CommitIfSolvable(town)) continue;
+            centers.Add(p);
+            houses.UnionWith(town);
+            towns.Add(town);
+        }
+
+        if (centers.Count < townNumber)
+            Debug.LogWarning($"[WFC] Solo se han podido colocar {centers.Count} de {townNumber} pueblos.");
+    }
+
+    /// <summary>
+    /// Marca en la celda una casa que encaje con todo lo ya colapsado a su alrededor (suelo, río,
+    /// otras casas...). Falla si la celda está ocupada, en el borde o la franja pegada a él, pegada
+    /// a otro pueblo (para que no se junten) o si ninguna casa encaja. La casa no se instancia hasta
+    /// que CommitIfSolvable da por bueno el pueblo entero.
+    /// </summary>
+    private bool TryPlaceHouse(Cell cell, HashSet<Cell> otherTowns, List<Cell> town)
+    {
+        if (cell == null || cell.collapsed || !FarFromBorder(cell.coords)) return false;
+        Vector3Int c = cell.coords;
+
+        for (int d = 0; d < 4; d++)
+            if (otherTowns.Contains(CellAt(c.x + AC4_DX[d], c.y, c.z + AC4_DZ[d]))) return false;
+
+        Tile house = ChooseTile(townTiles.Where(t => FitsCollapsedNeighbours(t, c)));
+        if (house == null) return false;
+
+        cell.tileOptions = new Tile[] { house };
+        cell.collapsed = true;
+        town.Add(cell);
+        return true;
+    }
+
+    /// <summary>
+    /// AC-4 no compara dos celdas ya colapsadas entre sí, así que hay que comprobarlo al colocarlas.
+    /// </summary>
+    private bool FitsCollapsedNeighbours(Tile tile, Vector3Int c)
+    {
+        for (int d = 0; d < 6; d++)
+        {
+            Cell n = CellAt(c.x + AC4_DX[d], c.y + AC4_DY[d], c.z + AC4_DZ[d]);
+            if (n != null && n.collapsed && !AC4GetNeighboursForDir(tile, d).Contains(n.tileOptions[0])) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Recibe celdas marcadas como colapsadas (tileOptions con su tile, aún sin instanciar) y deja que
+    /// AC-4 diga si el resto del mapa aún tiene solución. Si la tiene, las instancia; si no, las deshace.
+    /// </summary>
+    private bool CommitIfSolvable(List<Cell> cells)
+    {
+        InitAC4FromCellState();
+        if (AC4_contradiction)
+        {
+            foreach (Cell cell in cells) { cell.tileOptions = tileObjects.ToArray(); cell.collapsed = false; }
+            return false;
+        }
+
+        bool expandFrontier = useOptimization && GENERATE_ALL;
+        foreach (Cell cell in cells)
+            PlaceInfrastructureTile(cell, cell.tileOptions[0], expandFrontier, meshVisible: true);
+        return true;
+    }
+
+
+    //------------------------------------------------------CAMINOS------------------------------------------------------
+
+    /// <summary>
+    /// Conecta todos los pueblos con el menor número de caminos (árbol de expansión mínima, Kruskal):
+    /// se prueban los pares de pueblos del más cercano al más lejano y solo se hace camino entre dos
+    /// pueblos que aún no están conectados. Si un camino no se puede hacer, el par se salta y los
+    /// siguientes pares sirven de alternativa. Los caminos no se cruzan: cada uno bloquea a los demás.
+    /// </summary>
+    private void CreatePaths()
+    {
+        if (!generatePaths || pathPrefabs.Length == 0 || towns.Count < 2) return;
+        if (pathSocket == null)
+        {
+            Debug.LogWarning("[WFC] Falta asignar Path Socket: no se generan caminos.");
+            return;
+        }
+
+        int[] group = Enumerable.Range(0, towns.Count).ToArray();
+        int Find(int t) => group[t] == t ? t : (group[t] = Find(group[t]));
+
+        var pairs = from a in Enumerable.Range(0, towns.Count)
+                    from b in Enumerable.Range(0, towns.Count)
+                    where a < b
+                    orderby Vector3.Distance(towns[a][0].coords, towns[b][0].coords)
+                    select (a, b);
+
+        HashSet<Cell> pathCells = new HashSet<Cell>(); // caminos ya hechos (incluidos escaleras y puentes)
+        foreach (var (a, b) in pairs)
+            if (Find(a) != Find(b) && TryBuildPath(towns[a], towns[b], pathCells))
+                group[Find(a)] = Find(b);
+
+        if (Enumerable.Range(0, towns.Count).Select(Find).Distinct().Count() > 1)
+            Debug.LogWarning("[WFC] No se han podido conectar todos los pueblos por caminos.");
+    }
+
+    /// <summary>
+    /// Busca el camino más barato (Dijkstra) desde una celda pegada a una casa de un pueblo hasta una
+    /// celda pegada a una casa del otro. En cada paso el camino puede avanzar a la celda de al lado,
+    /// cruzar un río recto con un puente o subir/bajar una escalera (la escalera ocupa la columna de al
+    /// lado y se sale a la celda siguiente, un nivel más arriba o abajo). Cuanto más alto va el camino
+    /// más cuesta, porque el WFC tiene que levantar montaña debajo: así baja en cuanto puede.
+    /// Antes de colocarlo se comprueba con AC-4 que el mapa sigue teniendo solución.
+    /// </summary>
+    private bool TryBuildPath(List<Cell> townA, List<Cell> townB, HashSet<Cell> pathCells)
+    {
+        int[] cost = Enumerable.Repeat(int.MaxValue, gridComponents.Count).ToArray();
+        int[] parent = new int[gridComponents.Count];
+        var open = new SortedSet<(int cost, int cell)>();
+
+        foreach (Cell c in FreeSideNeighbours(townA))
+            if (CanHoldPath(c.coords, pathCells))
+            {
+                cost[c.index] = 0;
+                parent[c.index] = -1;
+                open.Add((0, c.index));
+            }
+        HashSet<Cell> goals = new HashSet<Cell>(FreeSideNeighbours(townB));
+
+        int goal = -1;
+        while (open.Count > 0 && goal < 0)
+        {
+            var (k, i) = open.Min;
+            open.Remove(open.Min);
+            if (k > cost[i]) continue; // entrada antigua, ya se llegó más barato
+
+            // parent >= 0: al menos dos celdas, para que las dos puntas tengan pieza de final
+            if (goals.Contains(gridComponents[i]) && parent[i] >= 0) { goal = i; break; }
+
+            void Relax(Vector3Int r, int cells)
+            {
+                if (!CanHoldPath(r, pathCells)) return;
+                int j = CellAt(r).index;
+                int c = k + cells + (r.y - 1);
+                if (c >= cost[j]) return;
+                cost[j] = c;
+                parent[j] = i;
+                open.Add((c, j));
+            }
+
+            Vector3Int p = gridComponents[i].coords;
+            for (int d = 0; d < 4; d++)
+            {
+                Vector3Int step = new Vector3Int(AC4_DX[d], 0, AC4_DZ[d]);
+                Vector3Int side = p + step;
+
+                if (CanHoldPath(side, pathCells)) Relax(side, 1);
+                else if (CanBridge(side, d, pathCells)) Relax(side + step, 2);
+
+                for (int dy = -1; dy <= 1; dy += 2)
+                {
+                    Vector3Int low = side + new Vector3Int(0, Mathf.Min(dy, 0), 0);
+                    if (CanHoldPath(low, pathCells) && CanHoldPath(low + Vector3Int.up, pathCells))
+                        Relax(side + step + new Vector3Int(0, dy, 0), 2);
+                }
+            }
+        }
+        if (goal < 0) return false;
+
+        List<Vector3Int> nodes = new List<Vector3Int>();
+        for (int j = goal; j >= 0; j = parent[j]) nodes.Add(gridComponents[j].coords);
+        nodes.Reverse();
+
+        var placement = new List<(Cell cell, Tile tile)>();
+        var bridges = new List<(Cell cell, bool alongX)>();
+        for (int n = 0; n < nodes.Count; n++)
+        {
+            int mask = 0;
+            if (n > 0) mask |= 1 << SideDir(nodes[n], nodes[n - 1]);
+            if (n < nodes.Count - 1) mask |= 1 << SideDir(nodes[n], nodes[n + 1]);
+
+            string role = n == 0 || n == nodes.Count - 1 ? "end"
+                        : (mask == 0b0011 || mask == 0b1100) ? "straight" : "curve";
+            placement.Add((CellAt(nodes[n]), FindPiece(pathPrefabs, pathSocket, role, mask)));
+
+            if (n == 0) continue;
+            Vector3Int a = nodes[n - 1], b = nodes[n];
+            int d = SideDir(a, b);
+            Vector3Int between = a + new Vector3Int(AC4_DX[d], 0, AC4_DZ[d]);
+
+            if (a.y != b.y)
+            {
+                // La trasera de la escalera (cara SOLID) mira al lado alto. La parte alta es la pieza del
+                // pool que la escalera admite encima (sus sockets verticales ya fijan la rotación).
+                int back = b.y > a.y ? d : AC4_OPP[d];
+                Tile stairs = pathPrefabs.FirstOrDefault(t => t.tileType.EndsWith("stairs", StringComparison.OrdinalIgnoreCase)
+                                                           && SocketMask(t, floorTile.upSocket.socketDefinition) == 1 << back);
+                Tile top = stairs == null ? null : stairs.aboveNeighbours.FirstOrDefault(t => pathPrefabs.Contains(t));
+                int lowY = Mathf.Min(a.y, b.y);
+                placement.Add((CellAt(between.x, lowY, between.z), stairs));
+                placement.Add((CellAt(between.x, lowY + 1, between.z), top));
+            }
+            else if (between != b)
+                bridges.Add((CellAt(between), d < 2));
+        }
+
+        // Falta alguna pieza en el pool, o el camino pasa dos veces por la misma celda (p. ej. una
+        // escalera sobre un tramo del propio camino)
+        if (placement.Any(e => e.tile == null) || placement.Select(e => e.cell).Distinct().Count() != placement.Count)
+            return false;
+
+        // Se marca el camino y se comprueba que el mapa sigue teniendo solución (p. ej. la montaña que
+        // necesita un tramo alto puede chocar con el río). Si no, se deshace.
+        foreach (var (cell, tile) in placement) { cell.tileOptions = new Tile[] { tile }; cell.collapsed = true; }
+        List<Cell> cells = placement.Select(e => e.cell).ToList();
+        if (!CommitIfSolvable(cells)) return false;
+        pathCells.UnionWith(cells);
+
+        foreach (var (cell, alongX) in bridges)
+        {
+            if (bridgePrefab != null)
+                Instantiate(bridgePrefab, cell.transform.position, Quaternion.Euler(0f, alongX ? 90f : 0f, 0f), cell.transform);
+            pathCells.Add(cell);
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Una celda puede ser camino (o parte de una escalera) si está libre, lejos del borde, tiene
+    /// suelo o hueco debajo y cielo o hueco encima, y no toca por los lados ningún camino ya hecho.
+    /// </summary>
+    private bool CanHoldPath(Vector3Int c, HashSet<Cell> pathCells)
+    {
+        Cell cell = CellAt(c);
+        if (cell == null || cell.collapsed || !FarFromBorder(c)) return false;
+
+        Cell below = CellAt(c + Vector3Int.down), above = CellAt(c + Vector3Int.up);
+        if (below == null || (below.collapsed && below.tileOptions[0] != floorTile)) return false;
+        if (above == null || (above.collapsed && above.tileOptions[0] != emptyTile)) return false;
+
+        for (int d = 0; d < 4; d++)
+            if (pathCells.Contains(CellAt(c + new Vector3Int(AC4_DX[d], 0, AC4_DZ[d])))) return false;
+        return true;
+    }
+
+    /// <summary>
+    /// Se puede poner un puente en una celda de río recto que el camino cruza de lado a lado
+    /// (en perpendicular al agua) y que no tenga ya otro puente.
+    /// </summary>
+    private bool CanBridge(Vector3Int c, int dir, HashSet<Cell> pathCells)
+    {
+        Cell cell = CellAt(c);
+        if (cell == null || !cell.collapsed || pathCells.Contains(cell) || riverPrefabs == null) return false;
+
+        Tile t = cell.tileOptions[0];
+        return riverPrefabs.Contains(t) && t.tileType.EndsWith("straight", StringComparison.OrdinalIgnoreCase)
+            && (SocketMask(t, riverSocket) & (1 << dir)) == 0;
+    }
+
+    /// <summary>
+    /// Dirección horizontal (0-3) de a hacia b, aunque b esté a dos celdas o en otra capa.
+    /// </summary>
+    private static int SideDir(Vector3Int a, Vector3Int b)
+    {
+        return DirTo(new Vector2Int(a.x, a.z), new Vector2Int(a.x + Math.Sign(b.x - a.x), a.z + Math.Sign(b.z - a.z)));
     }
 
 

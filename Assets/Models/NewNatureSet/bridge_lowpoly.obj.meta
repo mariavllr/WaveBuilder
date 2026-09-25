@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 39202ce7f49724f4f8597f94797a6ecc
+guid: 7191a6d72d9803b46ae2b37db9722def
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
@@ -7,8 +7,8 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: RiverInitEnd
-    second: {fileID: 2100000, guid: 56786b4fbf9a1bb4db530f9256c73465, type: 2}
+      name: pont_low_LOWPOLYSCENEMat
+    second: {fileID: 2100000, guid: d6874cddc94059f44aa8a47c01017e71, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
