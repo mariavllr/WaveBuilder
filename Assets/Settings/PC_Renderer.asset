@@ -1,5 +1,20 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-9117928754563704789
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f32b031787c860f428bd98a15b640e53, type: 3}
+  m_Name: TiltShiftRendererFeature
+  m_EditorClassIdentifier: Assembly-CSharp::TiltShiftRendererFeature
+  m_Active: 1
+  shader: {fileID: 4800000, guid: ad2b8b7a903009b468890076a724238a, type: 3}
+  injectionPoint: 550
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27,7 +42,8 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
   - {fileID: 5428066341204292091}
-  m_RendererFeatureMap: ad6b866f10d7b46cfb71bc04945d544b
+  - {fileID: -9117928754563704789}
+  m_RendererFeatureMap: ad6b866f10d7b46cfb71bc04945d544b2b18e9481b9c7681
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
