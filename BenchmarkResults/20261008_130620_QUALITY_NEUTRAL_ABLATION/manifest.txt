@@ -1,0 +1,95 @@
+experiment=QUALITY
+## Environment
+date=2026-10-08 13:06:20
+unity_version=6000.5.2f1
+is_editor=True
+editor_code_optimization=Release  (irrelevante para calidad: no se mide tiempo)
+scripting_backend=Mono
+os=Windows 11  (10.0.26200)
+cpu=Intel(R) Core(TM) i7-14700K x28 @3418MHz
+ram_mb=32452
+gc_incremental=True
+csv_format=ExcelSpanish (separador ';', decimal ',')
+runtime_hash_check=C:\Users\maria\Documents\GitHub\WaveBuilder\WaveBuilder\BenchmarkResults\20261008_094155_AB\runs.csv
+
+## Quality settings
+maps_per_config_and_solver=50 (exactamente; cada run reinicia hasta obtener solución)
+warmup=none (no se descarta ninguna generación; el run 0 se evalúa)
+timing=none
+max_attempts_per_run=1000 (tope de seguridad; si se alcanza se registra [ERROR] en log.txt)
+base_seed=20261007 (semillas de la fase 'measured' del benchmark de runtime)
+save_maps=True
+evaluated_cells=celdas libres (no preasignadas) de la instancia del intento con éxito
+tile_identity_js_entropy=tipo de tile jugable (rotaciones agregadas; SOLID/EMPTY/LIMIT excluidas)
+tile_identity_diversity=id de variante (rotación incluida), infraestructura incluida; diversity = celdas libres en ambos mapas; diversity_undecided = celdas con |D_c|>1 tras la propagación inicial en ambas instancias; diversity_undecided_type = mismas celdas, identidad de tipo (rotaciones agregadas)
+js=Jensen-Shannon, logaritmo natural, rango [0, ln 2]; entropy=Shannon en nats
+conditional_reference=Σ_celdas libres w_t/Σ_{s∈D_c} w_s con D_c el dominio arco-consistente tras la propagación inicial (sonda ThisWork independiente)
+
+## Tilesets
+nature negative_rules=False: tiles_total=77 base_tiles=25 generated_variants=52 domain_T=76 directed_relations_all=5180 directed_relations_domain=5108 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=pueblox1@y1(4 rot);aserraderox1@y1(4 rot)
+nature negative_rules=True: tiles_total=77 base_tiles=25 generated_variants=52 domain_T=76 directed_relations_all=4864 directed_relations_domain=4792 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=pueblox1@y1(4 rot);aserraderox1@y1(4 rot)
+desert negative_rules=False: tiles_total=37 base_tiles=13 generated_variants=24 domain_T=36 directed_relations_all=808 directed_relations_domain=776 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=sand_palmx2@y1(1 rot)
+desert negative_rules=True: tiles_total=37 base_tiles=13 generated_variants=24 domain_T=36 directed_relations_all=724 directed_relations_domain=692 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=sand_palmx2@y1(1 rot)
+farm negative_rules=False: tiles_total=95 base_tiles=28 generated_variants=67 domain_T=94 directed_relations_all=3852 directed_relations_domain=3820 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=HayBalex2@y1(2 rot)
+farm negative_rules=True: tiles_total=95 base_tiles=28 generated_variants=67 domain_T=94 directed_relations_all=3616 directed_relations_domain=3584 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=HayBalex2@y1(2 rot)
+
+## Playable types (p_original)
+nature K=22: grass=0.1656 pines=0.0066 beach=0.1325 beach_cornerExt=0.1325 beach_grassEnd_L=0.0331 beach_grassEnd_R=0.0331 border=0.0066 campfire=0.0099 cornerExtBorder=0.0066 corner=0.0066 cornerIntBorder=0.0066 cornerInterior=0.0066 grass_end=0.1325 grass_end_ExtCorner=0.1325 path=0.0331 path_corner=0.0662 path_end=0.0331 pine=0.0017 pineAutumn=0.0083 wall=0.0331 pueblo=0.0066 aserradero=0.0066
+desert K=10: sand=0.1124 borderSand=0.0449 cornerInt_wall_sand=0.2247 cornerInt_border_sand=0.0449 cornerExt_wall_sand=0.1348 cornerExt_border_sand=0.0449 sand_end=0.0449 palm=0.1685 sand_end_extCorner=0.0449 sand_wall=0.1348
+farm K=25: wall=0.0338 wall_outerCorner=0.0068 wall_window=0.0338 grass=0.1692 roofSide=0.0068 roofSide_OuterCorner=0.0068 roofSide_OuterCorner_F=0.0068 roofTop_ext=0.0068 roofTop_int=0.0068 WallRoof=0.0068 grass_innerCorner=0.1354 grass_outerCorner=0.1354 grass_side=0.1354 sand=0.0423 cliff_corner=0.0068 cliff=0.0068 cliff_corner_top=0.0068 cliff_border=0.0068 hayBale=0.0169 siloBase=0.0338 siloMiddle=0.0068 siloTop=0.0068 wallDoor=0.0068 fence=0.1354 fenceCorner=0.0338
+
+## Quality configurations (54)
+Q_UNRESTRICTED/NATURE/10x10x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/NATURE/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/NATURE/20x20x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/NATURE/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/NATURE/30x30x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/NATURE/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/DESERT/10x10x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/DESERT/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/DESERT/20x20x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/DESERT/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/DESERT/30x30x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/DESERT/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/FARM/10x10x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/FARM/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/FARM/20x20x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/FARM/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q_UNRESTRICTED/FARM/30x30x5 | Q-NEUTRAL | runtime_config_id=A_UNRESTRICTED/FARM/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+Q0_BASELINE/NATURE/10x10x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/NATURE/10x10x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/NATURE/10x10x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/NATURE/10x10x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/10x10x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/NATURE/20x20x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/NATURE/20x20x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/NATURE/20x20x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/NATURE/20x20x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/20x20x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/NATURE/30x30x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/NATURE/30x30x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/NATURE/30x30x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/NATURE/30x30x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/30x30x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/DESERT/10x10x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/DESERT/10x10x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/DESERT/10x10x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/DESERT/10x10x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/10x10x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/DESERT/20x20x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/DESERT/20x20x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/DESERT/20x20x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/DESERT/20x20x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/20x20x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/DESERT/30x30x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/DESERT/30x30x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/DESERT/30x30x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/DESERT/30x30x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/30x30x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/FARM/10x10x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/FARM/10x10x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/FARM/10x10x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/FARM/10x10x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/10x10x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/FARM/20x20x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/FARM/20x20x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/FARM/20x20x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/FARM/20x20x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/20x20x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q0_BASELINE/FARM/30x30x5 | Q-ABLATION | runtime_config_id=B0_BASELINE/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q1_LAYERS/FARM/30x30x5 | Q-ABLATION | runtime_config_id=B1_LAYERS/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q2_LAYERS_BOUNDARY/FARM/30x30x5 | Q-ABLATION | runtime_config_id=B2_LAYERS_BOUNDARY/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q3_LAYERS_BOUNDARY_FIXED/FARM/30x30x5 | Q-ABLATION | runtime_config_id=B3_LAYERS_BOUNDARY_FIXED/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+Q4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/30x30x5 | Q-ABLATION | runtime_config_id=B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched

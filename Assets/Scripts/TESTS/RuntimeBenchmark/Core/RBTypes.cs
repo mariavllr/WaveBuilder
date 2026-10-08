@@ -60,6 +60,7 @@ namespace WFCRuntimeBenchmark
         public int[] RotationSteps;           // 0..3 pasos de 90º
         public int[] Probability;             // Tile.probability en bruto
         public bool[] InDomain;               // false para LIMIT
+        public bool[] Infrastructure;         // Tile.isInfrastructureTile (SOLID, EMPTY, LIMIT); solo lo usan las métricas de calidad
         public int[][][] Allowed;             // [dir][tile] → tiles admitidas en celda + DIR[dir]
         public int FloorTile = -1, EmptyTile = -1, LimitTile = -1;
         public List<FixedTileSpec> FixedTiles = new List<FixedTileSpec>();

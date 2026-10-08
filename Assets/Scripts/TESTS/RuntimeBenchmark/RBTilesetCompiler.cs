@@ -76,7 +76,7 @@ public static class RBTilesetCompiler
         {
             Name = name, NegativeRules = negativeRules, TileCount = tc,
             TileNames = new string[tc], TileTypes = new string[tc], BaseTile = new int[tc], RotationSteps = new int[tc],
-            Probability = new int[tc], InDomain = new bool[tc], Allowed = new int[6][][],
+            Probability = new int[tc], InDomain = new bool[tc], Infrastructure = new bool[tc], Allowed = new int[6][][],
         };
         var byName = new Dictionary<string, int>();
         for (int i = 0; i < baseCount; i++) byName[arr[i].name] = i;
@@ -88,6 +88,7 @@ public static class RBTilesetCompiler
             c.TileTypes[i] = t.tileType;
             c.Probability[i] = uniformWeights ? 1 : t.probability;
             c.InDomain[i] = t.tileType != "limit";   // mismo criterio que MyWFC/GuminWFC/REFACTOR
+            c.Infrastructure[i] = t.isInfrastructureTile;   // SOLID, EMPTY, LIMIT (las variantes heredan el flag)
             c.RotationSteps[i] = Mathf.RoundToInt(t.rotation.y / 90f) & 3;
             if (i < baseCount) c.BaseTile[i] = i;
             else

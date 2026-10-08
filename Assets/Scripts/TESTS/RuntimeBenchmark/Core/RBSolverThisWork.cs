@@ -426,6 +426,20 @@ namespace WFCRuntimeBenchmark
 
         // ── Diagnóstico y lectura (fuera del cronómetro) ──────────────────
 
+        /// <summary>
+        /// Solo lectura (métricas de calidad): dominio actual de la celda i en
+        /// índices de dominio. Tras InitAttempt es el dominio arco-consistente
+        /// con todas las restricciones de la instancia. Devuelve false si la
+        /// celda está preasignada (no es variable del CSP).
+        /// </summary>
+        public bool GetCellDomain(int i, bool[] domainMask)
+        {
+            if (isFixed[i]) return false;
+            int b = i * T;
+            for (int t = 0; t < T; t++) domainMask[t] = wave[b + t];
+            return true;
+        }
+
         public int UndecidedAfterInit()
         {
             int c = 0;

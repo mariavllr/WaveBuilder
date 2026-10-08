@@ -732,7 +732,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f509f0dee2de02f4c9fd71eee2caaf14, type: 3}
   m_Name: 
@@ -772,12 +772,17 @@ MonoBehaviour:
   dimensionsZ: 30
   gridSize: 2
   seed: 0
+  baseSeed: 20261007
+  tilesetName: nature
+  generationIndex: 0
   maxRetries: 100
+  selector: 0
   probabilityConstraint: 1
   excludedNeighborConstraint: 1
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
   borderConstraint: 1
+  fixedTiles: []
   algorithmLabel: mi_WFC
   outputParent: {fileID: 1653789840}
   generateOnStart: 0

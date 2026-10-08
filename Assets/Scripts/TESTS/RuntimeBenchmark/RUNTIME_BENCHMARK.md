@@ -197,3 +197,7 @@ Desde el 8 de octubre de 2026, `TESTS/MyWFC.cs` no contiene una copia propia del
 - Equivalencia verificada fuera de Unity: `SingleRun` reproduce 360/360 runs del motor (misma solución y mismos intentos).
 - La versión anterior de `MyWFC.cs` está copiada en `Logs/MyWFC_backup_20261008_antes_R2.cs`.
 
+
+## 14. Benchmark de calidad
+
+El benchmark de calidad (JS global y condicionada, entropía, diversidad, tasa de éxito por intento) usa esta misma infraestructura con `Experiment = Quality` en `RuntimeBenchmarkRunner`. Genera exactamente 50 mapas por configuración y solver, sin warm-up ni cronómetro, con las semillas de la fase `measured` de este benchmark (mismos `solution_hash`). Se documenta en `QUALITY_BENCHMARK.md`.

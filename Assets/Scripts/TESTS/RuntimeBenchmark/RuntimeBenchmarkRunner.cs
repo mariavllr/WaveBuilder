@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // RuntimeBenchmarkRunner.cs
 //
 // Lanzador en Unity del benchmark de COSTE COMPUTACIONAL (runtime) del
@@ -22,8 +22,14 @@
 //   3. Escribe attempts.csv, runs.csv, summary.csv, log.txt y manifest.txt en
 //      <persistentDataPath>/RuntimeBenchmark/<fecha>_<A|B|AB>/ (nunca sobrescribe).
 //
+// Experiment = Quality: ejecuta en su lugar el benchmark de CALIDAD
+// (QualityEngine, RBQuality.cs) sobre la MISMA matriz: runBenchmarkA → Q-NEUTRAL,
+// runBenchmarkB → Q-ABLATION (Q0..Q4). Exactamente runsPerConfig mapas por
+// configuración y solver, sin warm-up, sin descartes y sin cronómetro. Salida en
+// <persistentDataPath>/QualityBenchmark/<fecha>_QUALITY_<...>/Q-NEUTRAL|Q-ABLATION/.
+//
 // Uso rápido: menú  WFC ▸ Runtime Benchmark ▸ Crear escena  y pulsar Play.
-// Documentación completa: RUNTIME_BENCHMARK.md (misma carpeta).
+// Documentación completa: RUNTIME_BENCHMARK.md y QUALITY_BENCHMARK.md (misma carpeta).
 // ============================================================================
 
 using System;
@@ -62,6 +68,18 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
         [Tooltip("Especificación de tiles fijas para B3/B4. Si está vacía, B3/B4 no se ejecutan para este tileset.")]
         public List<FixedTileEntry> fixedTiles = new List<FixedTileEntry>();
     }
+
+    public enum Experiment
+    {
+        [Tooltip("Benchmark de coste computacional (RuntimeBenchmarkEngine).")]
+        Runtime,
+        [Tooltip("Benchmark de calidad (QualityEngine): JS global, JS condicionada, entropía, diversidad. Sin warm-up ni tiempos.")]
+        Quality
+    }
+
+    [Header("Experimento")]
+    [Tooltip("Runtime: tiempos (A/B). Quality: métricas de calidad sobre la misma matriz (A → Q-NEUTRAL, B → Q-ABLATION).")]
+    public Experiment experiment = Experiment.Runtime;
 
     [Header("Tilesets (usa el menú contextual ⋮ ▸ 'Autocompletar tilesets del artículo')")]
     public List<TilesetEntry> tilesets = new List<TilesetEntry>();
@@ -108,6 +126,12 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
         [Tooltip("Separador ',' y decimal '.'. Formato estándar (pandas, R...).")]
         Standard
     }
+
+    [Header("Calidad (solo Experiment = Quality)")]
+    [Tooltip("Guarda todos los mapas generados (ids de tile por celda) en quality_maps_data.csv.gz.")]
+    public bool qualitySaveMaps = true;
+    [Tooltip("Opcional: ruta a un runs.csv del benchmark de runtime. Se comprueba que cada mapa de calidad tiene el mismo solution_hash que el run 'measured' equivalente (mismas semillas). Vacío = no comprobar.")]
+    public string runtimeRunsCsvForHashCheck = "";
 
     [Header("Ejecución")]
     [Tooltip("ExcelSpanish: ';' y decimal ','. Standard: ',' y decimal '.'. analyze_runtime.py lee ambos.")]
@@ -177,6 +201,16 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
         if (groups.Count < before)
             Debug.LogError("[RuntimeBenchmark] " + (before - groups.Count) + " configuraciones B3/B4 omitidas: tileset sin tiles fijas especificadas.");
 
+        if (experiment == Experiment.Quality)
+        {
+            yield return StartCoroutine(RunQuality(compiled, groups));
+            running = false;
+#if UNITY_EDITOR
+            if (exitPlayModeWhenDone) UnityEditor.EditorApplication.isPlaying = false;
+#endif
+            yield break;
+        }
+
         string tag = (runBenchmarkA ? "A" : "") + (runBenchmarkB ? "B" : "");
         string root = string.IsNullOrEmpty(outputRoot) ? Path.Combine(Application.persistentDataPath, "RuntimeBenchmark") : outputRoot;
         outputFolder = Path.Combine(root, DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_" + tag);
@@ -186,7 +220,7 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
         var sink = new CsvResultSink(outputFolder);
         sink.Echo = m => { if (m.StartsWith("[ERROR]") || m.StartsWith("[WARN]")) Debug.LogWarning("[RuntimeBenchmark] " + m); };
         File.WriteAllText(Path.Combine(outputFolder, "manifest.txt"),
-            EnvironmentDescription() + "\n" + BenchmarkPlan.Describe(compiled, groups, settings, options), new UTF8Encoding(false));
+            EnvironmentDescription(true) + "\n" + BenchmarkPlan.Describe(compiled, groups, settings, options), new UTF8Encoding(false));
         Debug.Log("[RuntimeBenchmark] " + groups.Count + " configuraciones → " + outputFolder);
 
         var startTime = DateTime.Now;
@@ -220,7 +254,113 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
 #endif
     }
 
-    private string EnvironmentDescription()
+    // ════════════════════════════════════════════════════════════════
+    // BENCHMARK DE CALIDAD
+    // ════════════════════════════════════════════════════════════════
+
+    /// <summary>Reenvía al sink de ficheros y comprueba cada mapa contra el runs.csv de runtime.</summary>
+    private sealed class HashCheckingSink : IQualitySink
+    {
+        public IQualitySink Inner;
+        public RuntimeHashCheck Check;
+        public int Maps;
+        public void Map(MapRecord r) { Maps++; if (Check != null) Check.Check(r); Inner.Map(r); }
+        public void Summary(string line) { Inner.Summary(line); }
+        public void Reference(string line) { Inner.Reference(line); }
+        public void Log(string m) { Inner.Log(m); }
+    }
+
+    private IEnumerator RunQuality(List<TilesetPair> compiled, List<ConfigGroup> groups)
+    {
+        var qs = new WFCRuntimeBenchmark.QualitySettings
+        {
+            Runs = runsPerConfig, MaxAttemptsPerRun = maxAttemptsPerRun, BaseSeed = (ulong)baseSeed, SaveMaps = qualitySaveMaps,
+        };
+
+        string tag = runBenchmarkA && runBenchmarkB ? "NEUTRAL_ABLATION" : runBenchmarkA ? "NEUTRAL" : "ABLATION";
+        string root = string.IsNullOrEmpty(outputRoot) ? Path.Combine(Application.persistentDataPath, "QualityBenchmark") : outputRoot;
+        outputFolder = Path.Combine(root, DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_QUALITY_" + tag);
+        Directory.CreateDirectory(outputFolder);
+
+        Csv.Separator = csvFormat == CsvFormat.ExcelSpanish ? ';' : ',';
+        Csv.DecimalComma = csvFormat == CsvFormat.ExcelSpanish;
+
+        RuntimeHashCheck hashCheck = null;
+        if (!string.IsNullOrEmpty(runtimeRunsCsvForHashCheck))
+        {
+            try
+            {
+                hashCheck = new RuntimeHashCheck(runtimeRunsCsvForHashCheck);
+                Debug.Log("[QualityBenchmark] Comprobación de hash activada: " + hashCheck.RuntimeRuns + " runs 'measured' leídos de " + runtimeRunsCsvForHashCheck);
+            }
+            catch (Exception e) { Debug.LogWarning("[QualityBenchmark] No se puede leer el runs.csv de runtime (" + e.Message + "); se continúa sin comprobación de hash."); }
+        }
+
+        if (warmupRuns > 0 || gcBeforeTimedPhases)
+            Debug.Log("[QualityBenchmark] warmupRuns, gcBeforeTimedPhases e interleaveSolvers se ignoran en calidad (sin warm-up, sin cronómetro).");
+
+        var env = new StringBuilder();
+        env.AppendLine("experiment=QUALITY");
+        env.Append(EnvironmentDescription(false));
+        env.AppendLine("runtime_hash_check=" + (hashCheck != null ? runtimeRunsCsvForHashCheck : "off"));
+        File.WriteAllText(Path.Combine(outputFolder, "manifest.txt"), env + "\n" + QualityEngine.Describe(compiled, groups, qs), new UTF8Encoding(false));
+
+        // Neutral y ablation en carpetas separadas: nunca se mezclan en el mismo fichero.
+        var parts = new List<KeyValuePair<string, List<ConfigGroup>>>();
+        var neutral = groups.Where(g => g.Level.Benchmark == "A").ToList();
+        var ablation = groups.Where(g => g.Level.Benchmark == "B").ToList();
+        if (neutral.Count > 0) parts.Add(new KeyValuePair<string, List<ConfigGroup>>("Q-NEUTRAL", neutral));
+        if (ablation.Count > 0) parts.Add(new KeyValuePair<string, List<ConfigGroup>>("Q-ABLATION", ablation));
+        Debug.Log("[QualityBenchmark] " + neutral.Count + " configuraciones neutral + " + ablation.Count + " ablation → " + outputFolder);
+
+        var startTime = DateTime.Now;
+        bool failed = false;
+        foreach (var part in parts)
+        {
+            var csv = new QualityCsvSink(Path.Combine(outputFolder, part.Key), qs.SaveMaps);
+            csv.Echo = m => { if (m.StartsWith("[ERROR]") || m.StartsWith("[WARN]")) Debug.LogWarning("[QualityBenchmark] " + m); };
+            csv.WriteTileTable(compiled.SelectMany(t => new[] { t.Plain, t.Negative }));
+            var sink = new HashCheckingSink { Inner = csv, Check = hashCheck };
+
+            IEnumerator<string> it = QualityEngine.Execute(part.Value, qs, sink).GetEnumerator();
+            string lastGroup = "";
+            while (true)
+            {
+                bool more;
+                try { more = it.MoveNext(); }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    csv.Log("[ERROR] Excepción: " + e);
+                    status = "ERROR: " + e.Message;
+                    failed = true;
+                    break;
+                }
+                if (!more) break;
+                status = part.Key + " " + it.Current;
+                int cut = it.Current.IndexOf(" mapa ", StringComparison.Ordinal);
+                string grp = cut > 0 ? it.Current.Substring(0, cut) : it.Current;
+                if (grp != lastGroup) { Debug.Log("[QualityBenchmark] " + grp); lastGroup = grp; }
+                yield return null;
+            }
+            csv.Log("[END] " + part.Key + " mapas=" + sink.Maps + (failed ? " (interrumpido)" : ""));
+            csv.Dispose();
+            if (failed) break;
+        }
+
+        if (hashCheck != null)
+        {
+            string rep = hashCheck.Report();
+            File.WriteAllText(Path.Combine(outputFolder, "runtime_hash_check.txt"), rep + "\n", new UTF8Encoding(false));
+            if (hashCheck.Compared > 0 && hashCheck.Equal == hashCheck.Compared) Debug.Log("[QualityBenchmark] " + rep);
+            else Debug.LogWarning("[QualityBenchmark] " + rep);
+        }
+
+        if (!failed) status = "COMPLETADO en " + (DateTime.Now - startTime).TotalMinutes.ToString("F1") + " min";
+        Debug.Log("[QualityBenchmark] " + status + " → " + outputFolder);
+    }
+
+    private string EnvironmentDescription(bool timing)
     {
         var sb = new StringBuilder();
         sb.AppendLine("## Environment");
@@ -229,8 +369,8 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
         sb.AppendLine("is_editor=" + Application.isEditor);
 #if UNITY_EDITOR
         sb.AppendLine("editor_code_optimization=" + UnityEditor.Compilation.CompilationPipeline.codeOptimization +
-                      "  (debe ser Release para medir tiempos)");
-        if (UnityEditor.Compilation.CompilationPipeline.codeOptimization != UnityEditor.Compilation.CodeOptimization.Release)
+                      (timing ? "  (debe ser Release para medir tiempos)" : "  (irrelevante para calidad: no se mide tiempo)"));
+        if (timing && UnityEditor.Compilation.CompilationPipeline.codeOptimization != UnityEditor.Compilation.CodeOptimization.Release)
             Debug.LogWarning("[RuntimeBenchmark] El editor está en modo 'Debug' de optimización de código: los tiempos no son representativos. " +
                              "Cambia a 'Release' (icono del bicho, esquina inferior derecha) antes de medir.");
 #endif
@@ -315,16 +455,16 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
     /// <summary>
     /// Rellena los tres tilesets con las mismas listas de prefabs que usan las
     /// escenas del artículo (ARTICLE/Nature, WFC_Desert, WFC_Granja).
-    /// Las tiles fijas son una PROPUESTA (ver RUNTIME_BENCHMARK.md): revísalas.
+    /// Tiles fijas: especificación final usada en el artículo (todas en la capa y=1).
     /// </summary>
     [ContextMenu("Autocompletar tilesets del artículo")]
     public void AutofillArticleTilesets()
     {
         tilesets = new List<TilesetEntry>
         {
-            MakeEntry("nature", NatureDir, NatureTiles, new[] { "pueblo", "aserradero", "campfire" }, new[] { 1, 1, 1 }),
+            MakeEntry("nature", NatureDir, NatureTiles, new[] { "pueblo", "aserradero" }, new[] { 1, 1 }),
             MakeEntry("desert", NatureDir, DesertTiles, new[] { "sand_palm" }, new[] { 2 }),
-            MakeEntry("farm", FarmDir, FarmTiles, new[] { "SiloDown", "HayBale" }, new[] { 1, 1 }),
+            MakeEntry("farm", FarmDir, FarmTiles, new[] { "HayBale" }, new[] { 2 }),
         };
         UnityEditor.EditorUtility.SetDirty(this);
         Debug.Log("[RuntimeBenchmark] Tilesets del artículo cargados. Revisa la especificación de tiles fijas antes de lanzar B3/B4.");
