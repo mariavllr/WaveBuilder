@@ -31,8 +31,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using WFCRuntimeBenchmark;
@@ -253,12 +251,6 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
     // COMPILACIÓN DE TILESETS
     // ════════════════════════════════════════════════════════════════
 
-    private sealed class RefEq : IEqualityComparer<Tile>
-    {
-        public bool Equals(Tile a, Tile b) { return ReferenceEquals(a, b); }
-        public int GetHashCode(Tile t) { return RuntimeHelpers.GetHashCode(t); }
-    }
-
     private TilePreprocessor preprocessor;
     private GameObject scratchRoot;
 
@@ -266,152 +258,31 @@ public class RuntimeBenchmarkRunner : MonoBehaviour
     {
         if (tilesets.Count == 0) throw new InvalidOperationException("No hay tilesets configurados.");
 
-        // TilePreprocessor propio, con contenedor inactivo para las variantes rotadas.
+        // TilePreprocessor propio; RBTilesetCompiler le asigna un contenedor inactivo para las variantes.
         scratchRoot = new GameObject("RuntimeBenchmark_Scratch");
         scratchRoot.SetActive(false);
         scratchRoot.transform.SetParent(transform, false);
         var preGo = new GameObject("TilePreprocessor");
         preGo.transform.SetParent(transform, false);
         preprocessor = preGo.AddComponent<TilePreprocessor>();
-        FieldInfo fi = typeof(TilePreprocessor).GetField("newTilesContainer", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (fi == null) throw new InvalidOperationException("TilePreprocessor.newTilesContainer no encontrado.");
 
         var result = new List<TilesetPair>();
         foreach (TilesetEntry e in tilesets)
         {
             var pair = new TilesetPair { Name = e.name };
-            pair.Plain = Compile(e, false, fi);
-            pair.Negative = Compile(e, true, fi);
+            pair.Plain = Compile(e, false);
+            pair.Negative = Compile(e, true);
             result.Add(pair);
         }
         return result;
     }
 
-    private CompiledTileset Compile(TilesetEntry e, bool negativeRules, FieldInfo containerField)
+    private CompiledTileset Compile(TilesetEntry e, bool negativeRules)
     {
-        if (e.baseTiles == null || e.baseTiles.Length == 0) throw new InvalidOperationException(e.name + ": sin tiles base.");
-
-        var container = new GameObject(e.name + (negativeRules ? "_neg" : "_plain"));
-        container.transform.SetParent(scratchRoot.transform, false); // jerarquía inactiva: nada se activa ni se renderiza
-        containerField.SetValue(preprocessor, container);
-
-        // Copias de los prefabs: el preprocesado escribe listas de vecinos y no
-        // debe tocar los assets originales que usan los demás scripts.
-        var arr = new Tile[e.baseTiles.Length];
-        for (int i = 0; i < arr.Length; i++)
-        {
-            if (e.baseTiles[i] == null) throw new InvalidOperationException(e.name + ": tile base nula en la posición " + i);
-            arr[i] = Instantiate(e.baseTiles[i], container.transform);
-            arr[i].name = e.baseTiles[i].name;
-        }
-        int baseCount = arr.Length;
-
-        preprocessor.excludedNeighborConstraint = negativeRules;
-        preprocessor.Preprocess(ref arr);
-
-        int tc = arr.Length;
-        var index = new Dictionary<Tile, int>(new RefEq());
-        for (int i = 0; i < tc; i++) index[arr[i]] = i;
-
-        var c = new CompiledTileset
-        {
-            Name = e.name, NegativeRules = negativeRules, TileCount = tc,
-            TileNames = new string[tc], TileTypes = new string[tc], BaseTile = new int[tc], RotationSteps = new int[tc],
-            Probability = new int[tc], InDomain = new bool[tc], Allowed = new int[6][][],
-        };
-        var byName = new Dictionary<string, int>();
-        for (int i = 0; i < baseCount; i++) byName[arr[i].name] = i;
-        int missingRefs = 0;
-        for (int i = 0; i < tc; i++)
-        {
-            Tile t = arr[i];
-            c.TileNames[i] = t.name;
-            c.TileTypes[i] = t.tileType;
-            c.Probability[i] = t.probability;
-            c.InDomain[i] = t.tileType != "limit";   // mismo criterio que MyWFC/GuminWFC/REFACTOR
-            c.RotationSteps[i] = Mathf.RoundToInt(t.rotation.y / 90f) & 3;
-            if (i < baseCount) c.BaseTile[i] = i;
-            else
-            {
-                int cut = t.name.LastIndexOf("_Rotate", StringComparison.Ordinal);
-                int b;
-                if (cut < 0 || !byName.TryGetValue(t.name.Substring(0, cut), out b))
-                    throw new InvalidOperationException(e.name + ": no se encuentra la tile base de la variante " + t.name);
-                c.BaseTile[i] = b;
-            }
-        }
-        for (int d = 0; d < 6; d++)
-        {
-            c.Allowed[d] = new int[tc][];
-            for (int a = 0; a < tc; a++)
-            {
-                List<Tile> list = Neighbours(arr[a], d);
-                var ids = new List<int>(list.Count);
-                foreach (Tile n in list)
-                {
-                    int id;
-                    if (n != null && index.TryGetValue(n, out id)) { if (!ids.Contains(id)) ids.Add(id); }
-                    else missingRefs++;
-                }
-                ids.Sort();
-                c.Allowed[d][a] = ids.ToArray();
-            }
-        }
-        if (missingRefs > 0) Debug.LogWarning("[RuntimeBenchmark] " + e.name + ": " + missingRefs + " referencias de vecino fuera del tileset (ignoradas).");
-
-        c.FloorTile = IndexOfPrefab(e, e.floorTile);
-        c.EmptyTile = IndexOfPrefab(e, e.emptyTile);
-        c.LimitTile = IndexOfPrefab(e, e.limitTile);
-        if (c.FloorTile < 0 || c.EmptyTile < 0) throw new InvalidOperationException(e.name + ": floorTile/emptyTile deben estar en baseTiles.");
-        if (c.LimitTile < 0) Debug.LogWarning("[RuntimeBenchmark] " + e.name + ": sin limitTile → Boundary no disponible.");
-        if (!c.InDomain[c.FloorTile] || !c.InDomain[c.EmptyTile]) throw new InvalidOperationException(e.name + ": floor/empty deben pertenecer al dominio.");
-
-        // Detección de (tileType, rotation) duplicados: Tile.Equals los considera iguales,
-        // lo que afectaría a los diccionarios de los scripts antiguos (aquí se indexa por referencia).
-        var dup = arr.GroupBy(t => t.tileType + "@" + t.rotation.y).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
-        if (dup.Count > 0) Debug.LogWarning("[RuntimeBenchmark] " + e.name + ": (tileType, rotación) duplicados: " + string.Join(", ", dup.ToArray()));
-
-        c.Finish();
-
-        foreach (FixedTileEntry f in e.fixedTiles)
-        {
-            int b = IndexOfPrefab(e, f.baseTile);
-            if (b < 0) throw new InvalidOperationException(e.name + ": tile fija fuera de baseTiles: " + (f.baseTile != null ? f.baseTile.name : "null"));
-            int[] variants = c.VariantsOf(b);
-            if (variants.Length == 0) throw new InvalidOperationException(e.name + ": la tile fija " + c.TileNames[b] + " no pertenece al dominio.");
-            c.FixedTiles.Add(new FixedTileSpec { BaseTile = b, Count = Mathf.Max(1, f.count), Layer = f.layer, Variants = variants });
-        }
-
-        Debug.Log(string.Format("[RuntimeBenchmark] {0} (negative rules={1}): {2} tiles ({3} base + {4} variantes), dominio T={5}, " +
-                                "relaciones dirigidas={6} (dominio {7}), asimétricas={8}",
-            e.name, negativeRules, tc, baseCount, tc - baseCount, c.T, c.DirectedRelations, c.DomainDirectedRelations, c.AsymmetricRelations));
-        if (c.AsymmetricRelations > 0)
-            Debug.LogError("[RuntimeBenchmark] " + e.name + ": tabla de adyacencias asimétrica. AC-4 requiere simetría; revisa con AdjacencySymmetryVerifier.");
-
-        foreach (Tile t in arr) if (t != null) Destroy(t.gameObject);
-        Destroy(container);
-        return c;
-    }
-
-    private static int IndexOfPrefab(TilesetEntry e, Tile prefab)
-    {
-        if (prefab == null) return -1;
-        // Comparación por referencia (Tile.Equals compara tileType+rotation).
-        for (int i = 0; i < e.baseTiles.Length; i++) if (ReferenceEquals(e.baseTiles[i], prefab)) return i;
-        return -1;
-    }
-
-    private static List<Tile> Neighbours(Tile t, int d)
-    {
-        switch (d)
-        {
-            case 0: return t.rightNeighbours;   // +X
-            case 1: return t.leftNeighbours;    // -X
-            case 2: return t.upNeighbours;      // +Z
-            case 3: return t.downNeighbours;    // -Z
-            case 4: return t.aboveNeighbours;   // +Y
-            default: return t.belowNeighbours;  // -Y
-        }
+        var fixedInputs = e.fixedTiles.Select(f => new RBTilesetCompiler.FixedInput { tile = f.baseTile, count = f.count, layer = f.layer }).ToList();
+        Tile[] unused;
+        return RBTilesetCompiler.Compile(e.name, e.baseTiles, e.floorTile, e.emptyTile, e.limitTile, fixedInputs,
+            negativeRules, false, preprocessor, scratchRoot.transform, false, out unused, "[RuntimeBenchmark]");
     }
 
     // ════════════════════════════════════════════════════════════════

@@ -12,7 +12,9 @@ Ficheros (en `Assets/Scripts/TESTS/RuntimeBenchmark/`):
 | `Core/RBSolverDeBroglie.cs` | Adaptador de DeBroglie 2.1.0 (sin modificar la librería), modos `matched` y `native` |
 | `Core/RBEngine.cs` | Motor: único cronómetro, protocolo de runs, CSV y estadísticos |
 | `Core/RBPlan.cs` | Matriz de configuraciones A y B, manifest |
-| `RuntimeBenchmarkRunner.cs` | MonoBehaviour que compila los tilesets con el `TilePreprocessor` del framework y lanza el motor |
+| `Core/RBSingleRun.cs` | Un run aislado (mismas semillas y misma ventana temporal que el motor), usado por `MyWFC` |
+| `RBTilesetCompiler.cs` | Compilación del tileset (copias de los prefabs + `TilePreprocessor`), compartida por el runner y `MyWFC` |
+| `RuntimeBenchmarkRunner.cs` | MonoBehaviour que compila los tilesets y lanza el motor |
 | `Editor/RuntimeBenchmarkMenu.cs` | Menú `WFC ▸ Runtime Benchmark` |
 | `analyze_runtime.py` | Tablas A y B (Markdown) a partir de `summary.csv` |
 
@@ -155,7 +157,7 @@ Cada ejecución crea `<persistentDataPath>/RuntimeBenchmark/<yyyyMMdd_HHmmss>_<A
 
 **summary.csv:** `config_id, benchmark, level_id, level_order, tileset, size_label, dim_x, dim_y, dim_z, total_cells, solver, solver_variant, n_runs, runs_solved, n_attempts_total, contradictions_total, contradictions_init, contradictions_search, success_rate_first_attempt, success_first_ci95_lo, success_first_ci95_hi, success_rate_pooled_attempts, effective_free_cells, solver_csp_cells, undecided_after_init_mean, decisions_mean, t_solve_sum_ms, t_solve_mean_ms, t_solve_median_ms, t_solve_q1_ms, t_solve_q3_ms, t_solve_iqr_ms, t_solve_sd_ms, t_solve_min_ms, t_solve_max_ms, t_success_attempt_mean_ms, t_success_attempt_median_ms, t_init_total_median_ms, t_search_total_median_ms, t_failed_attempt_mean_ms, time_per_free_cell_mean_us, time_per_free_cell_median_us, success_attempt_per_free_cell_median_us, warmup_run_times_ms, measured_run0_ms, all_solutions_valid`
 
-Los cuartiles son de tipo 7 (R por defecto, numpy `linear`). El separador es la coma y el formato numérico, invariante (punto decimal).
+Los cuartiles son de tipo 7 (R por defecto, numpy `linear`). Formato del CSV según `csvFormat` del runner: `ExcelSpanish` (por defecto) usa separador `;` y decimal `,`, para abrir directamente en Excel con configuración regional española; `Standard` usa `,` y `.`. `analyze_runtime.py` detecta ambos. Para pandas con el formato español: `pd.read_csv(ruta, sep=';', decimal=',')`.
 
 ## 11. Diferencias entre solvers que siguen siendo relevantes
 
@@ -184,3 +186,14 @@ Los cuartiles son de tipo 7 (R por defecto, numpy `linear`). El separador es la 
 - Matriz completa (A + B, 3 tilesets × 3 tamaños, 50 runs + 3 de calentamiento) ejecutada de principio a fin en Mono 6.8 en unos 8 minutos: 6 202 runs, 0 soluciones inválidas y 0 errores. En B3/B4, ThisWork y DeBroglie-matched registran exactamente las mismas contradicciones de inicialización: reciben las mismas instancias y la propagación inicial llega al mismo resultado. Los tiempos absolutos de esa ejecución **no** son válidos para el artículo (otra máquina y otro runtime).
 - Los tilesets del arnés se reconstruyeron replicando el `TilePreprocessor` sobre los prefabs. Los recuentos de relaciones difieren ligeramente de la Tabla III. En Unity se usa el `TilePreprocessor` real y el manifest registra los recuentos exactos (útil para comprobar las Tablas II y III).
 - El runner de Unity y el menú se han comprobado solo a nivel de compilación (contra stubs de la API de Unity). La primera ejecución real debe ser la prueba rápida del punto 9.
+
+## 13. Relación con `MyWFC.cs` (solver publicado)
+
+Desde el 8 de octubre de 2026, `TESTS/MyWFC.cs` no contiene una copia propia del algoritmo. Compila el tileset con `RBTilesetCompiler` y resuelve con `ThisWorkSolver` a través de `SingleRun`, es decir, con el mismo código que mide este benchmark.
+
+- Con `seed = 0`, la generación r de `MyWFC` usa las semillas del run r "measured" del benchmark. Si el tileset (misma lista de tiles en el mismo orden, mismas tiles de infraestructura y tiles fijas), el tamaño, `tilesetName`, `baseSeed` y las restricciones coinciden, produce el mismo mapa: `MyWFC.LastSolutionHash` coincide con `solution_hash` de `runs.csv`.
+- Las tiles fijas se definen en la lista `fixedTiles` del Inspector (tile, cantidad, capa). `Tile.fixedTile` ya no se usa.
+- Los prefabs originales ya no se modifican al preprocesar.
+- Equivalencia verificada fuera de Unity: `SingleRun` reproduce 360/360 runs del motor (misma solución y mismos intentos).
+- La versión anterior de `MyWFC.cs` está copiada en `Logs/MyWFC_backup_20261008_antes_R2.cs`.
+
