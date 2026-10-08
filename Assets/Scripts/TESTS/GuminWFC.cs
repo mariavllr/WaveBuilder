@@ -45,7 +45,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GuminWFC : MonoBehaviour, IWFCGenerator
+public class GuminWFC : MonoBehaviour, IWFCGenerator, IWFCSolveTimer
 {
     // =========================================================================
     // INSPECTOR
@@ -86,6 +86,49 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
     public event Action OnStart;
     public event Action OnEnd;
     public event Action OnIncompatibility;
+
+    // ── Cronómetro interno de resolución (IWFCSolveTimer) ────────────────
+    // Contrato de medición común a MyWFC, GuminWFC y DeBroglieWFC:
+    //   FUERA del cronómetro: construcción del propagador/modelo, aplicación de
+    //   las restricciones globales e inicialización del estado (incluida la
+    //   propagación inicial de esas restricciones), GC.Collect(), lectura del
+    //   resultado e instanciación visual.
+    //   DENTRO: únicamente el bucle observación–colapso–propagación de cada
+    //   intento. El tiempo de los intentos fallidos se suma al de la generación.
+    [Header("Medición")]
+    [Tooltip("Ejecuta GC.Collect() antes de cada intento, fuera del cronómetro, " +
+             "para que la recolección de basura no caiga dentro de la medición.")]
+    public bool collectGarbageBeforeSolve = true;
+
+    private readonly System.Diagnostics.Stopwatch solveWatch = new System.Diagnostics.Stopwatch();
+
+    /// <summary>Segundos de resolución de la última generación exitosa (suma de sus intentos).</summary>
+    public double LastSolveTime { get; private set; }
+
+    /// <summary>
+    /// Celdas con más de una opción al empezar la resolución del intento que
+    /// tuvo éxito (contadas fuera del cronómetro): las que el solver tiene que
+    /// decidir realmente. Excluye las celdas fijadas o ya determinadas por la
+    /// propagación inicial de las restricciones.
+    /// </summary>
+    public int LastCellsToDecide { get; private set; }
+
+    /// <summary>Celdas con más de una opción tras InitWave() (fuera del cronómetro).</summary>
+    private int CountCellsToDecide()
+    {
+        int count = 0;
+        for (int i = 0; i < N; i++)
+            if (observed[i] < 0 && sumsOfOnes[i] > 1) count++;
+        return count;
+    }
+
+    private void CollectGarbageOutsideTimer()
+    {
+        if (!collectGarbageBeforeSolve) return;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
 
     [Header("Etiqueta del experimento (columna del CSV)")]
     public string algorithmLabel = "gumin_prob";
@@ -154,24 +197,39 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
     // UNITY LIFECYCLE
     // =========================================================================
 
+    // PREPROCESADO DIFERIDO
+    // El preprocesado NO se hace en Awake(): TilePreprocessor escribe las listas
+    // de vecinos dentro de las tiles base, que son los mismos prefabs para los
+    // tres solvers. Si varios solvers preprocesaran en Awake (MyWFC siempre
+    // está activo porque comparte GameObject con el arnés), el último en
+    // ejecutarse sobrescribiría las listas de los demás con referencias a SUS
+    // variantes rotadas, y los otros solvers perderían adyacencias. Por eso
+    // solo preprocesa el solver al que se le pide generar, en su primer
+    // Generate(), fuera del cronómetro.
     void Awake()
     {
         if (tilePreprocessor == null)
+            Debug.LogError("[GuminWFC] TilePreprocessor no asignado en el Inspector.");
+    }
+
+    private bool EnsurePreprocessed()
+    {
+        if (tilesetPreprocessed) return true;
+        if (tilePreprocessor == null)
         {
             Debug.LogError("[GuminWFC] TilePreprocessor no asignado en el Inspector.");
-            return;
+            return false;
         }
 
-        // El preprocesado se hace una vez por sesión, igual que en REFACTOR.
         // Expande tileObjects con variantes rotadas y calcula la tabla de vecinos.
         tilePreprocessor.Preprocess(ref tileObjects);
 
-        // Filtrar LIMIT del dominio de colapso, igual que REFACTOR.
-        // Las referencias a LIMIT en las listas de vecinos se mantienen para
-        // que el TilePreprocessor pueda usarlas, pero Gumin no las colapsa.
+        // Filtrar LIMIT del dominio de colapso. Las referencias a LIMIT en las
+        // listas de vecinos se mantienen, pero Gumin no las colapsa.
         tileObjects = System.Array.FindAll(tileObjects, t => t.tileType != "limit");
 
         tilesetPreprocessed = true;
+        return true;
     }
 
     void Start()
@@ -190,11 +248,7 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
     /// </summary>
     public void Generate()
     {
-        if (!tilesetPreprocessed)
-        {
-            Debug.LogError("[GuminWFC] Tileset no preprocesado. Asegúrate de que Awake() se haya ejecutado.");
-            return;
-        }
+        if (!EnsurePreprocessed()) return;
 
         // Llamada directa y SÍNCRONA
         GenerateSync();
@@ -223,6 +277,8 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
     private void GenerateSync()
     {
         FailCount = 0;
+        LastSolveTime = 0;
+        LastCellsToDecide = 0;
 
         if (!BuildPropagator())
         {
@@ -232,14 +288,25 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
         rng = seed != 0 ? new System.Random(seed) : new System.Random();
 
         OnStart?.Invoke();
+        double solveTime = 0;
 
         for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
+            // Preparación del intento (FUERA del cronómetro)
             InitWave();
+            int cellsToDecide = CountCellsToDecide();
+            CollectGarbageOutsideTimer();
 
+            // Resolución (DENTRO del cronómetro)
+            solveWatch.Restart();
             bool success = RunAlgorithm();
+            solveWatch.Stop();
+            solveTime += solveWatch.Elapsed.TotalSeconds;
+
             if (success)
             {
+                LastSolveTime = solveTime;
+                LastCellsToDecide = cellsToDecide;
                 OnEnd?.Invoke();
                 InstantiateTiles();
                 return;
@@ -249,7 +316,7 @@ public class GuminWFC : MonoBehaviour, IWFCGenerator
             OnIncompatibility?.Invoke();
         }
 
-        Debug.LogWarning($"[GuminWFC] Agotados {maxRetries} reintentos sin solución.");
+        Debug.LogError($"[GuminWFC] Agotados {maxRetries} reintentos sin solución.");
     }
 
 

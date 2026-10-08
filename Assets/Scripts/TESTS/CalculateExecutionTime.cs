@@ -34,6 +34,22 @@ public enum WriteMode
 }
 
 /// <summary>
+/// Cronómetro interno de los solvers. Cada solver mide él mismo su tiempo de
+/// resolución (solo el bucle observación–colapso–propagación, sumando los
+/// intentos fallidos) y lo expone aquí. Así, lo que hagan los suscriptores de
+/// OnEnd (métricas, escritura de CSV…) nunca puede entrar en la medición, y el
+/// punto de inicio y fin queda definido igual en los tres solvers.
+/// </summary>
+public interface IWFCSolveTimer
+{
+    /// <summary>Segundos de resolución de la última generación exitosa.</summary>
+    double LastSolveTime { get; }
+
+    /// <summary>Celdas con más de una opción al empezar la resolución (intento con éxito).</summary>
+    int LastCellsToDecide { get; }
+}
+
+/// <summary>
 /// Arnés central de los tests de rendimiento WFC del artículo.
 /// Mide el tiempo de generación completa (GENERATE_ALL) de los tres solvers
 /// comparados (MyWFC, Gumin, DeBroglie) y vuelca los resultados a un CSV.
@@ -74,11 +90,10 @@ public class CalculateExecutionTime : MonoBehaviour
 
     // ── estado interno ──────────────────────────────────────────────
     private IWFCGenerator selected;
-    private Stopwatch stopwatch;
+    private IWFCSolveTimer solveTimer;   // cronómetro interno del solver
 
     private bool active = false;
     private bool writeToCSV = true;
-    private bool incompatibility = false;
 
     private int incCounter = 0;
     private int totalIncompat = 0;
@@ -102,7 +117,6 @@ public class CalculateExecutionTime : MonoBehaviour
 
     void Awake()
     {
-        stopwatch = new Stopwatch();
 
         selected = ResolveSelected();
         if (selected == null)
@@ -111,6 +125,14 @@ public class CalculateExecutionTime : MonoBehaviour
             active = false;
             return;
         }
+        solveTimer = selected as IWFCSolveTimer;
+        if (solveTimer == null)
+        {
+            Debug.LogError($"[Benchmark] El solver '{algorithm}' no implementa IWFCSolveTimer.");
+            active = false;
+            return;
+        }
+
         active = true;
 
         selected.OnStart += OnStart;
@@ -164,15 +186,12 @@ public class CalculateExecutionTime : MonoBehaviour
 
     private void OnStart()
     {
-        if (!incompatibility) stopwatch.Restart();
+        // El tiempo lo mide el propio solver (IWFCSolveTimer): aquí no se cronometra.
     }
 
     private void OnEnd()
     {
-        stopwatch.Stop();
-        incompatibility = false;
-
-        double t = stopwatch.Elapsed.TotalSeconds;
+        double t = solveTimer.LastSolveTime;
         timeSum += t;
         if (t > maxTime) maxTime = t;
         if (minTime == 0 || t < minTime) minTime = t;
@@ -181,14 +200,18 @@ public class CalculateExecutionTime : MonoBehaviour
         totalIncompat += incCounter;
         incCounter = 0;
 
-        Debug.Log($"[Benchmark] Medición {generationsDone}/{numberOfGenerations}: {t:F4}s");
+        Debug.Log($"[Benchmark] Medición {generationsDone}/{numberOfGenerations}: {t:F6}s | " +
+                  $"celdas por decidir: {solveTimer.LastCellsToDecide}");
 
         if (writeToCSV)
         {
             int col = ObtenerColumna(tabla, algorithmLabel);
             AsegurarFila(tabla, generationsDone);
             if (col >= 0 && col < tabla[generationsDone].Length)
-                tabla[generationsDone][col] = t.ToString("F4");
+                tabla[generationsDone][col] = t.ToString("F6");
+            int colCells = ObtenerColumna(tabla, CellsLabel);
+            if (colCells >= 0 && colCells < tabla[generationsDone].Length)
+                tabla[generationsDone][colCells] = solveTimer.LastCellsToDecide.ToString();
             GuardarCSV(tabla);
         }
 
@@ -200,7 +223,6 @@ public class CalculateExecutionTime : MonoBehaviour
 
     private void OnIncompat()
     {
-        incompatibility = true;
         incCounter++;
     }
 
@@ -225,9 +247,9 @@ public class CalculateExecutionTime : MonoBehaviour
         int col = ObtenerColumna(tabla, algorithmLabel);
         if (col < 0) { GuardarCSV(tabla); return; }
 
-        EscribirStat("Avg Time", col, avg.ToString("F4"));
-        EscribirStat("Min Time", col, minTime.ToString("F4"));
-        EscribirStat("Max Time", col, maxTime.ToString("F4"));
+        EscribirStat("Avg Time", col, avg.ToString("F6"));
+        EscribirStat("Min Time", col, minTime.ToString("F6"));
+        EscribirStat("Max Time", col, maxTime.ToString("F6"));
         EscribirStat("Incompat.", col, totalIncompat.ToString());
         EscribirStat("Fail Rate", col, failRate.ToString("F2") + " %");
         GuardarCSV(tabla);
@@ -254,6 +276,7 @@ public class CalculateExecutionTime : MonoBehaviour
             // Inicializar con la columna n_gen; AñadirColumna añade el algoritmo a continuación.
             tabla = new List<string[]> { new[] { "n_gen" } };
             AñadirColumna(tabla, algorithmLabel);
+            PrepararColumnaCeldas();
             GuardarCSV(tabla);
             writeToCSV = true;
             Debug.Log($"[Benchmark] CSV creado: {FilePath}");
@@ -267,6 +290,7 @@ public class CalculateExecutionTime : MonoBehaviour
         if (col == -1)
         {
             AñadirColumna(tabla, algorithmLabel);
+            PrepararColumnaCeldas();
             GuardarCSV(tabla);
             writeToCSV = true;
             Debug.Log($"[Benchmark] Añadida columna '{algorithmLabel}' a {FilePath}");
@@ -290,11 +314,26 @@ public class CalculateExecutionTime : MonoBehaviour
             if (col < tabla[fila].Length)
                 tabla[fila][col] = "";
 
+        PrepararColumnaCeldas();
         GuardarCSV(tabla);
         writeToCSV = true;
         Debug.LogWarning($"[Benchmark] SOBRESCRIBIENDO la columna '{algorithmLabel}' en {FilePath}. " +
                          "Los datos previos de este algoritmo se han descartado; " +
                          "el resto del fichero se conserva.");
+    }
+
+    // Columna adicional "<algoritmo>_cells": celdas por decidir en cada generación
+    // (LastCellsToDecide del solver). Se crea si no existe y se vacía si existe,
+    // siguiendo siempre a la columna de tiempos.
+    private string CellsLabel => algorithmLabel + "_cells";
+
+    private void PrepararColumnaCeldas()
+    {
+        int c = ObtenerColumna(tabla, CellsLabel);
+        if (c == -1) { AñadirColumna(tabla, CellsLabel); return; }
+        for (int fila = 1; fila < tabla.Count; fila++)
+            if (c < tabla[fila].Length)
+                tabla[fila][c] = "";
     }
 
     private List<string[]> LeerCSV()

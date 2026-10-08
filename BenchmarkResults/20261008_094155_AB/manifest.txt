@@ -1,0 +1,86 @@
+## Environment
+date=2026-10-08 09:41:55
+unity_version=6000.5.2f1
+is_editor=True
+editor_code_optimization=Release  (debe ser Release para medir tiempos)
+scripting_backend=Mono
+os=Windows 11  (10.0.26200)
+cpu=Intel(R) Core(TM) i7-14700K x28 @3418MHz
+ram_mb=32452
+gc_incremental=True
+csv_format=ExcelSpanish (separador ';', decimal ',')
+
+## Settings
+runs_per_config=50
+warmup_runs_per_config=3 (registrados con phase=warmup, excluidos del resumen)
+max_attempts_per_run=1000
+base_seed=20261007
+gc_before_timed_phases=True
+interleave_solvers=True
+this_work_selector=Heap | alt_selector=False | debroglie_native=False | debroglie_lazyinit=False
+stopwatch_frequency_hz=10000000 high_resolution=True
+timed_window=t_init (reset del estado + restricciones de la instancia + propagación inicial) + t_search (observación-colapso-propagación), sumado sobre todos los intentos del run
+
+## Tilesets
+nature negative_rules=False: tiles_total=77 base_tiles=25 generated_variants=52 domain_T=76 directed_relations_all=5180 directed_relations_domain=5108 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=pueblox1@y1(4 rot);aserraderox1@y1(4 rot)
+nature negative_rules=True: tiles_total=77 base_tiles=25 generated_variants=52 domain_T=76 directed_relations_all=4864 directed_relations_domain=4792 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=pueblox1@y1(4 rot);aserraderox1@y1(4 rot)
+desert negative_rules=False: tiles_total=37 base_tiles=13 generated_variants=24 domain_T=36 directed_relations_all=808 directed_relations_domain=776 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=sand_palmx2@y1(1 rot)
+desert negative_rules=True: tiles_total=37 base_tiles=13 generated_variants=24 domain_T=36 directed_relations_all=724 directed_relations_domain=692 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=sand_palmx2@y1(1 rot)
+farm negative_rules=False: tiles_total=95 base_tiles=28 generated_variants=67 domain_T=94 directed_relations_all=3852 directed_relations_domain=3820 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=HayBalex2@y1(2 rot)
+farm negative_rules=True: tiles_total=95 base_tiles=28 generated_variants=67 domain_T=94 directed_relations_all=3616 directed_relations_domain=3584 asymmetric_relations=0 nonpositive_weight_tiles=0 floor=SOLID empty=EMPTY limit=LIMIT fixed_specs=HayBalex2@y1(2 rot)
+
+## Configurations (54)
+A_UNRESTRICTED/NATURE/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/NATURE/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/NATURE/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/DESERT/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/DESERT/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/DESERT/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/FARM/10x10x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/FARM/20x20x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+A_UNRESTRICTED/FARM/30x30x5 | solvers=ThisWork/heap;Gumin/simple-tiled-3d;DeBroglie/matched
+B0_BASELINE/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/NATURE/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/DESERT/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/10x10x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/20x20x5 | solvers=ThisWork/heap;DeBroglie/matched
+B0_BASELINE/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B1_LAYERS/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B2_LAYERS_BOUNDARY/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B3_LAYERS_BOUNDARY_FIXED/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched
+B4_LAYERS_BOUNDARY_FIXED_NEGATIVE/FARM/30x30x5 | solvers=ThisWork/heap;DeBroglie/matched

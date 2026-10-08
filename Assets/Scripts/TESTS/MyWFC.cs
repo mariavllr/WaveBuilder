@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MyWFC : MonoBehaviour, IWFCGenerator
+public class MyWFC : MonoBehaviour, IWFCGenerator, IWFCSolveTimer
 {
     // =========================================================================
     // INSPECTOR
@@ -68,6 +68,49 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     public event Action OnEnd;
     public event Action OnIncompatibility;
 
+    // ── Cronómetro interno de resolución (IWFCSolveTimer) ────────────────
+    // Contrato de medición común a MyWFC, GuminWFC y DeBroglieWFC:
+    //   FUERA del cronómetro: construcción del propagador/modelo, aplicación de
+    //   las restricciones globales e inicialización del estado (incluida la
+    //   propagación inicial de esas restricciones), GC.Collect(), lectura del
+    //   resultado e instanciación visual.
+    //   DENTRO: únicamente el bucle observación–colapso–propagación de cada
+    //   intento. El tiempo de los intentos fallidos se suma al de la generación.
+    [Header("Medición")]
+    [Tooltip("Ejecuta GC.Collect() antes de cada intento, fuera del cronómetro, " +
+             "para que la recolección de basura no caiga dentro de la medición.")]
+    public bool collectGarbageBeforeSolve = true;
+
+    private readonly System.Diagnostics.Stopwatch solveWatch = new System.Diagnostics.Stopwatch();
+
+    /// <summary>Segundos de resolución de la última generación exitosa (suma de sus intentos).</summary>
+    public double LastSolveTime { get; private set; }
+
+    /// <summary>
+    /// Celdas con más de una opción al empezar la resolución del intento que
+    /// tuvo éxito (contadas fuera del cronómetro): las que el solver tiene que
+    /// decidir realmente. Excluye las celdas fijadas o ya determinadas por la
+    /// propagación inicial de las restricciones.
+    /// </summary>
+    public int LastCellsToDecide { get; private set; }
+
+    /// <summary>Celdas libres con más de una opción tras InitWave() (fuera del cronómetro).</summary>
+    private int CountCellsToDecide()
+    {
+        int count = 0;
+        for (int i = 0; i < N; i++)
+            if (fixedCellTile[i] == null && observed[i] < 0 && sumsOfOnes[i] > 1) count++;
+        return count;
+    }
+
+    private void CollectGarbageOutsideTimer()
+    {
+        if (!collectGarbageBeforeSolve) return;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
     // =========================================================================
     // IWFCGenerator
     // =========================================================================
@@ -102,6 +145,15 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     private (int cellIdx, int tileIdx)[] stack;
     private int stacksize;
     private bool contradiction;
+
+    // Estructuras de la versión optimizada (ver SELECTOR DE MÍNIMA ENTROPÍA)
+    private bool[] isFixed;          // celda fijada por las restricciones globales
+    private int[] freeNeighbor;      // [i*6+d] vecino libre en dir d, o -1 (fuera o fijo)
+    private int[] heap;              // celdas candidatas ordenadas por entropía + ruido
+    private int[] heapPos;           // posición de cada celda en heap; -1 si no está
+    private double[] noise;          // ruido de desempate por celda (fijo en cada intento)
+    private int heapSize;
+    private bool heapActive;         // false durante InitWave: el montículo aún no existe
     private System.Random rng;
 
     private Dictionary<Tile, int> tileIndex;
@@ -122,16 +174,32 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     // UNITY LIFECYCLE
     // =========================================================================
 
+    // PREPROCESADO DIFERIDO
+    // El preprocesado NO se hace en Awake(): TilePreprocessor escribe las listas
+    // de vecinos dentro de las tiles base, que son los mismos prefabs para los
+    // tres solvers. Si varios solvers preprocesaran en Awake (MyWFC siempre
+    // está activo porque comparte GameObject con el arnés), el último en
+    // ejecutarse sobrescribiría las listas de los demás con referencias a SUS
+    // variantes rotadas, y los otros solvers perderían adyacencias. Por eso
+    // solo preprocesa el solver al que se le pide generar, en su primer
+    // Generate(), fuera del cronómetro.
     void Awake()
     {
         if (tilePreprocessor == null)
+            Debug.LogError("[MyWFC] TilePreprocessor no asignado en el Inspector.");
+    }
+
+    private bool EnsurePreprocessed()
+    {
+        if (tilesetPreprocessed) return true;
+        if (tilePreprocessor == null)
         {
             Debug.LogError("[MyWFC] TilePreprocessor no asignado en el Inspector.");
-            return;
+            return false;
         }
 
-        // El preprocesado se hace una vez por sesión: expande variantes rotadas
-        // y calcula la tabla de vecinos (respetando excludedNeighborConstraint).
+        // Expande variantes rotadas y calcula la tabla de vecinos
+        // (respetando excludedNeighborConstraint).
         tilePreprocessor.excludedNeighborConstraint = excludedNeighborConstraint;
         tilePreprocessor.Preprocess(ref tileObjects);
 
@@ -140,6 +208,7 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
         tileObjects = Array.FindAll(tileObjects, t => t.tileType != "limit");
 
         tilesetPreprocessed = true;
+        return true;
     }
 
     void Start()
@@ -153,11 +222,7 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
 
     public void Generate()
     {
-        if (!tilesetPreprocessed)
-        {
-            Debug.LogError("[MyWFC] Tileset no preprocesado. Asegúrate de que Awake() se haya ejecutado.");
-            return;
-        }
+        if (!EnsurePreprocessed()) return;
         GenerateSync();
     }
 
@@ -176,6 +241,8 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     private void GenerateSync()
     {
         FailCount = 0;
+        LastSolveTime = 0;
+        LastCellsToDecide = 0;
 
         if (!BuildPropagator())
         {
@@ -185,14 +252,26 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
         rng = seed != 0 ? new System.Random(seed) : new System.Random();
 
         OnStart?.Invoke();
+        double solveTime = 0;
 
         for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
+            // Preparación del intento (FUERA del cronómetro)
             ApplyGlobalConstraints(); // re-aleatoriza las tiles fijas en cada intento
-            InitWave();
+            InitWave();               // estado inicial + propagación de las restricciones
+            int cellsToDecide = CountCellsToDecide();
+            CollectGarbageOutsideTimer();
 
-            if (RunAlgorithm())
+            // Resolución (DENTRO del cronómetro)
+            solveWatch.Restart();
+            bool success = RunAlgorithm();
+            solveWatch.Stop();
+            solveTime += solveWatch.Elapsed.TotalSeconds;
+
+            if (success)
             {
+                LastSolveTime = solveTime;
+                LastCellsToDecide = cellsToDecide;
                 OnEnd?.Invoke();
                 InstantiateTiles();
                 return;
@@ -202,7 +281,7 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
             OnIncompatibility?.Invoke();
         }
 
-        Debug.LogWarning($"[MyWFC] Agotados {maxRetries} reintentos sin solución.");
+        Debug.LogError($"[MyWFC] Agotados {maxRetries} reintentos sin solución.");
     }
 
     // =========================================================================
@@ -321,22 +400,40 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     }
 
     /// <summary>Coloca las tiles con Tile.fixedTile > 0 en celdas libres al azar.</summary>
+    // TILES FIJAS: especificación común a MyWFC y DeBroglieWFC.
+    // Una tile base con fixedTile = k produce exactamente k tiles fijas, cada una
+    // con una rotación elegida al azar entre la base y sus variantes. Las
+    // variantes rotadas heredan fixedTile al clonarse (Instantiate), así que solo
+    // se recorren las tiles base (rotation == zero) para no multiplicar las copias.
     private void CreateFixedTiles()
     {
         foreach (Tile prototype in tileObjects)
         {
             if (prototype.fixedTile <= 0) continue;
+            if (prototype.rotation != Vector3.zero) continue;   // solo tiles base
+
+            List<Tile> variants = GetRotationVariants(prototype);
             for (int k = 0; k < prototype.fixedTile; k++)
             {
                 int target = PickRandomFreeCell();
-                if (target < 0)
-                {
-                    Debug.LogWarning($"[MyWFC] No quedan celdas libres para tile fija {prototype.tileType}.");
-                    break;
-                }
-                fixedCellTile[target] = prototype;
+                if (target < 0) break;
+                fixedCellTile[target] = variants[rng.Next(0, variants.Count)];
             }
         }
+    }
+
+    /// <summary>
+    /// Tile base y sus variantes rotadas (TilePreprocessor las nombra
+    /// "&lt;base&gt;_RotateRight", "_Rotate180", "_RotateLeft").
+    /// </summary>
+    private List<Tile> GetRotationVariants(Tile baseTile)
+    {
+        string prefix = baseTile.gameObject.name + "_Rotate";
+        var variants = new List<Tile> { baseTile };
+        foreach (Tile t in tileObjects)
+            if (t != baseTile && t.gameObject.name.StartsWith(prefix))
+                variants.Add(t);
+        return variants;
     }
 
     private int PickRandomFreeCell()
@@ -364,6 +461,37 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
         stack = new (int, int)[N * T];
         stacksize = 0;
         contradiction = false;
+
+        // PASO 0: topología. Tabla de vecinos libres por celda y dirección
+        // (equivale a la GridTopology de DeBroglie, que también se construye
+        // fuera del cronómetro) y estado inicial del montículo de selección.
+        heapActive = false;
+        if (heap == null || heap.Length != N)
+        {
+            heap = new int[N];
+            heapPos = new int[N];
+            noise = new double[N];
+            isFixed = new bool[N];
+            freeNeighbor = new int[N * 6];
+        }
+        for (int i = 0; i < N; i++)
+        {
+            heapPos[i] = -1;
+            isFixed[i] = fixedCellTile[i] != null;
+        }
+        for (int i = 0; i < N; i++)
+        {
+            int x1 = i % MX;
+            int z1 = (i / MX) % MZ;
+            int y1 = i / (MX * MZ);
+            for (int d = 0; d < 6; d++)
+            {
+                int x2 = x1 + DX[d], y2 = y1 + DY[d], z2 = z1 + DZ[d];
+                int j = (x2 < 0 || x2 >= MX || y2 < 0 || y2 >= MY || z2 < 0 || z2 >= MZ)
+                    ? -1 : x2 + z2 * MX + y2 * MX * MZ;
+                freeNeighbor[i * 6 + d] = (j >= 0 && !isFixed[j]) ? j : -1;
+            }
+        }
 
         // PASO 1: wave desde el estado (libre / fija)
         for (int i = 0; i < N; i++)
@@ -472,72 +600,134 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
     // BUCLE PRINCIPAL
     // =========================================================================
 
+    // Versión optimizada. Mismo algoritmo (AC-4, mínima entropía de Shannon con
+    // desempate aleatorio, muestreo ponderado, reinicio completo ante
+    // contradicción); cambian las estructuras de datos:
+    //   · Selección: montículo binario indexado, O(log N) por actualización,
+    //     en lugar de recorrer las N celdas en cada colapso (O(N) por paso).
+    //   · Desempate: ruido 1e-6·U[0,1) fijo por celda en cada intento, en lugar
+    //     de sortear un número aleatorio por celda en cada recorrido.
+    //   · Entropía: solo se recalcula para celdas que siguen siendo candidatas.
+    //   · Propagación: vecinos precalculados (sin div/mod ni comprobación de
+    //     límites) y salida inmediata al detectar una contradicción.
     private bool RunAlgorithm()
     {
         // La propagación inicial (InitWave) ya pudo detectar una contradicción.
         if (contradiction) return false;
 
-        while (true)
-        {
-            int node = SelectNextCell();
-            if (node == -2) return false; // contradicción
-            if (node == -1) return true;  // todo colapsado
+        BuildHeap(); // forma parte de la resolución: dentro del cronómetro
 
-            if (!CollapseCell(node)) return false;
+        while (heapSize > 0)
+        {
+            int node = PopMin();
+            CollapseCell(node);
             if (!Propagate()) return false;
         }
+        return true; // todas las celdas candidatas colapsadas
     }
 
-    private int SelectNextCell()
+    private void CollapseCell(int i)
     {
-        double minEntropy = double.MaxValue;
-        int argMin = -1;
+        int b = i * T;
 
-        for (int i = 0; i < N; i++)
-        {
-            if (observed[i] >= 0 || fixedCellTile[i] != null) continue; // colapsada o fija
-            int count = sumsOfOnes[i];
-            if (count == 0) return -2;
+        double total = 0;
+        for (int t = 0; t < T; t++)
+            if (wave[b + t]) total += probabilityConstraint ? weights[t] : 1.0;
 
-            double e = entropies[i] + 1e-6 * rng.NextDouble();
-            if (e < minEntropy) { minEntropy = e; argMin = i; }
-        }
-        return argMin;
-    }
-
-    private bool CollapseCell(int i)
-    {
+        // Muestreo ponderado por probability, o uniforme si el flag está desactivado
+        double threshold = rng.NextDouble() * total;
+        double cumulative = 0;
+        int chosen = -1;
         for (int t = 0; t < T; t++)
         {
-            if (!wave[i * T + t]) { distribution[t] = 0.0; continue; }
-            // Ponderado por probability, o uniforme si el flag está desactivado
-            distribution[t] = probabilityConstraint ? weights[t] : 1.0;
+            if (!wave[b + t]) continue;
+            chosen = t; // si el redondeo impide alcanzar el umbral, queda la última permitida
+            cumulative += probabilityConstraint ? weights[t] : 1.0;
+            if (cumulative >= threshold) break;
         }
 
-        int chosen = SampleWeighted(distribution, rng.NextDouble());
-
         for (int t = 0; t < T; t++)
-            if (wave[i * T + t] && t != chosen)
+            if (wave[b + t] && t != chosen)
                 Ban(i, t);
 
         observed[i] = chosen;
-        return true;
     }
 
-    private static int SampleWeighted(double[] dist, double r)
-    {
-        double total = 0;
-        for (int i = 0; i < dist.Length; i++) total += dist[i];
-        if (total <= 0) return dist.Length - 1;
+    // =========================================================================
+    // SELECTOR DE MÍNIMA ENTROPÍA: montículo binario indexado
+    // =========================================================================
 
-        double threshold = r * total;
-        double cumulative = 0;
-        for (int i = 0; i < dist.Length; i++)
+    private double HeapKey(int i) => entropies[i] + noise[i];
+
+    private void BuildHeap()
+    {
+        heapSize = 0;
+        for (int i = 0; i < N; i++)
         {
-            cumulative += dist[i];
-            if (cumulative >= threshold) return i;
+            heapPos[i] = -1;
+            if (observed[i] >= 0 || isFixed[i]) continue; // colapsada o fija
+            noise[i] = 1e-6 * rng.NextDouble();
+            heapPos[i] = heapSize;
+            heap[heapSize++] = i;
         }
-        return dist.Length - 1;
+        for (int k = heapSize / 2 - 1; k >= 0; k--) SiftDown(k);
+        heapActive = true;
+    }
+
+    private int PopMin()
+    {
+        int top = heap[0];
+        heapPos[top] = -1;
+        heapSize--;
+        if (heapSize > 0)
+        {
+            int last = heap[heapSize];
+            heap[0] = last;
+            heapPos[last] = 0;
+            SiftDown(0);
+        }
+        return top;
+    }
+
+    private void HeapUpdate(int i)
+    {
+        int p = heapPos[i];
+        if (p < 0) return;
+        SiftUp(p);
+        SiftDown(heapPos[i]);
+    }
+
+    private void SiftUp(int p)
+    {
+        int cell = heap[p];
+        double key = HeapKey(cell);
+        while (p > 0)
+        {
+            int parent = (p - 1) >> 1;
+            int pc = heap[parent];
+            if (HeapKey(pc) <= key) break;
+            heap[p] = pc; heapPos[pc] = p;
+            p = parent;
+        }
+        heap[p] = cell; heapPos[cell] = p;
+    }
+
+    private void SiftDown(int p)
+    {
+        int cell = heap[p];
+        double key = HeapKey(cell);
+        while (true)
+        {
+            int l = 2 * p + 1;
+            if (l >= heapSize) break;
+            int r = l + 1;
+            int c = (r < heapSize && HeapKey(heap[r]) < HeapKey(heap[l])) ? r : l;
+            int cc = heap[c];
+            if (key <= HeapKey(cc)) break;
+            heap[p] = cc; heapPos[cc] = p;
+            p = c;
+        }
+        heap[p] = cell; heapPos[cell] = p;
     }
 
     // =========================================================================
@@ -549,28 +739,23 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
         while (stacksize > 0 && !contradiction)
         {
             (int i1, int t1) = stack[--stacksize];
-
-            int x1 = i1 % MX;
-            int z1 = (i1 / MX) % MZ;
-            int y1 = i1 / (MX * MZ);
+            int nb = i1 * 6;
 
             for (int d = 0; d < 6; d++)
             {
-                int x2 = x1 + DX[d];
-                int y2 = y1 + DY[d];
-                int z2 = z1 + DZ[d];
-                if (x2 < 0 || x2 >= MX || y2 < 0 || y2 >= MY || z2 < 0 || z2 >= MZ) continue;
-
-                int i2 = x2 + z2 * MX + y2 * MX * MZ;
-                if (fixedCellTile[i2] != null) continue;
+                int i2 = freeNeighbor[nb + d];
+                if (i2 < 0) continue; // fuera del volumen o celda fija
 
                 int[] supported = propagator[d * T + t1];
+                int b2 = i2 * T;
                 for (int l = 0; l < supported.Length; l++)
                 {
                     int t2 = supported[l];
-                    ref int comp = ref compatible[(i2 * T + t2) * 6 + d];
-                    comp--;
-                    if (comp == 0 && wave[i2 * T + t2]) Ban(i2, t2);
+                    if (--compatible[(b2 + t2) * 6 + d] == 0 && wave[b2 + t2])
+                    {
+                        Ban(i2, t2);
+                        if (contradiction) return false;
+                    }
                 }
             }
         }
@@ -590,13 +775,14 @@ public class MyWFC : MonoBehaviour, IWFCGenerator
         sumsOfWeights_c[i] -= weights[t];
         sumsOfWeightLogWeights_c[i] -= weightLogWeights[t];
 
-        if (sumsOfOnes[i] == 0)
-            contradiction = true;
-        else
-        {
-            double s = sumsOfWeights_c[i];
-            entropies[i] = s > 0 ? Math.Log(s) - sumsOfWeightLogWeights_c[i] / s : 0;
-        }
+        if (sumsOfOnes[i] == 0) { contradiction = true; return; }
+
+        // La entropía solo interesa a las celdas que siguen siendo candidatas
+        // (en InitWave, antes de existir el montículo, se calcula siempre).
+        if (heapActive && heapPos[i] < 0) return;
+        double s = sumsOfWeights_c[i];
+        entropies[i] = s > 0 ? Math.Log(s) - sumsOfWeightLogWeights_c[i] / s : 0;
+        if (heapActive) HeapUpdate(i);
     }
 
     // =========================================================================

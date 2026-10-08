@@ -89,7 +89,7 @@ public class WFCQualityMetrics : MonoBehaviour
     private WelfordAccumulator _accEntM = new WelfordAccumulator();
     private WelfordAccumulator _accEntV = new WelfordAccumulator();
 
-    private Stopwatch _stopwatch = new Stopwatch();
+    private IWFCSolveTimer _solveTimer;   // cronómetro interno del solver
     private double _lastTime = 0.0;
     private WelfordAccumulator _accTime = new WelfordAccumulator();
 
@@ -132,6 +132,7 @@ public class WFCQualityMetrics : MonoBehaviour
         // algorithmType debe coincidir con el Algorithm de CalculateExecutionTime,
         // que es quien dispara las generaciones que este arnés mide.
         configLabel = selected.AlgorithmLabel;
+        _solveTimer = selected as IWFCSolveTimer;
 
         _mapSize = $"{GetDimX()}x{GetDimZ()}x{GetDimY()}";
         _perRunPath = Path.Combine(Application.persistentDataPath, perRunFileName + ".csv");
@@ -179,8 +180,7 @@ public class WFCQualityMetrics : MonoBehaviour
 
     private void OnGenerationStart()
     {
-        if (!active) return;
-        _stopwatch.Restart();
+        // El tiempo lo mide el propio solver (IWFCSolveTimer): aquí no se cronometra.
     }
 
     private void OnIncompatibility()
@@ -225,7 +225,6 @@ public class WFCQualityMetrics : MonoBehaviour
         // métricas. El batch efectivo pasa a ser de (generationsPerBatch - 1)
         // generaciones medidas.
         _warmupSeen++;
-        _stopwatch.Stop();
         if (_warmupSeen <= 1)
         {
             Debug.Log("[Metrics] Generación de warm-up descartada (no se contabiliza " +
@@ -233,7 +232,7 @@ public class WFCQualityMetrics : MonoBehaviour
             return;
         }
 
-        _lastTime = _stopwatch.Elapsed.TotalSeconds;
+        _lastTime = _solveTimer != null ? _solveTimer.LastSolveTime : 0.0;
         _accTime.Add((float)_lastTime);
 
         _successCount++;
@@ -531,7 +530,7 @@ public class WFCQualityMetrics : MonoBehaviour
     {
         string row = string.Join(";",
             runId, tilesetName, _mapSize, configLabel,
-            time.ToString("F4"),
+            time.ToString("F6"),
             ca.ToString("F4"),
             js.ToString("F6"),
             entM.ToString("F4"),
@@ -560,7 +559,7 @@ public class WFCQualityMetrics : MonoBehaviour
             tilesetName, _mapSize, configLabel,
             _successCount,
             successRate.ToString("F4"),
-            meanTime.ToString("F4"), stdTime.ToString("F4"),
+            meanTime.ToString("F6"), stdTime.ToString("F6"),
             meanCA.ToString("F4"), stdCA.ToString("F4"),
             meanJS.ToString("F6"), stdJS.ToString("F6"),
             meanEntM.ToString("F4"), stdEntM.ToString("F4"),

@@ -39,16 +39,11 @@ using Resolution = DeBroglie.Resolution;
 ///
 /// Restricciones globales (applyGlobalConstraints = true):
 /// --------------------------------------------------------
-///   - LIMIT (bordes): Select manual restringido a la capa y=1 del perímetro
-///     horizontal, replicando exactamente REFACTOR.DefineMapLimits(). No se usa
-///     BorderConstraint nativo de DeBroglie porque este restringe la columna
-///     vertical COMPLETA de cada cara (todo Y), mientras que LIMIT en REFACTOR
-///     solo existe en y=1. Usar BorderConstraint aquí causaría contradicción
-///     determinista en cualquier mapa con dimensionsY > 2.
-///   - Floor: Ban en y=1 de tiles incompatibles con floorTile.belowNeighbours.
-///     No se replica la capa física de floorTile (y=0); se restringe la capa
-///     jugable inferior para que solo admita tiles compatibles con el suelo.
-///   - Ceiling: análogo para y=dimensionsY-2.
+///   - LIMIT (bordes): Select manual de LIMIT en el perímetro de y=1, igual que
+///     MyWFC. No se usa BorderConstraint porque este afectaría toda la columna
+///     vertical de cada cara, mientras que LIMIT solo existe en y=1.
+///   - Floor y ceiling: Select de las capas físicas y=0 e y=dimensionsY-1,
+///     respectivamente, igual que MyWFC.
 ///   - Fixed tiles: propagator.Select() en posiciones aleatorias para tiles
 ///     con fixedTile > 0 en el tileset.
 ///
@@ -58,13 +53,66 @@ using Resolution = DeBroglie.Resolution;
 /// construcción del modelo, topología, constraints y restricciones previas
 /// al bucle ocurren fuera del cronómetro.
 /// </summary>
-public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
+public class DeBroglieWFC : MonoBehaviour, IWFCGenerator, IWFCSolveTimer
 {
     // Eventos de instancia (contrato IWFCGenerator). Antes se reutilizaban los
     // eventos estáticos de WaveFunctionGame_REFACTOR; ahora DeBroglie es autónomo.
     public event Action OnStart;
     public event Action OnEnd;
     public event Action OnIncompatibility;
+
+    // ── Cronómetro interno de resolución (IWFCSolveTimer) ────────────────
+    // Contrato de medición común a MyWFC, GuminWFC y DeBroglieWFC:
+    //   FUERA del cronómetro: construcción del propagador/modelo, aplicación de
+    //   las restricciones globales e inicialización del estado (incluida la
+    //   propagación inicial de esas restricciones), GC.Collect(), lectura del
+    //   resultado e instanciación visual.
+    //   DENTRO: únicamente el bucle observación–colapso–propagación de cada
+    //   intento. El tiempo de los intentos fallidos se suma al de la generación.
+    [Header("Medición")]
+    [Tooltip("Ejecuta GC.Collect() antes de cada intento, fuera del cronómetro, " +
+             "para que la recolección de basura no caiga dentro de la medición.")]
+    public bool collectGarbageBeforeSolve = true;
+
+    private readonly System.Diagnostics.Stopwatch solveWatch = new System.Diagnostics.Stopwatch();
+
+    /// <summary>Segundos de resolución de la última generación exitosa (suma de sus intentos).</summary>
+    public double LastSolveTime { get; private set; }
+
+    /// <summary>
+    /// Celdas con más de una opción al empezar la resolución del intento que
+    /// tuvo éxito (contadas fuera del cronómetro): las que el solver tiene que
+    /// decidir realmente. Excluye las celdas fijadas o ya determinadas por la
+    /// propagación inicial de las restricciones.
+    /// </summary>
+    public int LastCellsToDecide { get; private set; }
+
+    /// <summary>
+    /// Celdas con más de una opción tras construir el propagador y aplicar las
+    /// restricciones globales (fuera del cronómetro). Incluye las capas y=0 e
+    /// y=dimY-1 mientras la propagación no las haya reducido a una sola tile.
+    /// </summary>
+    private int CountCellsToDecide(TilePropagator propagator)
+    {
+        var sets = propagator.ToValueSets<Tile>();
+        int count = 0;
+        for (int x = 0; x < dimensionsX; x++)
+            for (int y = 0; y < dimensionsY; y++)
+                for (int z = 0; z < dimensionsZ; z++)
+                {
+                    var s = sets.Get(x, y, z);
+                    if (s != null && s.Count > 1) count++;
+                }
+        return count;
+    }
+
+    private void CollectGarbageOutsideTimer()
+    {
+        if (!collectGarbageBeforeSolve) return;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
 
     [Header("Etiqueta del experimento (columna del CSV)")]
     public string algorithmLabel = "debroglie_full";
@@ -81,7 +129,7 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     [SerializeField] private TilePreprocessor tilePreprocessor;
 
     [Header("Input – tiles base (sin rotar)")]
-    [Tooltip("Array de tiles base. TilePreprocessor añadirá variantes rotadas en Awake.")]
+    [Tooltip("Array de tiles base. TilePreprocessor añadirá variantes rotadas al primer Generate().")]
     public Tile[] tileObjects;
 
     [Header("Dimensiones del grid 3D")]
@@ -104,6 +152,8 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     [Tooltip("Tile de techo vacío. Si se asigna, y=dimensionsY-2 solo admite tiles " +
              "cuyo aboveNeighbours incluye esta tile.")]
     [SerializeField] private Tile ceilingTile;
+    [Tooltip("Tile LIMIT fijada en el anillo de y=1. Si queda vacía, se busca la tile base con tileType = limit.")]
+    [SerializeField] private Tile limitTile;
 
     [Header("Salida visual")]
     [Tooltip("Transform padre bajo el que se instancian los tiles del resultado.")]
@@ -123,18 +173,8 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     // ── estado interno ───────────────────────────────────────────────
     private Dictionary<Tile, DBTile> toDB;
     private HashSet<Tile> limitTiles;
-    private Dictionary<DBDirection, List<DBTile>> acceptorsByDirection;
     private bool tilesetPreprocessed = false;
     private Tile[] _resolvedTiles;
-
-    // Las seis direcciones del modelo Cartesian3d, declaradas explícitamente
-    // para evitar Enum.GetValues que devuelve duplicados (WPlus/WMinus == ZPlus/ZMinus).
-    private static readonly DBDirection[] Cartesian3dDirections = new[]
-    {
-        DBDirection.XPlus, DBDirection.XMinus,
-        DBDirection.YPlus, DBDirection.YMinus,
-        DBDirection.ZPlus, DBDirection.ZMinus,
-    };
 
     // ════════════════════════════════════════════════════════════════
     //  Detección de tiles virtuales LIMIT
@@ -149,19 +189,36 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     //  Unity Lifecycle
     // ════════════════════════════════════════════════════════════════
 
+    // PREPROCESADO DIFERIDO
+    // El preprocesado NO se hace en Awake(): TilePreprocessor escribe las listas
+    // de vecinos dentro de las tiles base, que son los mismos prefabs para los
+    // tres solvers. Si varios solvers preprocesaran en Awake (MyWFC siempre
+    // está activo porque comparte GameObject con el arnés), el último en
+    // ejecutarse sobrescribiría las listas de los demás con referencias a SUS
+    // variantes rotadas, y los otros solvers perderían adyacencias. Por eso
+    // solo preprocesa el solver al que se le pide generar, en su primer
+    // Generate(), fuera del cronómetro.
     private void Awake()
     {
         if (tilePreprocessor == null)
+            Debug.LogError("[DeBroglieWFC] TilePreprocessor no asignado en el Inspector.");
+    }
+
+    private bool EnsurePreprocessed()
+    {
+        if (tilesetPreprocessed) return true;
+        if (tilePreprocessor == null)
         {
             Debug.LogError("[DeBroglieWFC] TilePreprocessor no asignado en el Inspector.");
-            return;
+            return false;
         }
 
-        // Preprocess se llama una vez: expande tileObjects con variantes rotadas
-        // y calcula la tabla de vecinos. LIMIT se mantiene en las listas de
-        // vecinos para que BorderConstraint funcione, pero se excluye del modelo.
+        // Expande tileObjects con variantes rotadas y calcula la tabla de
+        // vecinos. LIMIT se mantiene en las listas de vecinos para el borde,
+        // pero se excluye del modelo.
         tilePreprocessor.Preprocess(ref tileObjects);
         tilesetPreprocessed = true;
+        return true;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -170,11 +227,7 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
 
     public void Generate()
     {
-        if (!tilesetPreprocessed)
-        {
-            Debug.LogError("[DeBroglieWFC] Tileset no preprocesado. Asegúrate de que Awake() se haya ejecutado.");
-            return;
-        }
+        if (!EnsurePreprocessed()) return;
         ClearOutput();      // idempotente: permite repetir Generate() en el benchmark
         GenerateInternal();
     }
@@ -191,64 +244,66 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
 
     private void GenerateInternal()
     {
+        LastSolveTime = 0;
+        LastCellsToDecide = 0;
+
         // 1. Construcción del modelo y la topología (FUERA del cronómetro).
-        //    Se hace una sola vez por llamada: equivale al preprocesado de
-        //    REFACTOR, que tampoco se repite en cada regeneración.
         IndexTiles();
         AdjacentModel model = BuildAdjacentModel();
         GridTopology topology = BuildTopology();
 
-
         int attempt = 0;
         Resolution result = Resolution.Contradiction;
         TilePropagator propagator = null;
+        double solveTime = 0;
+        int cellsToDecide = 0;   // del intento en curso; tras el bucle, el del intento con éxito
+
+        OnStart?.Invoke();
 
         while (attempt < maxRetries)
         {
-            // Cada intento reconstruye el propagator y reaplica las
-            // restricciones globales, igual que REFACTOR.Regenerate() rehace
-            // el estado y vuelve a llamar a ApplyGlobalConstraints().
+            // 2. Preparación del intento (FUERA del cronómetro): propagador y
+            //    restricciones globales. En DeBroglie, Select/Ban propagan de
+            //    inmediato, así que la propagación inicial de las restricciones
+            //    queda fuera, igual que InitWave() en MyWFC y GuminWFC.
             propagator = BuildPropagator(model, topology);
 
             if (applyGlobalConstraints)
             {
-                ApplyMapLimits(propagator);
-                ApplyFloorCeilingConstraints(propagator);
+                ApplyInfrastructureConstraints(propagator);
                 ApplyFixedTiles(propagator);
             }
-            // 2. CRONÓMETRO: arranca antes del primer intento. El contrato es
-            //    idéntico al de REFACTOR: el reloj cubre propagación + colapso,
-            //    incluidos los reintentos por contradicción.
-            OnStart?.Invoke();
+            cellsToDecide = CountCellsToDecide(propagator);
+            CollectGarbageOutsideTimer();
 
-
+            // 3. Resolución (DENTRO del cronómetro)
+            solveWatch.Restart();
             result = propagator.Run();
+            solveWatch.Stop();
+            solveTime += solveWatch.Elapsed.TotalSeconds;
 
             if (result == Resolution.Decided)
                 break;
 
-            // Contradicción: notifica (para el contador de fallos del
-            // benchmark) y reintenta. El cronómetro sigue corriendo, por lo
-            // que el tiempo de este intento fallido se acumula en la medición.
+            // Contradicción: se notifica y se reintenta. El tiempo de resolución
+            // de este intento ya está sumado en solveTime.
             OnIncompatibility?.Invoke();
-            Debug.LogWarning($"[DeBroglieWFC] Contradicción ({result}) en intento " +
-                             $"{attempt + 1}. Reintentando.");
             attempt++;
         }
 
-        // 3. Resultado e instanciación (FUERA del cronómetro).
+        // 4. Resultado e instanciación (FUERA del cronómetro).
         if (result == Resolution.Decided)
         {
+            LastSolveTime = solveTime;
+            LastCellsToDecide = cellsToDecide;
             StoreResolvedTiles(propagator);          // poblar antes del evento
             OnEnd?.Invoke();
             InstantiateTiles(propagator);
-            Debug.Log($"[DeBroglie] Generación exitosa tras {attempt + 1} intento(s).");
         }
         else
         {
-            // Se agotaron los reintentos sin solución. No se dispara
-            // EndGeneration, de modo que esta medición queda incompleta y no
-            // contamina las estadísticas. Señal de tileset problemático.
+            // Se agotaron los reintentos: no se dispara OnEnd y la medición
+            // queda incompleta, sin contaminar las estadísticas.
             Debug.LogError($"[DeBroglieWFC] Sin solución tras {maxRetries} reintentos. " +
                            "Revisa la resolubilidad del tileset o aumenta maxRetries.");
         }
@@ -256,59 +311,20 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
 
     // ════════════════════════════════════════════════════════════════
     //  Indexado: construye los mapeos Tile ↔ DBTile
-    //  y recolecta LIMIT desde las listas de vecinos
+    //  e identifica las tiles LIMIT
     // ════════════════════════════════════════════════════════════════
 
     private void IndexTiles()
     {
         toDB = new Dictionary<Tile, DBTile>();
         limitTiles = new HashSet<Tile>();
-        acceptorsByDirection = new Dictionary<DBDirection, List<DBTile>>();
-        foreach (DBDirection d in Cartesian3dDirections)
-            acceptorsByDirection[d] = new List<DBTile>();
 
-        // Primera pasada: indexar tiles no-LIMIT y recolectar LIMIT desde vecinos.
-        // Recordatorio: LIMIT no está en tileObjects (TilePreprocessor podría no haberla
-        // filtrado aún), pero SÍ puede aparecer en las listas de vecinos de otras tiles.
+        // LIMIT debe formar parte del modelo para poder fijarlo físicamente en
+        // el anillo, igual que MyWFC. Después se prohíbe en cualquier otra celda.
         foreach (Tile t in tileObjects)
         {
-            if (IsLimit(t)) { limitTiles.Add(t); continue; }
             toDB[t] = new DBTile(t);
-
-            CollectLimitsFrom(t.rightNeighbours);
-            CollectLimitsFrom(t.leftNeighbours);
-            CollectLimitsFrom(t.upNeighbours);
-            CollectLimitsFrom(t.downNeighbours);
-            CollectLimitsFrom(t.aboveNeighbours);
-            CollectLimitsFrom(t.belowNeighbours);
-        }
-
-        // Segunda pasada: para cada dirección, listar las tiles que aceptan
-        // LIMIT en su lista d-th. Estas son las tiles válidas en la cara exterior
-        // del mapa (usadas por BorderConstraint para replicar el mecanismo LIMIT).
-        RegisterAcceptors(t => t.rightNeighbours, DBDirection.XPlus);
-        RegisterAcceptors(t => t.leftNeighbours, DBDirection.XMinus);
-        RegisterAcceptors(t => t.upNeighbours, DBDirection.ZPlus);
-        RegisterAcceptors(t => t.downNeighbours, DBDirection.ZMinus);
-        RegisterAcceptors(t => t.aboveNeighbours, DBDirection.YPlus);
-        RegisterAcceptors(t => t.belowNeighbours, DBDirection.YMinus);
-    }
-
-    private void CollectLimitsFrom(List<Tile> neighbours)
-    {
-        if (neighbours == null) return;
-        foreach (Tile n in neighbours)
-            if (IsLimit(n)) limitTiles.Add(n);
-    }
-
-    private void RegisterAcceptors(System.Func<Tile, List<Tile>> selector, DBDirection d)
-    {
-        foreach (Tile t in tileObjects)
-        {
-            if (IsLimit(t) || !toDB.ContainsKey(t)) continue;
-            var neighbours = selector(t);
-            if (neighbours != null && neighbours.Any(IsLimit))
-                acceptorsByDirection[d].Add(toDB[t]);
+            if (IsLimit(t)) limitTiles.Add(t);
         }
     }
 
@@ -332,7 +348,7 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
 
         foreach (Tile src in tileObjects)
         {
-            if (IsLimit(src) || !toDB.ContainsKey(src)) continue;
+            if (!toDB.ContainsKey(src)) continue;
 
             model.SetFrequency(toDB[src], src.probability);
 
@@ -342,7 +358,7 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
                 if (neighbours == null) continue;
                 foreach (Tile dst in neighbours)
                 {
-                    if (IsLimit(dst) || !toDB.ContainsKey(dst)) continue;
+                    if (!toDB.ContainsKey(dst)) continue;
                     model.AddAdjacency(toDB[src], toDB[dst], dir);
                 }
             }
@@ -358,14 +374,14 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     }
 
     // ════════════════════════════════════════════════════════════════
-    //  Propagator y restricción de LIMIT (Select manual, capa y=1)
+    //  Propagator y restricciones de infraestructura
     // ════════════════════════════════════════════════════════════════
 
     private TilePropagator BuildPropagator(AdjacentModel model, GridTopology topology)
     {
         var rng = fixedSeed > 0 ? new System.Random(fixedSeed) : new System.Random();
 
-        // Sin Constraints nativos: LIMIT se aplica manualmente en ApplyMapLimits,
+        // Sin Constraints nativos: LIMIT se aplica manualmente,
         // porque BorderConstraint de DeBroglie restringe la columna vertical
         // COMPLETA de cada cara (todo Y), mientras que en REFACTOR el marcador
         // LIMIT solo existe en la capa y=1 (ver DefineMapLimits, que itera
@@ -387,118 +403,48 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     }
 
     /// <summary>
-    /// Replica REFACTOR.DefineMapLimits(): restringe el perímetro horizontal
-    /// de la capa y=1 (justo encima del suelo) a las tiles que aceptan LIMIT
-    /// como vecino en la dirección hacia el exterior correspondiente.
-    ///
-    /// A diferencia de BorderConstraint (que opera sobre la columna vertical
-    /// completa de cada cara), este método solo toca y=1, igual que REFACTOR.
-    /// En celdas de esquina (que tocan dos caras a la vez, p.ej. x=0 y z=0),
-    /// se llama a Select dos veces seguidas; como Select bannea todo lo que
-    /// no esté en el conjunto dado, dos llamadas consecutivas intersectan
-    /// ambos conjuntos. El resultado final es el dominio correcto: solo tiles
-    /// de esquina (p.ej. "..._cornerExt") que aceptan LIMIT en AMBAS
-    /// direcciones sobreviven, igual que en la tabla de adyacencia verificada.
+    /// Replica las celdas fijas de MyWFC: suelo en y=0, techo en y=Y-1 y
+    /// LIMIT en el anillo de y=1. LIMIT se prohíbe fuera del anillo para que
+    /// no entre en el dominio de celdas libres.
     /// </summary>
-    private void ApplyMapLimits(TilePropagator propagator)
+    private void ApplyInfrastructureConstraints(TilePropagator propagator)
     {
-        if (dimensionsY <= 1) return; // no existe capa y=1 en mapas de 1 capa
+        if (floorTile != null && toDB.TryGetValue(floorTile, out DBTile floor))
+            for (int x = 0; x < dimensionsX; x++)
+                for (int z = 0; z < dimensionsZ; z++)
+                    propagator.Select(x, 0, z, floor);
+        else if (floorTile != null)
+            Debug.LogError("[DeBroglieWFC] floorTile no está incluido en tileObjects.");
 
-        const int y = 1;
+        if (ceilingTile != null && toDB.TryGetValue(ceilingTile, out DBTile ceiling))
+            for (int x = 0; x < dimensionsX; x++)
+                for (int z = 0; z < dimensionsZ; z++)
+                    propagator.Select(x, dimensionsY - 1, z, ceiling);
+        else if (ceilingTile != null)
+            Debug.LogError("[DeBroglieWFC] ceilingTile no está incluido en tileObjects.");
+
+        Tile selectedLimit = limitTile != null && toDB.ContainsKey(limitTile)
+            ? limitTile
+            : tileObjects.FirstOrDefault(t => IsLimit(t) && t.rotation == Vector3.zero)
+              ?? limitTiles.FirstOrDefault();
+        if (selectedLimit == null || !toDB.TryGetValue(selectedLimit, out DBTile limit))
+        {
+            Debug.LogError("[DeBroglieWFC] No se encontró una limitTile válida en tileObjects.");
+            return;
+        }
+
         for (int x = 0; x < dimensionsX; x++)
-        {
-            bool xMin = x == 0;
-            bool xMax = x == dimensionsX - 1;
-
-            for (int z = 0; z < dimensionsZ; z++)
-            {
-                bool zMin = z == 0;
-                bool zMax = z == dimensionsZ - 1;
-
-                if (!xMin && !xMax && !zMin && !zMax) continue; // celda interior: sin restricción
-
-                if (xMin) propagator.Select(x, y, z, acceptorsByDirection[DBDirection.XMinus]);
-                if (xMax) propagator.Select(x, y, z, acceptorsByDirection[DBDirection.XPlus]);
-                if (zMin) propagator.Select(x, y, z, acceptorsByDirection[DBDirection.ZMinus]);
-                if (zMax) propagator.Select(x, y, z, acceptorsByDirection[DBDirection.ZPlus]);
-            }
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    //  Restricciones de suelo y techo
-    //
-    //  REFACTOR coloca físicamente floorTile en y=0 y emptyTile en
-    //  y=dimensionsY-1 (layers de infraestructura). DeBroglieWFC no replica
-    //  esas capas físicas porque floorTile/ceilingTile no forman parte del
-    //  modelo WFC; en su lugar restringe las capas jugables adyacentes
-    //  (y=1 y y=dimensionsY-2) para que solo admitan tiles cuyos sockets
-    //  son compatibles con el suelo/techo definido.
-    // ════════════════════════════════════════════════════════════════
-
-    private void ApplyFloorCeilingConstraints(TilePropagator propagator)
-    {
-        if (floorTile != null && dimensionsY > 1)
-        {
-            // Verificar que al menos una tile jugable acepta floorTile como vecino inferior.
-            // Si ninguna lo acepta (porque floorTile no está en tileObjects de DeBroglieWFC
-            // o sus sockets no emparejaron), prohibir todas las tiles de y=1 causaría
-            // contradicción inmediata.
-            bool anyAccepts = false;
-            foreach (Tile t in tileObjects)
-            {
-                if (IsLimit(t) || !toDB.ContainsKey(t)) continue;
-                if (t.belowNeighbours != null && t.belowNeighbours.Contains(floorTile))
-                { anyAccepts = true; break; }
-            }
-
-            if (!anyAccepts)
-            {
-                Debug.LogWarning("[DeBroglieWFC] floorTile no aparece en belowNeighbours de ninguna " +
-                                 "tile jugable. Asegúrate de incluir floorTile en tileObjects y de que " +
-                                 "sus sockets sean compatibles. Se omite la restricción de suelo.");
-            }
-            else
-            {
-                for (int x = 0; x < dimensionsX; x++)
-                    for (int z = 0; z < dimensionsZ; z++)
-                        foreach (Tile t in tileObjects)
-                        {
-                            if (IsLimit(t) || !toDB.ContainsKey(t)) continue;
-                            if (t.belowNeighbours == null || !t.belowNeighbours.Contains(floorTile))
-                                propagator.Ban(x, 1, z, toDB[t]);
-                        }
-            }
-        }
-
-        if (ceilingTile != null && dimensionsY > 2)
-        {
-            bool anyAccepts = false;
-            foreach (Tile t in tileObjects)
-            {
-                if (IsLimit(t) || !toDB.ContainsKey(t)) continue;
-                if (t.aboveNeighbours != null && t.aboveNeighbours.Contains(ceilingTile))
-                { anyAccepts = true; break; }
-            }
-
-            if (!anyAccepts)
-            {
-                Debug.LogWarning("[DeBroglieWFC] ceilingTile no aparece en aboveNeighbours de ninguna " +
-                                 "tile jugable. Se omite la restricción de techo.");
-            }
-            else
-            {
-                int topPlayable = dimensionsY - 2;
-                for (int x = 0; x < dimensionsX; x++)
-                    for (int z = 0; z < dimensionsZ; z++)
-                        foreach (Tile t in tileObjects)
-                        {
-                            if (IsLimit(t) || !toDB.ContainsKey(t)) continue;
-                            if (t.aboveNeighbours == null || !t.aboveNeighbours.Contains(ceilingTile))
-                                propagator.Ban(x, topPlayable, z, toDB[t]);
-                        }
-            }
-        }
+            for (int y = 0; y < dimensionsY; y++)
+                for (int z = 0; z < dimensionsZ; z++)
+                {
+                    bool limitRing = y == 1 &&
+                        (x == 0 || x == dimensionsX - 1 || z == 0 || z == dimensionsZ - 1);
+                    if (limitRing)
+                        propagator.Select(x, y, z, limit);
+                    else
+                        foreach (Tile candidate in limitTiles)
+                            propagator.Ban(x, y, z, toDB[candidate]);
+                }
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -510,6 +456,11 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
     //  de REFACTOR pero expresado en el API de DeBroglie.
     // ════════════════════════════════════════════════════════════════
 
+    // TILES FIJAS: especificación común a MyWFC y DeBroglieWFC.
+    // Una tile base con fixedTile = k produce exactamente k tiles fijas, cada una
+    // con una rotación elegida al azar entre la base y sus variantes.
+    // Posiciones: capas 1..dimY-2, excluido el perímetro de y=1, que en MyWFC
+    // ocupa el anillo LIMIT (mismo conjunto de celdas candidatas en ambos).
     private void ApplyFixedTiles(TilePropagator propagator)
     {
         var rng = fixedSeed > 0 ? new System.Random(fixedSeed + 1) : new System.Random();
@@ -519,13 +470,13 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
         {
             if (IsLimit(proto) || !toDB.ContainsKey(proto)) continue;
             if (proto.fixedTile <= 0) continue;
-            // Los variantes rotados heredan fixedTile del original vía Instantiate().
-            // Solo el tile original (rotation == zero) define cuántas instancias colocar.
-            if (proto.rotation != Vector3.zero) continue;
+            if (proto.rotation != Vector3.zero) continue;   // solo tiles base
+
+            List<Tile> variants = GetRotationVariants(proto).FindAll(v => toDB.ContainsKey(v));
 
             for (int i = 0; i < proto.fixedTile; i++)
             {
-                // Hasta 200 intentos para encontrar una celda libre.
+                // Hasta 200 intentos para encontrar una celda candidata libre.
                 bool placed = false;
                 for (int attempt = 0; attempt < 200 && !placed; attempt++)
                 {
@@ -533,19 +484,31 @@ public class DeBroglieWFC : MonoBehaviour, IWFCGenerator
                     int y = rng.Next(1, Mathf.Max(1, dimensionsY - 1));
                     int z = rng.Next(0, dimensionsZ);
 
-                    if (!usedPositions.Contains((x, y, z)))
-                    {
-                        usedPositions.Add((x, y, z));
-                        propagator.Select(x, y, z, toDB[proto]);
-                        placed = true;
-                    }
-                }
+                    bool ringY1 = y == 1 && (x == 0 || x == dimensionsX - 1 ||
+                                             z == 0 || z == dimensionsZ - 1);
+                    if (ringY1 || usedPositions.Contains((x, y, z))) continue;
 
-                if (!placed)
-                    Debug.LogWarning($"[DeBroglieWFC] No se pudo colocar tile fija '{proto.tileType}' " +
-                                     "(no quedan posiciones libres).");
+                    usedPositions.Add((x, y, z));
+                    Tile chosen = variants[rng.Next(0, variants.Count)];
+                    propagator.Select(x, y, z, toDB[chosen]);
+                    placed = true;
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// Tile base y sus variantes rotadas (TilePreprocessor las nombra
+    /// "&lt;base&gt;_RotateRight", "_Rotate180", "_RotateLeft").
+    /// </summary>
+    private List<Tile> GetRotationVariants(Tile baseTile)
+    {
+        string prefix = baseTile.gameObject.name + "_Rotate";
+        var variants = new List<Tile> { baseTile };
+        foreach (Tile t in tileObjects)
+            if (t != baseTile && t.gameObject.name.StartsWith(prefix))
+                variants.Add(t);
+        return variants;
     }
 
     // ════════════════════════════════════════════════════════════════

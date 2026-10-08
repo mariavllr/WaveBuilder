@@ -400,7 +400,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &475089836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -408,7 +408,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 475089835}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db4219f6788fcd3459d4160502865aa5, type: 3}
   m_Name: 
@@ -440,14 +440,15 @@ MonoBehaviour:
   - {fileID: 5376119154660965731, guid: 31679c91f49e20748b1f096c5ae4caca, type: 3}
   - {fileID: 4580760713516505934, guid: ee28d40d6106fbd448e714e068c74c94, type: 3}
   - {fileID: 481162187089817775, guid: a760c8b32d531fa448df00761039e969, type: 3}
-  dimensionsX: 16
+  dimensionsX: 30
   dimensionsY: 5
-  dimensionsZ: 16
+  dimensionsZ: 30
   gridSize: 2
   seed: 0
-  maxRetries: 100
+  maxRetries: 10
   outputParent: {fileID: 475089837}
   generateOnStart: 0
+  collectGarbageBeforeSolve: 1
   algorithmLabel: gumin
 --- !u!4 &475089837
 Transform:
@@ -471,7 +472,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 475089835}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -508,7 +509,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73d4dcb0c3a37f643a6952dc539ec590, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  algorithmLabel: debroglie_full
+  collectGarbageBeforeSolve: 1
+  algorithmLabel: debroglie
   tilePreprocessor: {fileID: 1311016782}
   tileObjects:
   - {fileID: -7542057271563045512, guid: 8c49b53a0492bc44c88e4e8cfa49c688, type: 3}
@@ -543,6 +545,7 @@ MonoBehaviour:
   applyGlobalConstraints: 1
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   ceilingTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
+  limitTile: {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
   outputParent: {fileID: 1311016781}
   fixedSeed: 0
   maxRetries: 10000
@@ -715,7 +718,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2ca1bdef6e0e8546b7212a1fa4181de, type: 3}
   m_Name: 
@@ -729,7 +732,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f509f0dee2de02f4c9fd71eee2caaf14, type: 3}
   m_Name: 
@@ -764,9 +767,9 @@ MonoBehaviour:
   floorTile: {fileID: 2591377062762197173, guid: 23d3dc7cbca008f48ab4740bd402b911, type: 3}
   emptyTile: {fileID: 4187426750720118590, guid: 85d911cca2c83ba40b7e12900bb75209, type: 3}
   limitTile: {fileID: 4187426750720118590, guid: b06f66a95ac6d61418356e31ecb5c4c2, type: 3}
-  dimensionsX: 25
+  dimensionsX: 30
   dimensionsY: 5
-  dimensionsZ: 25
+  dimensionsZ: 30
   gridSize: 2
   seed: 0
   maxRetries: 100
@@ -775,9 +778,10 @@ MonoBehaviour:
   floorCeilingConstraint: 1
   fixedTilesConstraint: 1
   borderConstraint: 1
-  algorithmLabel: PRUEBA
+  algorithmLabel: mi_WFC
   outputParent: {fileID: 1653789840}
   generateOnStart: 0
+  collectGarbageBeforeSolve: 1
 --- !u!114 &1653789845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -785,12 +789,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1653789837}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 666b1abcd2b642949b9703a1ad400568, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WFCQualityMetrics
-  active: 1
+  active: 0
   algorithmType: 1
   myWFC: {fileID: 1653789844}
   guminWFC: {fileID: 475089836}
